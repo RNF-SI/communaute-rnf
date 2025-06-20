@@ -20,12 +20,12 @@ final class Version20230404091458 extends AbstractMigration
     public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
-        $this->addSql('ALTER TABLE naturadapt_users ADD has_been_notified_of_new_adaptative_approach TINYINT(1) DEFAULT 0 NOT NULL');
+        $this->addSql('ALTER TABLE communaute_rnf_users ADD has_been_notified_of_new_adaptative_approach TINYINT(1) DEFAULT 0 NOT NULL');
     }
 
     public function down(Schema $schema): void
     {
         // this down() migration is auto-generated, please modify it to your needs
-        $this->addSql('ALTER TABLE naturadapt_users DROP has_been_notified_of_new_adaptative_approach');
+        $this->addSql('ALTER TABLE communaute_rnf_users DROP has_been_notified_of_new_adaptative_approach');
     }
 }

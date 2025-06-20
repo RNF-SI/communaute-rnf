@@ -47,17 +47,17 @@ class ReindexAllCommand extends Command {
 	protected function getQueryFromIndex($indexName) {
 		switch ($indexName) {
 			case 'pages':
-				return 'SELECT id, title, body FROM naturadapt_pages;';
+				return 'SELECT id, title, body FROM communaute_rnf_pages;';
 			case 'discussions_messages':
-				return 'SELECT id, body FROM naturadapt_discussion_message;';
+				return 'SELECT id, body FROM communaute_rnf_discussion_message;';
 			case 'articles':
-				return 'SELECT id, title, body FROM naturadapt_articles;';
+				return 'SELECT id, title, body FROM communaute_rnf_articles;';
 			case 'documents':
-				return 'SELECT id, title FROM naturadapt_document;';
+				return 'SELECT id, title FROM communaute_rnf_document;';
 			case 'groups':
-				return 'SELECT id, name, description, presentation FROM naturadapt_usergroups;';
+				return 'SELECT id, name, description, presentation FROM communaute_rnf_usergroups;';
 			case 'members':
-				return 'SELECT id, name, presentation, bio FROM naturadapt_users;';
+				return 'SELECT id, name, presentation, bio FROM communaute_rnf_users;';
 			default:
 				return '';
 		}

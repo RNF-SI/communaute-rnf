@@ -20,12 +20,12 @@ final class Version20230417102137 extends AbstractMigration
     public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
-        $this->addSql('ALTER TABLE naturadapt_users ADD adaptative_approach_link VARCHAR(255) DEFAULT NULL');
+        $this->addSql('ALTER TABLE communaute_rnf_users ADD adaptative_approach_link VARCHAR(255) DEFAULT NULL');
     }
 
     public function down(Schema $schema): void
     {
         // this down() migration is auto-generated, please modify it to your needs
-        $this->addSql('ALTER TABLE naturadapt_users DROP adaptative_approach_link');
+        $this->addSql('ALTER TABLE communaute_rnf_users DROP adaptative_approach_link');
     }
 }
