@@ -2,21 +2,31 @@
 * SETTINGS
 **************************************************/
 
+// RNF Color Palette (in order of importance)
+$color_primary: #00885b;      // Main green color
+$color_secondary: #c8d469;    // Light green
+$color_tertiary: #31b7bc;     // Turquoise
+$color_quaternary: #518196;   // Blue-grey
+$color_quinary: #fabb64;      // Orange
+$color_senary: #dc8063;       // Red-orange
+$color_septenary: #646363;    // Grey
+
+// Legacy colors mapped to RNF palette
 $color_grey_dark: #1e1b2e;
 $color_grey_medium: #333435;
-$color_grey_neutral: #646568;
+$color_grey_neutral: $color_septenary;  // Using RNF grey
 $color_grey_light: #8E8F94;
 $color_grey_border: #e3e5e9;
 $color_grey_lighter: #f5f7f6;
 $color_grey_border: #DBDEE4;
 
-$color_dodger_blue: #079bd9;
-$color_lime_green: #4faf31;
+$color_dodger_blue: $color_tertiary;    // Using RNF turquoise
+$color_lime_green: $color_secondary;     // Using RNF light green
 $color_saddle_brown: #8f3f00;
-$color_red: #e22020;
-$color_orange_red: #e95a06;
-$color_orange: #f59701;
+$color_red: $color_senary;              // Using RNF red-orange
+$color_orange_red: $color_senary;       // Using RNF red-orange
+$color_orange: $color_quinary;          // Using RNF orange
 $color_gold_yellow: #fed102;
 
 $color_default: black;
-$color_action: #2fb67d;
+$color_action: $color_primary;          // Using RNF main green
