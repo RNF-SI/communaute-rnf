@@ -20,7 +20,7 @@ final class Version20230404075900 extends AbstractMigration
     public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
-        $this->addSql('DROP TABLE migration_versions');
+        // $this->addSql('DROP TABLE migration_versions'); // Commenté car la table n'existe pas dans une nouvelle installation
         $this->addSql('ALTER TABLE communaute_rnf_users ADD has_adaptative_approach TINYINT(1) DEFAULT 0 NOT NULL');
     }
 
