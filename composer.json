@@ -1,6 +1,6 @@
 {
-    "name": "telabotanica/naturadapt",
-    "description": "Naturadapt community website",
+    "name": "telabotanica/communaute-rnf",
+    "description": "Plateforme collaborative pour animer la communauté des réserves naturelles de France et leurs commissions",
     "type": "project",
     "license": "proprietary",
     "require": {

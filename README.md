@@ -1,28 +1,44 @@
-# NaturAdapt
+# Communauté RNF
+
+Plateforme collaborative pour animer la communauté des réserves naturelles de France et leurs commissions.
+
+## Description
+
+La Communauté RNF est une plateforme web collaborative dédiée au réseau des Réserves Naturelles de France (RNF). Elle facilite les échanges, le partage d'expériences et la coordination entre tous les acteurs du réseau des réserves naturelles :
+
+- Gestionnaires de réserves naturelles
+- Membres des commissions scientifiques, éducatives et techniques
+
+La plateforme permet de créer des groupes thématiques, partager des ressources, organiser des discussions et mutualiser les expertises au sein du réseau RNF.
 
 ## Install
 
 Clone the repository, install _composer_ then run:
+
 ```bash
 composer install
 ```
 
 Copy .env to .env.local and change the settings, particulary:
-- ```APP_ENV```
-- ```DATABASE_URL```
-- ```DATABASE_PREFIX```
+
+- `APP_ENV`
+- `DATABASE_URL`
+- `DATABASE_PREFIX`
 
 If necessary, create the DB:
+
 ```bash
 php bin/console doctrine:database:create
 ```
 
 Create the tables:
+
 ```bash
 php bin/console doctrine:migrations:migrate
 ```
 
 Create the file containing administrators informations
+
 ```bash
 test ! -f config/platform/config.yaml && cp config/platform/default.config.yaml config/platform/config.yaml || true
 
@@ -38,6 +54,7 @@ The plateform uses data like taxonomies to be fully functionnal. Default data ca
 Default skills are defined as slugs in the Command _src/Command/ImportSkillsCommand.php_
 
 To import default Skills, run
+
 ```bash
 php bin/console import:skills
 ```
@@ -54,24 +71,27 @@ If the _env_ variable _COMMUNITY_SLUG_ is defined, the corresponding group will 
 ## Fixtures
 
 Fill the plateform with _Lorem Ipsum_:
+
 ```bash
 php bin/console doctrine:fixtures:load
 ```
 
-
 ## Toolbox
 
 Activate a user:
+
 ```bash
 php bin/console user:activate <user-email>
 ```
 
 Deactivate a user:
+
 ```bash
 php bin/console user:deactivate <user-email>
 ```
 
 Give ROLE_ADMIN to a user:
+
 ```bash
 php bin/console user:set-admin <user-email>
 ```
@@ -79,11 +99,13 @@ php bin/console user:set-admin <user-email>
 ## Indexes
 
 Generate all indexes:
+
 ```bash
 php bin/console search:reindex:all
 ```
 
 Generate one index (`pages`, `discussions_messages`, `articles`, `documents`, `groups`, `members`)
+
 ```bash
 php bin/console search:reindex <index>
 ```
@@ -91,24 +113,25 @@ php bin/console search:reindex <index>
 ## Map Informations
 
 For each user, get Latitude and Longitude from city, zipcode and Country
+
 ```bash
 php bin/console app:update-coordinates
 ```
 
 For each user, convert Latitude and Longitude into NutsId
+
 ```bash
 php bin/console app:update-nuts-id
 ```
-
 
 ## FAQ
 
 ### How to force https ?
 
-Edit your .env and a ```SECURE_SCHEME``` variable with ```https```
+Edit your .env and a `SECURE_SCHEME` variable with `https`
 
 ### How to handle proxies ?
 
-You can add ```TRUSTED_PROXIES``` to your .env.
+You can add `TRUSTED_PROXIES` to your .env.
 
-Or you can add a ```TRUST_ALL=1``` to always forward the ```HEADER_X_FORWARDED_*``` headers, as mentionned on https://symfony.com/doc/current/deployment/proxies.html.
+Or you can add a `TRUST_ALL=1` to always forward the `HEADER_X_FORWARDED_*` headers, as mentionned on https://symfony.com/doc/current/deployment/proxies.html.

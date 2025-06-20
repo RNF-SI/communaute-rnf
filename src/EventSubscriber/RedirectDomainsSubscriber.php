@@ -22,16 +22,14 @@ class RedirectDomainsSubscriber implements EventSubscriberInterface {
 		$host    = $request->getHost();
 
 		switch ( $host ) {
-			case 'www.naturadapt.com':
-			case 'naturadapt.fr':
-			case 'www.naturadapt.fr':
-			case 'naturadapt.eu':
-			case 'www.naturadapt.eu':
+			case 'www.communaute-rnf.fr':
+			case 'communaute-rnf.com':
+			case 'www.communaute-rnf.com':
 				if ( NULL !== $qs = $request->getQueryString() ) {
 					$qs = '?' . $qs;
 				}
 				$uri = $request->getBaseUrl() . $request->getPathInfo() . $qs;
-				$event->setResponse( new RedirectResponse( 'https://naturadapt.com' . $uri, 301 ) );
+				$event->setResponse( new RedirectResponse( 'https://communaute-rnf.fr' . $uri, 301 ) );
 				break;
 		}
 	}

@@ -1,4 +1,6 @@
 {
+	"name": "communaute-rnf",
+	"description": "Plateforme collaborative pour animer la communauté des réserves naturelles de France et leurs commissions",
 	"devDependencies": {
 		"@ckeditor/ckeditor5-build-classic": "^18.0.0",
 		"@symfony/webpack-encore": "^0.31.0",
