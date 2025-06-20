@@ -83,69 +83,51 @@ groups:
     fileId: "groups-hero.jpg"
 
 menus:
-    navbarLiens:
-        title:
-        liens:
-        -
-            nom: 'À propos de la plateforme'
-            lien: '/'
-        -
-            nom: Groupes
-            lien: '/groups/'
-        -
-            nom: Ressources
-            lien: '/groups/communaute/pages/ressources/'
-        -
-            nom: Actualités
-            lien: '/groups/communaute/articles/'
-        -
-            nom: Annuaire
-            lien: '/members'
-    footbarFirstLiens:
-        title: 'Menu'
-        liens:
-        -
-            nom: Accueil
-            lien: '/'
-        -
-            nom: 'Connexion / Inscription'
-            lien: '/login/'
-        -
-            nom: Groupes
-            lien: '/groups/'
-        -
-            nom: Annuaire
-            lien: '/members/'
-        -
-            nom: Ressources
-            lien: '/groups/communaute/pages/ressources/'
-    footbarSecondLiens:
-        title: 'En savoir plus'
-        liens:
-        -
-            nom: 'À propos de la Communauté RNF'
-            lien: '/groups/communaute/pages/a-propos-de-la-communaute-rnf'
-        -
-            nom: Newsletter
-            lien: '/communaute/pages/newsletter'
-        -
-            nom: 'À propos de la plateforme'
-            lien: '/groups/communaute/pages/a-propos-de-la-plateforme'
-        -
-            nom: 'Charte de la plateforme'
-            lien: '/groups/communaute/pages/charte-de-la-plateforme'
-        -
-            nom: 'Mentions Légales'
-            lien: '/groups/plateforme-web/pages/mentions-legales'
-    footbarThirdLiens:
-        title: 'Aide'
-        liens:
-        -
-            nom: 'Tutoriels d'utilisation de la plateforme'
-            lien: '/groups/communaute/tutoriels-d-utilisation-de-la-plateforme'
-        -
-            nom: 'Règles d'utilisation de la plateforme'
-            lien: '/groups/plateforme-web/pages/regles'
-        -
-            nom: 'Signaler un problème'
-            lien: 'mailto:support@communaute-rnf.fr'
+  navbarLiens:
+    title:
+    liens:
+      - nom: "À propos de la plateforme"
+        lien: "/"
+      - nom: Groupes
+        lien: "/groups/"
+      - nom: Ressources
+        lien: "/groups/communaute/pages/ressources/"
+      - nom: Actualités
+        lien: "/groups/communaute/articles/"
+      - nom: Annuaire
+        lien: "/members"
+  footbarFirstLiens:
+    title: "Menu"
+    liens:
+      - nom: Accueil
+        lien: "/"
+      - nom: "Connexion / Inscription"
+        lien: "/login/"
+      - nom: Groupes
+        lien: "/groups/"
+      - nom: Annuaire
+        lien: "/members/"
+      - nom: Ressources
+        lien: "/groups/communaute/pages/ressources/"
+  footbarSecondLiens:
+    title: "En savoir plus"
+    liens:
+      - nom: "À propos de la Communauté RNF"
+        lien: "/groups/communaute/pages/a-propos-de-la-communaute-rnf"
+      - nom: Newsletter
+        lien: "/communaute/pages/newsletter"
+      - nom: "À propos de la plateforme"
+        lien: "/groups/communaute/pages/a-propos-de-la-plateforme"
+      - nom: "Charte de la plateforme"
+        lien: "/groups/communaute/pages/charte-de-la-plateforme"
+      - nom: "Mentions Légales"
+        lien: "/groups/plateforme-web/pages/mentions-legales"
+  footbarThirdLiens:
+    title: "Aide"
+    liens:
+      - nom: "Tutoriels d'utilisation de la plateforme"
+        lien: "/groups/communaute/tutoriels-d-utilisation-de-la-plateforme"
+      - nom: "Règles d'utilisation de la plateforme"
+        lien: "/groups/plateforme-web/pages/regles"
+      - nom: "Signaler un problème"
+        lien: "mailto:support@communaute-rnf.fr"
