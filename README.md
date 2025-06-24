@@ -11,7 +11,121 @@ La Communauté RNF est une plateforme web collaborative dédiée au réseau des 
 
 La plateforme permet de créer des groupes thématiques, partager des ressources, organiser des discussions et mutualiser les expertises au sein du réseau RNF.
 
-## Install
+## Technologies
+
+- **Backend** : Symfony 4.4 LTS, PHP 7.3+, MySQL/MariaDB
+- **Frontend** : Webpack Encore, SCSS, ES6 JavaScript
+- **Search** : TNTSearch pour la recherche full-text
+- **Maps** : Leaflet pour la géolocalisation
+- **Email** : Postmark pour les notifications
+
+## Installation
+
+### Prérequis
+
+- PHP 7.3+ avec extensions (mysql, gd, intl, zip, xml)
+- Composer
+- Node.js et npm
+- MySQL 5.7+ ou MariaDB 10.3+
+
+## Configuration
+
+### Variables d'environnement obligatoires
+
+Avant de procéder à l'installation, vous **devez** configurer ces variables dans votre fichier `.env.local` :
+
+- `APP_ENV` - Environnement (dev/prod)
+- `DATABASE_URL` - Connexion à la base de données MySQL
+- `DATABASE_PREFIX` - Préfixe des tables (recommandé: communaute_rnf_)
+- `COMMUNITY_SLUG` - **OBLIGATOIRE** - Nom du groupe communautaire principal
+- `APP_SECRET` - Clé secrète pour Symfony
+
+**Exemple minimal de configuration obligatoire :**
+
+```bash
+APP_ENV=dev
+APP_SECRET=your-32-character-secret-key-here
+DATABASE_URL=mysql://username:password@127.0.0.1:3306/communaute_rnf
+DATABASE_PREFIX=communaute_rnf_
+COMMUNITY_SLUG=communaute
+```
+
+### Variables d'environnement complètes (.env.local)
+
+Pour une installation complète avec toutes les fonctionnalités :
+
+```bash
+# ===== OBLIGATOIRE =====
+# Environnement
+APP_ENV=prod  # ou dev pour le développement
+APP_SECRET=your-32-character-secret-key-here
+
+# Base de données
+DATABASE_URL=mysql://username:password@127.0.0.1:3306/communaute_rnf
+DATABASE_PREFIX=communaute_rnf_
+
+# Groupe communautaire (OBLIGATOIRE)
+COMMUNITY_SLUG=communaute
+
+# ===== OPTIONNEL =====
+# Platform name
+PLATEFORM_NAME="Communauté RNF"
+
+# Defines platform groups
+PLATEFORM_GROUP_SLUG=
+
+# Defines mandatory information pages
+# e.g
+# PLATFORM_CHARTER_PAGE_SLUG=charte-de-la-plateforme
+# PLATFORM_CHARTER_PAGE_GROUP_SLUG=${COMMUNITY_SLUG}
+# TERMS_OF_USE_PAGE_SLUG=mentions-legales
+# TERMS_OF_USE_PAGE_GROUP_SLUG=${PLATEFORM_GROUP_SLUG}
+# GROUP_CREATION_HELP_PAGE_SLUG=qui-peut-creer-des-groupes
+# GROUP_CREATION_HELP_PAGE_GROUP_SLUG=${PLATEFORM_GROUP_SLUG}
+# RESOURCES_PAGE_GROUP_SLUG=${COMMUNITY_SLUG}
+# RESOURCES_PAGE_SLUG=ressources
+PLATFORM_CHARTER_PAGE_SLUG=
+PLATFORM_CHARTER_PAGE_GROUP_SLUG=
+TERMS_OF_USE_PAGE_SLUG=
+TERMS_OF_USE_PAGE_GROUP_SLUG=
+GROUP_CREATION_HELP_PAGE_SLUG=
+GROUP_CREATION_HELP_PAGE_GROUP_SLUG=
+RESOURCES_PAGE_SLUG=
+RESOURCES_PAGE_GROUP_SLUG=
+
+# Email (Postmark recommandé)
+MAILER_URL=postmark+api://YOUR_API_KEY@default
+# Defines Postmark credentials
+POSTMARK_SENDER=noreply@votre-domaine.fr
+POSTMARK_SERVER_TOKEN=your-server-token
+POSTMARK_INBOUND_KEY=
+POSTMARK_LIST_DOMAIN=list.communaute-rnf.fr
+POSTMARK_BULK_TOKEN=
+
+# Sécurité
+SECURE_SCHEME=https  # Force HTTPS en production
+TRUSTED_PROXIES=127.0.0.1  # Si derrière un proxy
+
+# Authentification RNF (optionnelle)
+RNF_AUTH_API_ENDPOINT=https://geonature.reserves-naturelles.org
+RNF_AUTH_ID_APPLICATION=14
+RNF_AUTH_APP_CODE=COMM_RNF
+
+# Analytics feature flag
+ANALYTICS_ENABLED=false
+
+# TNTSearch parameters
+INDEX_DIR='public/media/cache/indexes/'
+
+# Admin module parameters
+ASSET_DIR='public/media/layout/'
+
+# Google Recaptcha
+GOOGLE_RECAPTCHA_SITE_KEY=your-site-key
+GOOGLE_RECAPTCHA_SECRET_KEY=your-secret-key
+```
+
+### Installation Backend
 
 Clone the repository, install _composer_ then run:
 
@@ -19,11 +133,7 @@ Clone the repository, install _composer_ then run:
 composer install
 ```
 
-Copy .env to .env.local and change the settings, particulary:
-
-- `APP_ENV`
-- `DATABASE_URL`
-- `DATABASE_PREFIX`
+Copy .env to .env.local and configure the settings (see Configuration section above)
 
 If necessary, create the DB:
 
@@ -37,7 +147,7 @@ Create the tables:
 php bin/console doctrine:migrations:migrate
 ```
 
-Create the file containing administrators informations
+Create the file containing administrators informations:
 
 ```bash
 test ! -f config/platform/config.yaml && cp config/platform/default.config.yaml config/platform/config.yaml || true
@@ -45,93 +155,144 @@ test ! -f config/platform/config.yaml && cp config/platform/default.config.yaml 
 cp config/platform/default.config.yaml config/platform/config.yaml
 ```
 
-## Inserting default data
+### Installation Frontend
 
-The plateform uses data like taxonomies to be fully functionnal. Default data can be inserted via PHP commands.
+```bash
+npm install
+npm run build  # Pour la production
+# OU
+npm run watch  # Pour le développement avec auto-reload
+```
 
-### Skills
+## Données par défaut
+
+### Compétences utilisateur
 
 Default skills are defined as slugs in the Command _src/Command/ImportSkillsCommand.php_
 
-To import default Skills, run
+To import default Skills, run:
 
 ```bash
 php bin/console import:skills
 ```
 
-Eventually, additionnal skills can be directly in the database.
+Eventually, additional skills can be directly added in the database.
 
-Skills translations in the differents languages are managed via Symfony translations via the specific _skills_ domain.
+Skills translations in the different languages are managed via Symfony translations via the specific _skills_ domain.
 ex: _translations/skills.fr.yml_
 
 ## General group
 
-If the _env_ variable _COMMUNITY_SLUG_ is defined, the corresponding group will be defacto the "general" group, and every user registred will be by default a member of this group.
+If the _env_ variable _COMMUNITY_SLUG_ is defined, the corresponding group will be de facto the "general" group, and every user registered will be by default a member of this group.
 
 ## Fixtures
 
-Fill the plateform with _Lorem Ipsum_:
+Fill the platform with _Lorem Ipsum_:
 
 ```bash
 php bin/console doctrine:fixtures:load
 ```
 
-## Toolbox
+## Administration
 
-Activate a user:
+### Gestion des utilisateurs
 
 ```bash
+# Activer un utilisateur
 php bin/console user:activate <user-email>
-```
 
-Deactivate a user:
-
-```bash
+# Désactiver un utilisateur
 php bin/console user:deactivate <user-email>
-```
 
-Give ROLE_ADMIN to a user:
-
-```bash
+# Donner les droits administrateur plateforme (ROLE_ADMIN)
 php bin/console user:set-admin <user-email>
+
+# Retirer les droits administrateur plateforme
+php bin/console user:unset-admin <user-email>
 ```
 
-## Indexes
+### Différences entre les rôles d'administration
 
-Generate all indexes:
+- **ROLE_ADMIN** : Administrateur plateforme (accès admin global, gestion utilisateurs, analytics)
+- **Admin communauté** : Administrateur du groupe communautaire (validation groupes, modération)
+- **Admin groupe** : Administrateur d'un groupe spécifique (gestion membres, contenu du groupe)
+
+Pour faire d'un utilisateur un admin de communauté, ajoutez-le comme admin du groupe défini par `COMMUNITY_SLUG`.
+
+### Moteur de recherche
 
 ```bash
+# Réindexer toutes les données
 php bin/console search:reindex:all
+
+# Réindexer un type spécifique
+php bin/console search:reindex <type>
+# Types disponibles : pages, discussions_messages, articles, documents, groups, members
 ```
 
-Generate one index (`pages`, `discussions_messages`, `articles`, `documents`, `groups`, `members`)
+### Données géographiques
 
 ```bash
-php bin/console search:reindex <index>
-```
-
-## Map Informations
-
-For each user, get Latitude and Longitude from city, zipcode and Country
-
-```bash
+# Récupérer les coordonnées géographiques depuis ville/code postal
 php bin/console app:update-coordinates
+
+# Convertir les coordonnées en identifiants NUTS
+php bin/console app:update-nuts-id
 ```
 
-For each user, convert Latitude and Longitude into NutsId
+## Tests
 
 ```bash
-php bin/console app:update-nuts-id
+# Lancer les tests (inclut setup base de données)
+npm run test
+```
+
+## Développement
+
+### Commandes utiles
+
+```bash
+# Clear cache Symfony
+php bin/console cache:clear
+
+# Mise à jour du schéma de base de données
+php bin/console doctrine:migrations:diff
+php bin/console doctrine:migrations:migrate
+
+# Build frontend pour développement
+npm run watch
+
+# Build frontend pour production
+npm run build
+```
+
+### Structure du projet
+
+```
+src/
+├── Controller/        # Contrôleurs Symfony
+├── Entity/           # Entités Doctrine
+├── Service/          # Services métier
+├── Security/         # Voters et authentification
+└── Command/          # Commandes console
+
+templates/            # Templates Twig
+assets/              # Sources frontend (JS/SCSS)
+public/              # Assets compilés et uploads
 ```
 
 ## FAQ
 
-### How to force https ?
+### Comment forcer HTTPS ?
 
-Edit your .env and a `SECURE_SCHEME` variable with `https`
+Ajouter `SECURE_SCHEME=https` dans votre `.env.local`
 
-### How to handle proxies ?
+### Comment gérer les proxies ?
 
-You can add `TRUSTED_PROXIES` to your .env.
+Ajouter `TRUSTED_PROXIES=127.0.0.1,10.0.0.0/8` dans votre `.env.local`
 
-Or you can add a `TRUST_ALL=1` to always forward the `HEADER_X_FORWARDED_*` headers, as mentionned on https://symfony.com/doc/current/deployment/proxies.html.
+Ou `TRUST_ALL=1` pour faire confiance à tous les headers `X-Forwarded-*`.
+
+### Problème de connexion base de données ?
+
+Vérifiez que le `DATABASE_PREFIX` est bien défini et que l'utilisateur MySQL a les droits sur la base.
