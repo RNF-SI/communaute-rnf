@@ -4,6 +4,7 @@
 /.env.*.local
 /config/secrets/prod/prod.decrypt.private.php
 /config/platform/config.yaml
+/config/platform/config_temp.yaml
 /public/bundles/
 /var/
 /vendor/

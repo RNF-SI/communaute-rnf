@@ -21,8 +21,6 @@ home:
     </p>
     <p>En résumé, la Communauté RNF, c'est <strong>un réseau dynamique et collaboratif qui facilite le partage de connaissances et d'expériences entre tous les acteurs des réserves naturelles de France</strong>.
     </p>
-    <p>Nos valeurs communes et principes de fonctionnement sont inscrits dans <a href="/groups/communaute/pages/charte-de-la-plateforme">une charte que nous vous invitons à lire</a>.
-    </p>
     <p>Intéressés par l'aventure ? <a href="/groups/communaute/pages/a-propos-de-la-communaute-rnf">Rejoignez la Communauté RNF ici ! C'est gratuit, libre et ouvert !</a>
     </p>  
     <h2>Que pouvez-vous y trouver ?</h2>
@@ -63,10 +61,9 @@ home:
     <h2>Comment s'inscrire ?</h2>
     <ul>
     <li>1. RDV en haut à droite puis cliquez sur le bouton vert « Connexion »</li>
-    <li>2. Tapez votre adresse mail et choisissez un mot de passe</li>
-    <li>3. Ouvrez le mail de confirmation d'inscription reçu sur votre boite mail</li>
+    <li>2. Connectez vous avec votre compte RNF ou créez un compte en allant sur la page d'inscription</li>
     </ul>
-    <p>Bienvenue en tant que membre de la <strong>Communauté RNF</strong> ! Vous pouvez par ailleurs <a href="/groups/communaute/pages/newsletter">vous inscrire à la newsletter pour suivre les actualités du réseau</a>.</p>
+    <p>Bienvenue en tant que membre de la <strong>Communauté RNF</strong> ! 
     </div>
 
   second_clique_visibility: true
@@ -75,8 +72,7 @@ home:
   second_clique_lien: /groups
   troisieme_texte: |
     <ul>
-    <li>Contacter le support de la plateforme : <a href="mailto:support@communaute-rnf.fr">support@communaute-rnf.fr</a></li>
-    <li>Contacter l'équipe RNF : <a href="mailto:communaute-rnf@espaces-naturels.fr">communaute-rnf@espaces-naturels.fr</a></li>
+    <li>Contacter l'équipe RNF </li>
     </ul>
 groups:
   frontgroup:
