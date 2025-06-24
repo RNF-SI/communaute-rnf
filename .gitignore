@@ -24,6 +24,8 @@ files
 
 ###> liip/imagine-bundle ###
 /public/media/cache/
+
+public/media/2-CHARTE GRAPHIQUE RNF
 ###< liip/imagine-bundle ###
 
 /.vscode

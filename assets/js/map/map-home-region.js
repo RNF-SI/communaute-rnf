@@ -27,24 +27,23 @@ function getColor(value) {
   return color;
 }
 
-function getCountByRegion(feature, membersData, levelCodeToKeep, adaptativeChecked) {
+function getCountByRegion(feature, membersData, levelCodeToKeep) {
   let count = 0;
-  const adaptativeString = adaptativeChecked? 'adaptative_approach':'all';
 
   if (levelCodeToKeep === 1) {
     const countryCode = feature.properties.ISO_A2;
-    if (membersData.level1[adaptativeString].hasOwnProperty(countryCode)) {
-      count = membersData.level1[adaptativeString][countryCode];
+    if (membersData.level1.all.hasOwnProperty(countryCode)) {
+      count = membersData.level1.all[countryCode];
     }
   } else if (levelCodeToKeep === 2) {
     const level2RegionCode = feature.properties.NUTS_ID.substring(0, 4);
-    if (membersData.level2[adaptativeString].hasOwnProperty(level2RegionCode)) {
-      count = membersData.level2[adaptativeString][level2RegionCode];
+    if (membersData.level2.all.hasOwnProperty(level2RegionCode)) {
+      count = membersData.level2.all[level2RegionCode];
     }
   } else if (levelCodeToKeep === 3) {
     const level3RegionCode = feature.properties.NUTS_ID;
-    if (membersData.level3[adaptativeString].hasOwnProperty(level3RegionCode)) {
-      count = membersData.level3[adaptativeString][level3RegionCode];
+    if (membersData.level3.all.hasOwnProperty(level3RegionCode)) {
+      count = membersData.level3.all[level3RegionCode];
     }
   }
 
@@ -53,7 +52,7 @@ function getCountByRegion(feature, membersData, levelCodeToKeep, adaptativeCheck
 
 
 
-async function loadRegionsLayer(map, zoomLevel, membersDataPromise, adaptativeChecked) {
+async function loadRegionsLayer(map, zoomLevel, membersDataPromise) {
   // Retirez la couche de tuiles précédente (si elle existe)
   if (geojsonLayer) {
     map.removeLayer(geojsonLayer);
@@ -97,17 +96,13 @@ async function loadRegionsLayer(map, zoomLevel, membersDataPromise, adaptativeCh
   const membersData = await membersDataPromise;
   // Initialisez geojsonLayer avec les données récupérées et la fonction de style adaptée
   geojsonLayer = L.geoJSON(filteredData, {
-    style: (feature) => style(feature, membersData, levelCodeToKeep, adaptativeChecked),
+    style: (feature) => style(feature, membersData, levelCodeToKeep),
     onEachFeature: function (feature, layer) {
       // Add a mouseover event handler to display the count number
       layer.on('mouseover', function (e) {
-        let count = getCountByRegion(feature, membersData, levelCodeToKeep, adaptativeChecked);
+        let count = getCountByRegion(feature, membersData, levelCodeToKeep);
         if (count !== 0) {
-          if (adaptativeChecked) {
-            layer.bindTooltip(count + " démarches d'adaptations", {sticky: true}).openTooltip();
-          } else {
-            layer.bindTooltip(count + " membres", {sticky: true}).openTooltip();
-          }
+          layer.bindTooltip(count + " membres", {sticky: true}).openTooltip();
         }
       });
 
@@ -123,8 +118,8 @@ async function loadRegionsLayer(map, zoomLevel, membersDataPromise, adaptativeCh
 }
 
   
-function style(feature, membersData, levelCodeToKeep, adaptativeChecked) {
-  const count = getCountByRegion(feature, membersData, levelCodeToKeep, adaptativeChecked);
+function style(feature, membersData, levelCodeToKeep) {
+  const count = getCountByRegion(feature, membersData, levelCodeToKeep);
   const fillColor = getColor(count);
   return {
     fillColor: fillColor,
@@ -141,17 +136,15 @@ async function fetchMapData() {
   const membersData =  await response.json();
 
   // Calculer les données de niveau 2
-  const level2Data = {'adaptative_approach': {}, 'all': {}};
+  const level2Data = {'all': {}};
 
   let level3Data = membersData["level3"];
-  for(const userOrAdaptativeData in level3Data){
-    for (const regionId in level3Data[userOrAdaptativeData]) {
-      const level2RegionId = regionId.substring(0, 4);
-      if (!level2Data[userOrAdaptativeData][level2RegionId]) {
-        level2Data[userOrAdaptativeData][level2RegionId] = 0;
-      }
-      level2Data[userOrAdaptativeData][level2RegionId] += level3Data[userOrAdaptativeData][regionId];
+  for (const regionId in level3Data.all) {
+    const level2RegionId = regionId.substring(0, 4);
+    if (!level2Data.all[level2RegionId]) {
+      level2Data.all[level2RegionId] = 0;
     }
+    level2Data.all[level2RegionId] += level3Data.all[regionId];
   }
 
   return {
@@ -184,27 +177,10 @@ domready(async () => {
       const membersDataPromise = await fetchMapData();
 
 
-      const radioAdaptedLabel = document.getElementById("radio-adapted-label");
-      const radioAdaptedInput = radioAdaptedLabel.querySelector('input[type="radio"]');
-
-      const radioNotAdaptedLabel = document.getElementById("radio-not-adapted-label");
       
-      // Add event listener for radio buttons
-      const radioButtons = document.querySelectorAll('input[name="adaptative-user-filter"]');
-      radioButtons.forEach((radioButton) => {
-        radioButton.addEventListener("change", async (event) => {
-          const value = event.target.value;
-          
-          if (value === "adapted") {
-            loadRegionsLayer(mapRegions, mapRegions.getZoom(), membersDataPromise, true);
-          } else {
-            loadRegionsLayer(mapRegions, mapRegions.getZoom(), membersDataPromise, false);
-          }
-        });
-      });
 
-      // Appeler la fonction loadRegionsLayer avec le niveau de zoom initial (2)
-      loadRegionsLayer(mapRegions, initialZoom, membersDataPromise, true);
+      // Appeler la fonction loadRegionsLayer avec le niveau de zoom initial
+      loadRegionsLayer(mapRegions, initialZoom, membersDataPromise);
 
 
 
@@ -212,15 +188,9 @@ domready(async () => {
 
       // Mettre à jour la couche des régions lors d'un changement de zoom
       mapRegions.on('zoomend', function () {
-        loadRegionsLayer(mapRegions, mapRegions.getZoom(), membersDataPromise, radioAdaptedInput.checked);
+        loadRegionsLayer(mapRegions, mapRegions.getZoom(), membersDataPromise);
       });
 
-      radioAdaptedLabel.addEventListener("click", function (event) {
-        event.stopPropagation(); // Empêcher la propagation de l'événement au niveau supérieur (la carte)
-      });
-      radioNotAdaptedLabel.addEventListener("click", function (event) {
-        event.stopPropagation(); // Empêcher la propagation de l'événement au niveau supérieur (la carte)
-      });
 
     }
 });

@@ -198,6 +198,40 @@ class User implements UserInterface, JsonSerializable {
 	 */
 	private $hasBeenNotifiedOfNewAdaptativeApproach;
 
+	/**
+	 * RNF specific fields for external authentication
+	 */
+	
+	/**
+	 * @ORM\Column(type="integer", nullable=true)
+	 */
+	private $rnfIdRole;
+
+	/**
+	 * @ORM\Column(type="integer", nullable=true)
+	 */
+	private $rnfIdOrganisme;
+
+	/**
+	 * @ORM\Column(type="string", length=255, nullable=true)
+	 */
+	private $rnfUserLogin;
+
+	/**
+	 * @ORM\Column(type="string", length=100, nullable=true)
+	 */
+	private $rnfPrenomRole;
+
+	/**
+	 * @ORM\Column(type="string", length=100, nullable=true)
+	 */
+	private $rnfNomRole;
+
+	/**
+	 * @ORM\Column(type="json", nullable=true)
+	 */
+	private $rnfRoleInfo = [];
+
 	public function __construct () {
 		$this->usergroupMemberships = new ArrayCollection();
 		$this->skills               = new ArrayCollection();
@@ -622,6 +656,74 @@ class User implements UserInterface, JsonSerializable {
 		return $this;
 	}
 
+	// RNF specific getters and setters
+	
+	public function getRnfIdRole(): ?int
+	{
+		return $this->rnfIdRole;
+	}
+
+	public function setRnfIdRole(?int $rnfIdRole): self
+	{
+		$this->rnfIdRole = $rnfIdRole;
+		return $this;
+	}
+
+	public function getRnfIdOrganisme(): ?int
+	{
+		return $this->rnfIdOrganisme;
+	}
+
+	public function setRnfIdOrganisme(?int $rnfIdOrganisme): self
+	{
+		$this->rnfIdOrganisme = $rnfIdOrganisme;
+		return $this;
+	}
+
+	public function getRnfUserLogin(): ?string
+	{
+		return $this->rnfUserLogin;
+	}
+
+	public function setRnfUserLogin(?string $rnfUserLogin): self
+	{
+		$this->rnfUserLogin = $rnfUserLogin;
+		return $this;
+	}
+
+	public function getRnfPrenomRole(): ?string
+	{
+		return $this->rnfPrenomRole;
+	}
+
+	public function setRnfPrenomRole(?string $rnfPrenomRole): self
+	{
+		$this->rnfPrenomRole = $rnfPrenomRole;
+		return $this;
+	}
+
+	public function getRnfNomRole(): ?string
+	{
+		return $this->rnfNomRole;
+	}
+
+	public function setRnfNomRole(?string $rnfNomRole): self
+	{
+		$this->rnfNomRole = $rnfNomRole;
+		return $this;
+	}
+
+	public function getRnfRoleInfo(): array
+	{
+		return $this->rnfRoleInfo ?? [];
+	}
+
+	public function setRnfRoleInfo(?array $rnfRoleInfo): self
+	{
+		$this->rnfRoleInfo = $rnfRoleInfo ?? [];
+		return $this;
+	}
+
 	public function jsonSerialize()
     {
         return [
@@ -632,9 +734,8 @@ class User implements UserInterface, JsonSerializable {
 			'site' => $this->site,
 			'city' => $this->city,
 			'zipcode' => $this->zipcode,
-			'hasAdaptativeApproach' => $this->hasAdaptativeApproach,
-			'adaptativeApproachDescription' => $this->adaptativeApproachDescription,
-			'adaptativeApproachLink' => $this->adaptativeApproachLink,
+			'rnf_id_role' => $this->rnfIdRole,
+			'rnf_id_organisme' => $this->rnfIdOrganisme,
         ];
     }
 }

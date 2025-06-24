@@ -81,18 +81,8 @@ class UserController extends AbstractController
 	 */
 	public function loginPage()
 	{
-		if ($this->isGranted(UserVoter::LOGGED)) {
-			$this->addFlash('notice', 'messages.user.already_connected');
-
-			return $this->redirectToRoute('homepage');
-		}
-
-		return $this->render(
-			'pages/user/login.html.twig',
-			[
-				'recaptcha_site_key' => $this->recaptchaSiteKey
-			]
-		);
+		// Redirect to RNF authentication
+		return $this->redirectToRoute('rnf_auth_login');
 	}
 
 	/**
@@ -153,8 +143,6 @@ class UserController extends AbstractController
 			$user->setRoles([User::ROLE_USER]);
 			$user->setStatus(User::STATUS_PENDING);
 			$user->setHasAgreedTermsOfUse(true);
-			$user->setHasAdaptativeApproach(false);
-			$user->setHasBeenNotifiedOfNewAdaptativeApproach(false);
 
 			$token = $tokenGenerator->generateToken();
 			$user->setResetToken($token);
@@ -424,10 +412,7 @@ class UserController extends AbstractController
 		 * @var User $user
 		 */
 		$user = $this->getUser();
-		$form = $this->createForm(UserProfileType::class, $user, [
-			'has_been_notified' => $user->getHasBeenNotifiedOfNewAdaptativeApproach(),
-		]);
-		$user->setHasBeenNotifiedOfNewAdaptativeApproach(true);
+		$form = $this->createForm(UserProfileType::class, $user);
 		$form->handleRequest($request);
 
 		if ($form->isSubmitted() && $form->isValid()) {

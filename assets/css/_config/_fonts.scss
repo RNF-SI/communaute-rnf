@@ -4,27 +4,34 @@
 
 @use "sass:math";
 
+// Import Google Fonts
+@import url('https://fonts.googleapis.com/css2?family=Arima+Madurai:wght@300;400;500;700;800;900&display=swap');
+
+// Font stacks with fallbacks
+$font-family-titles: 'Arima Madurai', cursive, serif;
+$font-family-body: 'Century Gothic', 'CenturyGothic', 'AppleGothic', sans-serif;
+
 @mixin font_default {
-	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-family: $font-family-body;
 	font-weight: normal;
 	font-style:  normal;
 }
 
 @mixin font_default_bold {
-	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-family: $font-family-body;
 	font-weight: bold;
 	font-style:  normal;
 }
 
 @mixin font_title {
-	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-	font-weight: normal;
+	font-family: $font-family-titles;
+	font-weight: 400;
 	font-style:  normal;
 }
 
 @mixin font_title_bold {
-	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-	font-weight: bold;
+	font-family: $font-family-titles;
+	font-weight: 700;
 	font-style:  normal;
 }
 

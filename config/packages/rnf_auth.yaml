@@ -1,0 +1,8 @@
+parameters:
+    rnf_auth:
+        api_endpoint: '%env(RNF_AUTH_API_ENDPOINT)%'
+        id_application: '%env(int:RNF_AUTH_ID_APPLICATION)%'
+        app_code: '%env(RNF_AUTH_APP_CODE)%'
+        app_name: 'Communauté RNF'
+        inscription_url: 'https://plateformes.reserves-naturelles.org/inscription'
+        platform_url: 'https://plateformes.reserves-naturelles.org'

@@ -7,18 +7,18 @@ use Doctrine\ORM\EntityManagerInterface;
 
 class Community {
 	/**
-	 * @var \App\Entity\Usergroup|bool|object|null
+	 * @var \App\Entity\Usergroup|null
 	 */
-	private $group = FALSE;
+	private $group = null;
 
 	/**
 	 * Community constructor.
 	 *
-	 * @param                                            $slug
+	 * @param string                                     $slug
 	 * @param \Doctrine\ORM\EntityManagerInterface       $manager
 	 */
 	public function __construct (
-			$slug,
+			string $slug,
             EntityManagerInterface $manager
 	) {
 		if ( !empty( $slug ) ) {
@@ -27,6 +27,9 @@ class Community {
 		}
 	}
 
+	/**
+	 * @return \App\Entity\Usergroup|null
+	 */
 	public function getGroup () {
 		return $this->group;
 	}

@@ -58,49 +58,6 @@ async function getCustomIcon(color, avatarUrl=null) {
   }
 }
 
-// Function pour filtrer entre les démarches adaptatives et tout le monde
-function filterMarkers(markersCluster, markersArray, showAdaptive) {
-  markersCluster.clearLayers(); // Retirez tous les marqueurs du groupe de clusters
-  markersArray.forEach((marker) => {
-      if (!marker) return;
-
-      if (!showAdaptive || marker.options.hasAdaptiveApproach) {
-          markersCluster.addLayer(marker); // Ajoutez les marqueurs qui correspondent au filtre
-      }
-  });
-}
-
-function showAdaptiveMarkers(showAdaptiveOnly) {
-  markers.clearLayers(); // Effacer tous les marqueurs existants
-
-  // Parcourez la liste des membres et ajoutez un marqueur pour chaque membre
-  members.forEach(async (member) => {
-    if (member.latitude != null && member.longitude != null) {
-      // Si on montre seulement les démarches d'adaptation et que le membre n'a pas de démarche d'adaptation, passer
-      if (showAdaptiveOnly && !member.hasAdaptativeApproach) return;
-
-      // Obtenez l'icône personnalisée pour chaque membre
-      const icon = await getCustomIcon('#ffffff', null);
-
-      // Créez un marqueur avec l'icône personnalisée et ajoutez-le au groupe de marqueurs
-      const marker = L.marker([member.latitude, member.longitude], { icon: icon });
-      // let popupContent = `<b>${member.name}</b>`;
-      let popupContent = `<b><a href='/members/${member.id}' target='_blank'>${member.name}</a></b>`;
-
-      if (member.hasAdaptativeApproach) {
-        if(member.adaptativeApproachDescription && member.adaptativeApproachLink) {
-          popupContent += `<br/><a href='${member.adaptativeApproachLink}' target="_blank">${member.adaptativeApproachDescription}</a>`;
-        } else if(member.adaptativeApproachDescription) {
-          popupContent += `<br/>${member.adaptativeApproachDescription}`;
-        } else if (member.adaptativeApproachLink) {
-          popupContent += `<br/><a href='${member.adaptativeApproachLink}' target="_blank">${member.adaptativeApproachLink}</a>`;
-        }     
-      }
-      marker.bindPopup(popupContent).openPopup();
-      markers.addLayer(marker);
-    }
-  });
-}
 
 
 // Fonction principale exécutée lorsque le DOM est prêt
@@ -142,17 +99,8 @@ domready(async () => {
         const icon = await getCustomIcon('#ffffff', null);
 
         // Créez un marqueur avec l'icône personnalisée et ajoutez-le au groupe de marqueurs
-        const marker = L.marker([member.latitude, member.longitude], { icon: icon, hasAdaptiveApproach: member.hasAdaptativeApproach, });
+        const marker = L.marker([member.latitude, member.longitude], { icon: icon });
         let popupContent = `<b><a href='/members/${member.id}' target='_blank'>${member.name}</a></b>`;
-        if (member.hasAdaptativeApproach) {
-          if(member.adaptativeApproachDescription && member.adaptativeApproachLink) {
-            popupContent += `<br/><a href='${member.adaptativeApproachLink}' target="_blank">${member.adaptativeApproachDescription}</a>`;
-          } else if(member.adaptativeApproachDescription) {
-            popupContent += `<br/>${member.adaptativeApproachDescription}`;
-          } else if (member.adaptativeApproachLink) {
-            popupContent += `<br/><a href='${member.adaptativeApproachLink}' target="_blank">${member.adaptativeApproachLink}</a>`;
-          }     
-        }
         marker.bindPopup(popupContent).openPopup();
         markers.addLayer(marker);
         return marker;
@@ -162,39 +110,6 @@ domready(async () => {
 
     // Attendez que tous les marqueurs soient chargés
     await Promise.all(markerPromises);
-
-    const radioAdaptedLabel = document.getElementById("radio-adapted-label");
-    const radioNotAdaptedLabel = document.getElementById("radio-not-adapted-label");
-    
-    async function updateMarkers(checked) {
-      const allMarkers = await Promise.all(markerPromises);
-      filterMarkers(markers, allMarkers, checked);
-    }
-
-   
-
-
-    // Initialisation de l'état des marqueurs
-    updateMarkers(true);
-    // Add event listener for radio buttons
-    const radioButtons = document.querySelectorAll('input[name="adaptative-user-filter"]');
-    radioButtons.forEach((radioButton) => {
-      radioButton.addEventListener("change", async (event) => {
-        const value = event.target.value;
-        if (value === "adapted") {
-          updateMarkers(true);
-        } else {
-          updateMarkers(false);
-        }
-      });
-    });
-
-    radioAdaptedLabel.addEventListener("click", function (event) {
-      event.stopPropagation(); // Empêcher la propagation de l'événement au niveau supérieur (la carte)
-    });
-    radioNotAdaptedLabel.addEventListener("click", function (event) {
-      event.stopPropagation(); // Empêcher la propagation de l'événement au niveau supérieur (la carte)
-    });
     
     // Ajoutez le groupe de marqueurs à la carte
     mapCommunaute.addLayer(markers);

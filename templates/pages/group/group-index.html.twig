@@ -12,7 +12,7 @@
 			{% else %}
 				{% include 'contents/group/group--full__restricted.html.twig' with {'group':group, 'logEvents':false} %}
 			{% endif %}
-		{% elseif user_group_relation.communityAdmin(app.user) or user_group_relation.isAdmin(app.user, group) %}
+		{% elseif user_group_relation.isCommunityAdmin(app.user) or user_group_relation.isAdmin(app.user, group) %}
 			{% include 'contents/group/group--full__moderate.html.twig' with {'group':group, 'logEvents':false} %}
 		{% endif %}
 	</section>

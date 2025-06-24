@@ -214,29 +214,32 @@ class GroupController extends AbstractController {
 				$this->redirectToRoute( 'group_activate', [ 'groupSlug' => $group->getSlug(), 'doActivate' => TRUE ] );
 			} else {
 
-				$communityAdmins = $community->getGroup()->getMembersByRole( UsergroupMembership::ROLE_ADMIN );
-				$multiple = count( $communityAdmins ) > 1;
+				$communityGroup = $community->getGroup();
+				if ( $communityGroup ) {
+					$communityAdmins = $communityGroup->getMembersByRole( UsergroupMembership::ROLE_ADMIN );
+					$multiple = count( $communityAdmins ) > 1;
 
-				foreach ( $communityAdmins as $communityAdminMembership ) {
-					$communityAdmin = $communityAdminMembership->getUser();
+					foreach ( $communityAdmins as $communityAdminMembership ) {
+						$communityAdmin = $communityAdminMembership->getUser();
 
-					$message = $this->renderView(
-						'emails/usergroup-activation.html.twig',
-						[
-							'admin'     => $communityAdmin,
-							'user'      => $user,
-							'usergroup' => $group,
-							'url'       => $this->generateUrl( 'group_index', [ 'groupSlug' => $group->getSlug() ], UrlGeneratorInterface::ABSOLUTE_URL ),
-							'multiple'  => $multiple,
-						]
-					);
+						$message = $this->renderView(
+							'emails/usergroup-activation.html.twig',
+							[
+								'admin'     => $communityAdmin,
+								'user'      => $user,
+								'usergroup' => $group,
+								'url'       => $this->generateUrl( 'group_index', [ 'groupSlug' => $group->getSlug() ], UrlGeneratorInterface::ABSOLUTE_URL ),
+								'multiple'  => $multiple,
+							]
+						);
 
-					$mailer->send(
-						[ $this->getParameter( 'plateform' )[ 'from' ] => $this->getParameter( 'plateform' )[ 'name' ] ],
-						$communityAdmin->getEmail(),
-						$mailer->getSubjectFromTitle( $message ),
-						$message
-					);
+						$mailer->send(
+							[ $this->getParameter( 'plateform' )[ 'from' ] => $this->getParameter( 'plateform' )[ 'name' ] ],
+							$communityAdmin->getEmail(),
+							$mailer->getSubjectFromTitle( $message ),
+							$message
+						);
+					}
 				}
 			}
 

@@ -88,16 +88,6 @@ class LoginFormAuthenticator extends AbstractFormLoginAuthenticator {
 			throw new \Exception('Invalid user object');
 		}
 	
-		if (!$user->getHasBeenNotifiedOfNewAdaptativeApproach()) {
-			// Add a flash message to notify the user
-			// TODO: Code à enlever une fois que les utilisateurs auront mis à jour leur profil
-			$adaptativeFormMessage = $this->translator->trans('messages.user.adaptative_approach_required', ['%link%' => "#user_profile_hasAdaptativeApproach"]);
-			$request->getSession()->getFlashBag()->add('warning', $adaptativeFormMessage);
-			$this->entityManager->flush();
-
-			// Rediriger vers la page de notification pour demander à l'utilisateur de mettre à jour sa variable hasBeenNotifiedOfNewAdaptativeApproach
-			return new RedirectResponse($this->router->generate('user_profile_edit'));
-		}
 		
 		if ( $targetPath = $this->getTargetPath( $request->getSession(), $providerKey ) ) {
 			return new RedirectResponse( $targetPath );

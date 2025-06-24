@@ -1,0 +1,62 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'pages.user.login.title'|trans }} | {{ plateform.name }}{% endblock %}
+
+{% block main %}
+	<section class="main main__user-page main__user-page__login">
+		<div class="main--content content-container">
+			{% include 'components/app-flashes.html.twig' %}
+			
+			{% if error %}
+				<div class="alert alert-danger">
+					{{ error.messageKey|trans(error.messageData, 'security') }}
+				</div>
+			{% endif %}
+
+			<div class="rnf-login-section">
+				<h1 class="h3">Connexion à la Communauté RNF</h1>
+				<p class="hint">Utilisez votre compte unique RNF pour accéder à la plateforme.</p>
+				
+				<form method="post" action="{{ path('rnf_auth_login') }}" class="rnf-login-form">
+					<div class="form-rows">
+						<div class="form-row form-row__field">
+							<label for="login">Identifiant RNF</label>
+							<input type="text" 
+							       id="login" 
+							       name="login" 
+							       value="{{ last_username }}" 
+							       required 
+							       autofocus 
+							       placeholder="Votre identifiant RNF">
+						</div>
+						
+						<div class="form-row form-row__field">
+							<label for="password">Mot de passe</label>
+							<input type="password" 
+							       id="password" 
+							       name="password" 
+							       required 
+							       placeholder="Votre mot de passe">
+						</div>
+					</div>
+					
+					<div class="form-row form-row__submit">
+						<input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+						<button type="submit">Se connecter</button>
+					</div>
+				</form>
+
+				<div class="text-center mt-4">
+					<p>Pas encore de compte RNF ?</p>
+					<a href="{{ inscription_url }}" class="cta">Créer un compte sur la plateforme RNF</a>
+				</div>
+
+				<div class="text-center mt-4">
+					<small>
+						Cette authentification est gérée par la plateforme centrale RNF
+					</small>
+				</div>
+			</div>
+		</div>
+	</section>
+{% endblock %}

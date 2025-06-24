@@ -8,7 +8,6 @@ use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Service\FileManager;
 use App\Entity\Usergroup;
-use App\Repository\UserRepository;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 
@@ -17,14 +16,11 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class AppController extends AbstractController {
 
-    private $userRepository;
 	private $translator;
 
-    public function __construct(UserRepository $userRepository, TranslatorInterface $translator)
+    public function __construct(TranslatorInterface $translator)
     {
-        $this->userRepository = $userRepository;
-		$this->translator       = $translator;
-
+		$this->translator = $translator;
     }
 
 	/**
@@ -37,29 +33,9 @@ class AppController extends AbstractController {
 		EntityManagerInterface $manager,
 		\App\Service\AppTextManager $appTextManager
 	) {
-		// Récupérez tous les utilisateurs
-		$users = $this->userRepository->findAll();
-
 		$homeTexts = $appTextManager->getTabText('home');
 
-       // Obtenez l'objet token actuel
-	   $token = $this->get('security.token_storage')->getToken();
-	   
-	   // TODO: Code à enlever une fois que les utilisateurs auront mis à jour leurs profils
-		// Si l'utilisateur est connecté, récupérez l'objet User
-		if ($token && $token->getUser() && $token->getUser() instanceof \App\Entity\User) {
-			$user = $token->getUser();
-
-			if (!$user->getHasBeenNotifiedOfNewAdaptativeApproach()) {
-				$adaptativeFormMessage = $this->translator->trans('messages.user.new_adaptative_approach_required', ['%link%' => $this->generateUrl('user_profile_edit')]);
-				// Add a flash message to notify the user
-				$this->addFlash('warning', $adaptativeFormMessage);
-				$manager->flush();
-			}
-		}
-
 		return $this->render( 'pages/front.html.twig', [
-			'users' => $users,
 			'adminText' => $homeTexts
 		] );
 	}
