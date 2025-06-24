@@ -4,8 +4,8 @@
 
 @use "sass:math";
 
-// Import Google Fonts
-@import url('https://fonts.googleapis.com/css2?family=Arima+Madurai:wght@300;400;500;700;800;900&display=swap');
+// Import local RNF font faces
+@import 'font-faces';
 
 // Font stacks with fallbacks
 $font-family-titles: 'Arima Madurai', cursive, serif;

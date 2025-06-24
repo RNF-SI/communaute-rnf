@@ -69,6 +69,12 @@ Encore
 		return options;
 	} )
 	.enablePostCssLoader()
+	
+	// Copy fonts to build directory
+	.copyFiles({
+        from: './assets/fonts',
+        to: 'fonts/[path][name].[ext]'
+    })
 
     // uncomment if you use TypeScript
     //.enableTypeScriptLoader()

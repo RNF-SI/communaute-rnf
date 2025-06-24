@@ -41,7 +41,6 @@ import './ui/removable-tag-list';
 import './ui/groups-search';
 import './ui/add-form';
 import './ui/link-order-change';
-import './ui/adaptative-approach-form'
 //
 import './user/profile';
 import './user/dashboard';
