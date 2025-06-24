@@ -24,8 +24,6 @@ class User implements UserInterface, JsonSerializable {
 	public const TYPE_PRIVATE       = 'private';
 	public const TYPE_PROFESSIONNAL = 'professional';
 
-	public const TYPE_HAS_ADAPTATIVE_APPROACH_YES = 'adaptative_approach';
-	public const TYPE_HAS_ADAPTATIVE_APPROACH_NO = 'no_adaptative_approach';
 
 	/**
 	 * @ORM\Id()
@@ -178,25 +176,6 @@ class User implements UserInterface, JsonSerializable {
 	 */
 	private $hasAgreedTermsOfUse;
 
-	/**
-	 * @ORM\Column(type="boolean", options={"default":"0"})
-	 */
-	private $hasAdaptativeApproach;
-
-	/**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
-    private $adaptativeApproachLink;
-
-	/**
-	 * @ORM\Column(type="string", length=255, nullable=true)
-	 */
-	private $adaptativeApproachDescription;
-
-	/**
-	 * @ORM\Column(type="boolean", options={"default":"0"})
-	 */
-	private $hasBeenNotifiedOfNewAdaptativeApproach;
 
 	/**
 	 * RNF specific fields for external authentication
@@ -612,49 +591,6 @@ class User implements UserInterface, JsonSerializable {
 		return $this;
 	}
 
-	public function getHasAdaptativeApproach (): bool {
-		return $this->hasAdaptativeApproach?? false;
-	}
-
-	public function setHasAdaptativeApproach ( ?bool $hasAdaptativeApproach ): self {
-		$this->hasAdaptativeApproach = $hasAdaptativeApproach ?? false;
-
-		return $this;
-	}
-
-	public function getAdaptativeApproachLink(): ?string
-    {
-        return $this->adaptativeApproachLink;
-    }
-
-    public function setAdaptativeApproachLink(?string $adaptativeApproachLink): self
-    {
-        $this->adaptativeApproachLink = $adaptativeApproachLink;
-
-        return $this;
-    }
-
-	public function getAdaptativeApproachDescription(): ?string
-	{
-		return $this->adaptativeApproachDescription;
-	}
-
-	public function setAdaptativeApproachDescription(?string $adaptativeApproachDescription): self
-	{
-		$this->adaptativeApproachDescription = $adaptativeApproachDescription;
-
-		return $this;
-	}
-
-	public function getHasBeenNotifiedOfNewAdaptativeApproach (): bool {
-		return $this->hasBeenNotifiedOfNewAdaptativeApproach ?? false;
-	}
-
-	public function setHasBeenNotifiedOfNewAdaptativeApproach ( ?bool $hasBeenNotifiedOfNewAdaptativeApproach ): self {
-		$this->hasBeenNotifiedOfNewAdaptativeApproach = $hasBeenNotifiedOfNewAdaptativeApproach ?? false;
-
-		return $this;
-	}
 
 	// RNF specific getters and setters
 	
