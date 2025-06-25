@@ -57,13 +57,6 @@
         <div class="form_errors">{{ form_errors(form.bio) }}</div>
     </div>
     <div class="form-row form-row__field">
-        {{ form_label(form.inscriptionType, 'forms.user.inscription_type.label') }}
-        <div class="form-row__radioboxes">
-            {{ form_widget(form.inscriptionType) }}
-        </div>
-        <div class="form_errors">{{ form_errors(form.inscriptionType) }}</div>
-    </div>
-    <div class="form-row form-row__field">
         {{ form_label(form.skills, 'forms.user.skills.label') }}
         <div class="hint">{{ 'forms.user.skills.hint'|trans }}</div>
         <div class="form-row__checkboxes checkboxes-autocomplete" data-limit="5">

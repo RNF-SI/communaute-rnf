@@ -21,8 +21,6 @@ class User implements UserInterface, JsonSerializable {
 	public const ROLE_USER  = 'ROLE_USER';
 	public const ROLE_ADMIN = 'ROLE_ADMIN';
 
-	public const TYPE_PRIVATE       = 'private';
-	public const TYPE_PROFESSIONNAL = 'professional';
 
 
 	/**
@@ -103,10 +101,6 @@ class User implements UserInterface, JsonSerializable {
 	 */
 	private $profileVisibility;
 
-	/**
-	 * @ORM\Column(type="string", length=20, nullable=true)
-	 */
-	private $inscriptionType;
 
 	/**
 	 * @ORM\ManyToMany(targetEntity="App\Entity\Skill")
@@ -474,16 +468,6 @@ class User implements UserInterface, JsonSerializable {
 
 	public function setBio ( ?string $bio ): self {
 		$this->bio = trim( $bio );
-
-		return $this;
-	}
-
-	public function getInscriptionType (): ?string {
-		return $this->inscriptionType;
-	}
-
-	public function setInscriptionType ( ?string $inscriptionType ): self {
-		$this->inscriptionType = $inscriptionType;
 
 		return $this;
 	}

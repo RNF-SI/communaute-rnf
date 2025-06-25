@@ -128,23 +128,6 @@ class UserRepository extends ServiceEntityRepository {
 		}
 
 		/**
-		 * INSCRIPTION TYPE
-		 */
-		if ( !empty( $filters[ 'inscriptionType' ] ) ) {
-			if ( !is_array( $filters[ 'inscriptionType' ] ) ) {
-				$filters[ 'inscriptionType' ] = [ $filters[ 'inscriptionType' ] ];
-			}
-
-			$query = [];
-			foreach ( $filters[ 'inscriptionType' ] as $inscriptionType ) {
-				$var     = 'inscriptionType' . ( $i++ );
-				$query[] = $qb->expr()->eq( 'u.inscriptionType', ':' . $var );
-				$qb->setParameter( $var, $inscriptionType );
-			}
-			$qb->andWhere( new Orx( $query ) );
-		}
-
-		/**
 		 * SKILLS
 		 */
 		if ( !empty( $filters[ 'skills' ] ) ) {

@@ -59,18 +59,6 @@ class UsergroupMembersManager {
 										  'multiple' => TRUE,
 										  'choices'  => $countriesNames,
 								  ] )
-								  ->add( 'inscriptionType', ChoiceType::class, [
-										  'required' => FALSE,
-										  'expanded' => TRUE,
-										  'multiple' => TRUE,
-										  'choices'  => array_combine( [
-												  'pages.member.list.filters.inscription_type.labels.' . User::TYPE_PRIVATE,
-												  'pages.member.list.filters.inscription_type.labels.' . User::TYPE_PROFESSIONNAL,
-										  ], [
-												  User::TYPE_PRIVATE,
-												  User::TYPE_PROFESSIONNAL,
-										  ] ),
-								  ] )
 								  ->add( 'skills', EntityType::class, [
 										  'class'                     => Skill::class,
 										  'required'                  => FALSE,

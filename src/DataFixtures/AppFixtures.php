@@ -25,7 +25,6 @@ class AppFixtures extends Fixture {
 
 	public function load ( ObjectManager $manager ) {
 		$countries        = [ 'fr_FR', 'en_GB', 'es_ES', 'en_US', 'de_DE' ];
-		$inscriptionTypes = [ User::TYPE_PRIVATE, User::TYPE_PROFESSIONNAL, NULL ];
 
 		/**
 		 * USERS
@@ -50,7 +49,6 @@ class AppFixtures extends Fixture {
 			$user->setStatus( User::STATUS_ACTIVE );
 
 			$user->setCountry( substr( $country, 3, 2 ) );
-			$user->setInscriptionType( $inscriptionTypes[ rand( 0, count( $inscriptionTypes ) - 1 ) ] );
 			$user->setHasAgreedTermsOfUse(true);
 
 			$manager->persist( $user );

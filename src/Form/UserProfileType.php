@@ -77,16 +77,6 @@ class UserProfileType extends AbstractType {
 				->add( 'bio', TextareaType::class, [
 						'required' => FALSE,
 				] )
-				->add( 'inscriptionType', ChoiceType::class, [
-						'required'    => FALSE,
-						'expanded'    => TRUE,
-						'multiple'    => FALSE,
-						'placeholder' => FALSE,
-						'choices'     => [
-								'forms.user.inscription_type.labels.' . User::TYPE_PRIVATE       => User::TYPE_PRIVATE,
-								'forms.user.inscription_type.labels.' . User::TYPE_PROFESSIONNAL => User::TYPE_PROFESSIONNAL,
-						],
-				] )
 				->add( 'skills', EntityType::class, [
 						'class'                     => Skill::class,
 						'required'                  => FALSE,
