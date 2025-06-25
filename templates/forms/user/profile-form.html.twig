@@ -1,74 +1,87 @@
 {{ form_start(form) }}
 <div class="form-row__mandatory">{{ 'forms.mandatory'|trans }}</div>
 <div class="form-rows">
-	<div class="form-row form-row__field">
-		{{ form_label(form.name, 'forms.user.name.label') }}
-		{{ form_widget(form.name, {'attr': {'placeholder': 'forms.user.name.placeholder'}}) }}
-	</div>
-	<div class="form-row form-row__field">
-		{{ form_label(form.displayname, 'forms.user.display_name.label') }}
-		{{ form_widget(form.displayname, {'attr': {'placeholder': 'forms.user.display_name.placeholder'}}) }}
-	</div>
-	<div class="form-row form-row__file">
-		<div class="file-preview">
-			<div class="file-preview--img">
-				{% if (user is defined) and (user.avatar is not empty) %}
-					<img src="{{ path('member_avatar', {'user_id': user.id}) }}" alt="">
-				{% endif %}
-			</div>
-			<div class="file-preview--content">
-				{{ form_label(form.avatarfile, 'forms.user.avatar.label') }}
-				<div class="hint">{{ 'forms.user.avatar.hint'|trans|format(form.avatarfile.vars.attr['data-max-size']) }}</div>
-				{{ form_widget(form.avatarfile) }}
-				{{ form_label(form.avatarfile, 'forms.user.avatar.button', {'label_attr': {'class': 'submit-style submit-style__inverted'}}) }}
-				<div class="form_errors">{{ form_errors(form.avatarfile) }}</div>
-			</div>
-		</div>
-	</div>
-	<div class="columns__66-33">
-		<div class="form-row form-row__field">
-			{{ form_label(form.city, 'forms.user.city.label') }}
-			{{ form_widget(form.city, {'attr': {'placeholder': 'forms.user.city.placeholder'}}) }}
-		</div>
-		<div class="form-row form-row__field">
-			{{ form_label(form.zipcode, 'forms.user.zipcode.label') }}
-			{{ form_widget(form.zipcode, {'attr': {'placeholder': 'forms.user.zipcode.placeholder'}}) }}
-		</div>
-	</div>
-	<div class="form-row form-row__field">
-		{{ form_label(form.country, 'forms.user.country.label') }}
-		{{ form_widget(form.country, {'attr': {'placeholder': 'forms.user.country.placeholder'}}) }}
-	</div>
-	<div class="form-row form-row__field">
-		{{ form_label(form.presentation, 'forms.user.presentation.label') }}
-		<div class="hint">{{ 'forms.user.presentation.hint'|trans }}</div>
-		{{ form_widget(form.presentation, {'attr': {'placeholder': 'forms.user.presentation.placeholder'}}) }}
-	</div>
-	<div class="form-row form-row__field">
-		{{ form_label(form.bio, 'forms.user.bio.label') }}
-		<div class="hint">{{ 'forms.user.bio.hint'|trans }}</div>
-		{{ form_widget(form.bio, {'attr': {'placeholder': 'forms.user.bio.placeholder'}}) }}
-	</div>
-	<div class="form-row form-row__field">
-		{{ form_label(form.inscriptionType, 'forms.user.inscription_type.label') }}
-		<div class="form-row__radioboxes">
-			{{ form_widget(form.inscriptionType) }}
-		</div>
-	</div>
-	<div class="form-row form-row__field">
-		{{ form_label(form.skills, 'forms.user.skills.label') }}
-		<div class="hint">{{ 'forms.user.skills.hint'|trans }}</div>
-		<div class="form-row__checkboxes checkboxes-autocomplete">
-			{{ form_widget(form.skills) }}
-		</div>
-	</div>
-	<div class="form-row form-row__field">
-		{{ form_label(form.siteName, 'forms.user.site.label') }}
-		<div class="hint">{{ 'forms.user.site.hint'|trans }}</div>
-		{{ form_widget(form.siteName, {'attr': {'placeholder': 'forms.user.site.placeholder', 'data-query': path('search_site', {'query':'query'})}}) }}
-	</div>
+    <div class="form-row form-row__field">
+        {{ form_label(form.name, 'forms.user.name.label') }}
+        {{ form_widget(form.name, {'attr': {'placeholder': 'forms.user.name.placeholder'}}) }}
+        <div class="form_errors">{{ form_errors(form.name) }}</div>
+    </div>
+    <div class="form-row form-row__field">
+        {{ form_label(form.displayname, 'forms.user.display_name.label') }}
+        {{ form_widget(form.displayname, {'attr': {'placeholder': 'forms.user.display_name.placeholder'}}) }}
+        <div class="form_errors">{{ form_errors(form.displayname) }}</div>
+    </div>
+    <div class="form-row form-row__file">
+        <div class="file-preview">
+            <div class="file-preview--img">
+                {% if (user is defined) and (user.avatar is not empty) %}
+                    <img src="{{ path('member_avatar', {'user_id': user.id}) }}" alt="">
+                {% endif %}
+            </div>
+            <div class="file-preview--content">
+                {{ form_label(form.avatarfile, 'forms.user.avatar.label') }}
+                <div class="hint">{{ 'forms.user.avatar.hint'|trans|format(form.avatarfile.vars.attr['data-max-size']) }}</div>
+                {{ form_widget(form.avatarfile) }}
+                {{ form_label(form.avatarfile, 'forms.user.avatar.button', {'label_attr': {'class': 'submit-style submit-style__inverted'}}) }}
+                <div class="form_errors">{{ form_errors(form.avatarfile) }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="columns__66-33">
+        <div class="form-row form-row__field">
+            {{ form_label(form.city, 'forms.user.city.label') }}
+            {{ form_widget(form.city, {'attr': {'placeholder': 'forms.user.city.placeholder'}}) }}
+            <div class="form_errors">{{ form_errors(form.city) }}</div>
+        </div>
+        <div class="form-row form-row__field">
+            {{ form_label(form.zipcode, 'forms.user.zipcode.label') }}
+            {{ form_widget(form.zipcode, {'attr': {'placeholder': 'forms.user.zipcode.placeholder'}}) }}
+            <div class="form_errors">{{ form_errors(form.zipcode) }}</div>
+        </div>
+    </div>
+    <div class="form-row form-row__field">
+        {{ form_label(form.country, 'forms.user.country.label') }}
+        {{ form_widget(form.country, {'attr': {'placeholder': 'forms.user.country.placeholder'}}) }}
+        <div class="form_errors">{{ form_errors(form.country) }}</div>
+    </div>
+    <div class="form-row form-row__field">
+        {{ form_label(form.presentation, 'forms.user.presentation.label') }}
+        <div class="hint">{{ 'forms.user.presentation.hint'|trans }}</div>
+        {{ form_widget(form.presentation, {'attr': {'placeholder': 'forms.user.presentation.placeholder'}}) }}
+        <div class="form_errors">{{ form_errors(form.presentation) }}</div>
+    </div>
+    <div class="form-row form-row__field">
+        {{ form_label(form.bio, 'forms.user.bio.label') }}
+        <div class="hint">{{ 'forms.user.bio.hint'|trans }}</div>
+        {{ form_widget(form.bio, {'attr': {'placeholder': 'forms.user.bio.placeholder'}}) }}
+        <div class="form_errors">{{ form_errors(form.bio) }}</div>
+    </div>
+    <div class="form-row form-row__field">
+        {{ form_label(form.inscriptionType, 'forms.user.inscription_type.label') }}
+        <div class="form-row__radioboxes">
+            {{ form_widget(form.inscriptionType) }}
+        </div>
+        <div class="form_errors">{{ form_errors(form.inscriptionType) }}</div>
+    </div>
+    <div class="form-row form-row__field">
+        {{ form_label(form.skills, 'forms.user.skills.label') }}
+        <div class="hint">{{ 'forms.user.skills.hint'|trans }}</div>
+        <div class="form-row__checkboxes checkboxes-autocomplete" data-limit="5">
+            {{ form_widget(form.skills) }}
+        </div>
+        <div class="form_errors">{{ form_errors(form.skills) }}</div>
+    </div>
+    <div class="form-row form-row__field">
+        {{ form_label(form.siteName, 'forms.user.site.label') }}
+        <div class="hint">{{ 'forms.user.site.hint'|trans }}</div>
+        {{ form_widget(form.siteName, {'attr': {'placeholder': 'forms.user.site.placeholder', 'data-query': path('search_site', {'query':'query'})}}) }}
+        <div class="form_errors">{{ form_errors(form.siteName) }}</div>
+    </div>
+
+    {{ form_widget(form.latitude) }}
+    {{ form_widget(form.longitude) }}
 </div>
 <div class="form-row form-row__submit">
-	{{ form_widget(form.submit, {'label': form_submit}) }}
+    {{ form_widget(form.submit, {'label': form_submit}) }}
 </div>
 {{ form_end(form) }}
