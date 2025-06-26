@@ -142,12 +142,39 @@ class AdminController extends AbstractController {
 	public function adminGroupsEdit (
 		Request $request,
 		EntityManagerInterface $manager,
-		\App\Service\FileManager $fileManager
+		\App\Service\FileManager $fileManager,
+		\App\Service\SearchEngineManager $searchEngineManager
 	) {
-		$groupForm          = $this->createForm( AdminGroupsType::class);
+		// Get all usergroups and current important groups
+		$usergroups = $manager->getRepository(\App\Entity\Usergroup::class)->findAll();
+		$importantGroups = $manager->getRepository(\App\Entity\Usergroup::class)->findBy(['isImportant' => true]);
+		
+		$groupForm = $this->createForm( AdminGroupsType::class, null, [
+			'important_groups' => $importantGroups
+		]);
 		$groupForm->handleRequest( $request );
-
+		
 		if ( $groupForm->isSubmitted() && $groupForm->isValid() ) {
+			// Handle important groups update
+			$selectedImportantGroups = $groupForm->get('importantGroups')->getData();
+			
+			// Reset all groups to not important
+			foreach ($usergroups as $group) {
+				$group->setIsImportant(false);
+			}
+			
+			// Set selected groups as important
+			foreach ($selectedImportantGroups as $group) {
+				$group->setIsImportant(true);
+			}
+			
+			// Save important groups changes
+			$manager->flush();
+			
+			// Reindex groups to update search with new importance order
+			$searchEngineManager->reindexGroups();
+			
+			$this->addFlash('success', 'Les groupes importants ont été mis à jour et l\'index de recherche a été actualisé.');
 
 			// Entete
 			$uploadFile = $groupForm->get( 'frontgroupfile' )->getData();

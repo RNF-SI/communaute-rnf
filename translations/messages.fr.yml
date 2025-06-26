@@ -237,6 +237,9 @@ forms:
                 label: "Image de couverture de la page Groupes"
                 hint: "Format JPG ou PNG, %s maximum"
                 button: "Parcourir"
+            important_groups:
+                name: "Groupes importants"
+                hint: "Sélectionnez les groupes qui doivent apparaître en premier dans la page des groupes"
         menus:
             name: "Menus"
             introduction: "Modifiez la barre de navigation et le footer"
@@ -338,6 +341,7 @@ pages:
             active_ago: "Actif %s"
         is_member: "Abonné·e"
         is_member_description: "Vous recevez toutes les discussions de ce groupe par e-mail."
+        is_important: "Groupe mis en avant"
         is_member_unsubscribed: "Membre"
         is_member_unsubscribed_description: "Vous pouvez accéder au groupe mais vous ne recevez pas d’e-mail."
         is_banned: "Vous avez été banni·e de ce groupe"
@@ -361,11 +365,18 @@ pages:
         groups:
             title: "Groupes"
             subtitle: "Trouvez les groupes de discussion qui vous intéressent"
+            no_results: "Aucun groupe trouvé"
             list:
                 all: "Groupes"
+                important: "Groupes importants"
+                active: "Groupes actifs"
                 pending:
                     yours: "Vos groupes en attente de validation"
                     admins: "Groupes en attente de validation"
+            pending:
+                info:
+                    title: "À propos des groupes en attente"
+                    description: "Ces groupes ne sont pas indexés et n'apparaissent pas dans les résultats de recherche tant qu'ils ne sont pas validés par un administrateur."
         pages:
             title: "Pages"
             empty: "Créer votre première page"

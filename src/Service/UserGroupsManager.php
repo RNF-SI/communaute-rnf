@@ -48,7 +48,7 @@ class UserGroupsManager {
 	}
 
 	public function getGroupsFromType(string $groupType): array{
-		if($groupType=='groups-elements'){
+		if($groupType=='all-groups-container'){
 			$groups = $this->getGroups();
 		} else if ($groupType=='groups-to-activate-elements'){
 			$groups = $this->getGroupsToActivate();
@@ -56,6 +56,28 @@ class UserGroupsManager {
 			$groups = [];
 		}
 		return $groups;
+	}
+
+	public function getImportantGroups(): array {
+		$allGroups = $this->getGroups();
+		$importantGroups = [];
+		foreach ($allGroups as $group) {
+			if ($group->getIsImportant()) {
+				$importantGroups[] = $group;
+			}
+		}
+		return $importantGroups;
+	}
+
+	public function getRegularGroups(): array {
+		$allGroups = $this->getGroups();
+		$regularGroups = [];
+		foreach ($allGroups as $group) {
+			if (!$group->getIsImportant()) {
+				$regularGroups[] = $group;
+			}
+		}
+		return $regularGroups;
 	}
 
 	public function getGroupsFilteredByIds(array $idsList, string $groupType): array{

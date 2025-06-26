@@ -33,8 +33,13 @@
 		<div class="content-container">
 			{% set displayableGroupsToActivate = user_group_relation.getGroupsUserCanAdmin(app.user, groupsToActivate) %}
 			{% if groupsToActivate is defined and displayableGroupsToActivate is not empty %}
-				<section class="groups-list">
-					<p class="small-title">{{ user_group_relation.isCommunityAdmin(app.user) ? 'pages.group.groups.list.pending.admins'|trans : 'pages.group.groups.list.pending.yours'|trans }}</p>
+				<section class="groups-list groups-pending">
+					<p class="small-title">
+						{{ user_group_relation.isCommunityAdmin(app.user) ? 'pages.group.groups.list.pending.admins'|trans : 'pages.group.groups.list.pending.yours'|trans }}
+						<span class="pending-groups-help" data-tooltip="{{ 'pages.group.groups.pending.info.description'|trans|default('Ces groupes ne sont pas indexés et n\'apparaissent pas dans les résultats de recherche tant qu\'ils ne sont pas validés par un administrateur.') }}">
+							<img src="/media/layout/help.svg" alt="?" style="width: 16px; height: 16px; margin-left: 8px; vertical-align: middle;">
+						</span>
+					</p>
 					<ul id="groups-to-activate-elements">
 						{% for groupToActivate in displayableGroupsToActivate %}
 							<li>
@@ -43,19 +48,15 @@
 						{% endfor %}
 					</ul>
 				</section>
+				
+				<hr class="groups-separator" style="margin: 40px 0; border: 0; border-top: 2px solid #e0e0e0;">
 			{% endif %}
 
-			<section class="groups-list">
-				{% if groupsToActivate is defined and displayableGroupsToActivate is not empty %}
-					<p class="small-title">{{ 'pages.group.groups.list.all'|trans }}</p>
-				{% endif %}
-				<ul id="groups-elements">
-					{% for group in groups %}
-						<li>
-							{% include 'contents/group/group--teaser.html.twig' with {'group':group} %}
-						</li>
-					{% endfor %}
-				</ul>
+			<section class="groups-list groups-active">
+				<p class="small-title">{{ 'pages.group.groups.list.active'|trans|default('Groupes actifs') }}</p>
+				<div id="all-groups-container">
+					{% include 'pages/group/groups-list.html.twig' with {'groups': groups} %}
+				</div>
 			</section>
 		</div>
 	</section>

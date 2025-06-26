@@ -60,8 +60,9 @@ class ReindexCommand extends Command {
 			case 'documents':
 				return 'SELECT id, title FROM communaute_rnf_document;';
 			case 'groups':
-				return 'SELECT id, name, description, presentation FROM communaute_rnf_usergroups
-						WHERE is_active<>0;';
+				return 'SELECT id, name, description, presentation, is_important FROM communaute_rnf_usergroups
+						WHERE is_active<>0
+						ORDER BY is_important DESC, id ASC;';
 			case 'members':
 				return 'SELECT id, name, presentation, bio FROM communaute_rnf_users;';
 			default:

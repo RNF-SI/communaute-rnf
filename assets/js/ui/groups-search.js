@@ -9,13 +9,14 @@ domready( () => {
 
 async function searchGroups(e){
 	getGroupHTML('groups-to-activate-elements', e.target.value);
-	getGroupHTML('groups-elements', e.target.value);
+	getGroupHTML('all-groups-container', e.target.value);
 }
 
 async function getGroupHTML(id, text){
 	const groups = document.getElementById( id );
 	if(groups!==null){
-		const newGroupsObject = await fetch("/groups/search?type="+id+"&q="+text)
+		const searchType = id;
+		const newGroupsObject = await fetch("/groups/search?type="+searchType+"&q="+text)
 										.then(response => response.json());
 		groups.innerHTML = newGroupsObject.groups;
 	}

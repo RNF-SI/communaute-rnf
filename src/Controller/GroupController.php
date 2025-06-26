@@ -77,20 +77,47 @@ class GroupController extends AbstractController {
 			$searchEngineManager->setTNTSearchConfiguration();
 			$result = $searchEngineManager->searchGroup($em, $query);
 
+			// Simplifier: toujours utiliser le type passé en paramètre
 			$groupList = $userGroupsManager->getGroupsFilteredByIds($result, $type);
+			
 			$groupList = $searchEngineManager->snippetGroupsText($query, $groupList);
 
-			$groupListHTML = $this->render( 'pages/group/groups-list.html.twig', [
-				'groups' => $groupList,
-			] );
-			$contentGroups = $groupListHTML->getContent();
-			$contentGroups = $searchEngineManager->highlightText($query, $contentGroups);
+			// Pour les groupes en attente, utiliser un template spécialisé
+			if ($type === 'groups-to-activate-elements') {
+				if (empty($groupList)) {
+					$contentGroups = '';
+				} else {
+					$groupListHTML = $this->render( 'pages/group/groups-to-activate-list.html.twig', [
+						'groups' => $groupList,
+					] );
+					$contentGroups = $groupListHTML->getContent();
+					$contentGroups = $searchEngineManager->highlightText($query, $contentGroups);
+				}
+			} else {
+				$groupListHTML = $this->render( 'pages/group/groups-list.html.twig', [
+					'groups' => $groupList,
+				] );
+				$contentGroups = $groupListHTML->getContent();
+				$contentGroups = $searchEngineManager->highlightText($query, $contentGroups);
+			}
 		} else {
 			$groupList = $userGroupsManager->getGroupsFromType($type);
-			$groupListHTML = $this->render( 'pages/group/groups-list.html.twig', [
-				'groups' => $groupList,
-			] );
-			$contentGroups = $groupListHTML->getContent();
+			// Pour les groupes en attente, utiliser un template spécialisé
+			if ($type === 'groups-to-activate-elements') {
+				if (empty($groupList)) {
+					$contentGroups = '';
+				} else {
+					$groupListHTML = $this->render( 'pages/group/groups-to-activate-list.html.twig', [
+						'groups' => $groupList,
+					] );
+					$contentGroups = $groupListHTML->getContent();
+				}
+			} else {
+				$groupListHTML = $this->render( 'pages/group/groups-list.html.twig', [
+					'groups' => $groupList,
+				] );
+				$contentGroups = $groupListHTML->getContent();
+			}
 		}
 
         return $this->json([
@@ -218,27 +245,44 @@ class GroupController extends AbstractController {
 				if ( $communityGroup ) {
 					$communityAdmins = $communityGroup->getMembersByRole( UsergroupMembership::ROLE_ADMIN );
 					$multiple = count( $communityAdmins ) > 1;
+					$emailsSent = 0;
+					$totalAdmins = count( $communityAdmins );
 
 					foreach ( $communityAdmins as $communityAdminMembership ) {
 						$communityAdmin = $communityAdminMembership->getUser();
+						
+						// Vérifier que l'email est valide avant d'envoyer
+						if ($communityAdmin->getEmail() && filter_var($communityAdmin->getEmail(), FILTER_VALIDATE_EMAIL)) {
+							try {
+								$message = $this->renderView(
+									'emails/usergroup-activation.html.twig',
+									[
+										'admin'     => $communityAdmin,
+										'user'      => $user,
+										'usergroup' => $group,
+										'url'       => $this->generateUrl( 'group_index', [ 'groupSlug' => $group->getSlug() ], UrlGeneratorInterface::ABSOLUTE_URL ),
+										'multiple'  => $multiple,
+									]
+								);
 
-						$message = $this->renderView(
-							'emails/usergroup-activation.html.twig',
-							[
-								'admin'     => $communityAdmin,
-								'user'      => $user,
-								'usergroup' => $group,
-								'url'       => $this->generateUrl( 'group_index', [ 'groupSlug' => $group->getSlug() ], UrlGeneratorInterface::ABSOLUTE_URL ),
-								'multiple'  => $multiple,
-							]
-						);
-
-						$mailer->send(
-							[ $this->getParameter( 'plateform' )[ 'from' ] => $this->getParameter( 'plateform' )[ 'name' ] ],
-							$communityAdmin->getEmail(),
-							$mailer->getSubjectFromTitle( $message ),
-							$message
-						);
+								$mailer->send(
+									[ $this->getParameter( 'plateform' )[ 'from' ] => $this->getParameter( 'plateform' )[ 'name' ] ],
+									$communityAdmin->getEmail(),
+									$mailer->getSubjectFromTitle( $message ),
+									$message
+								);
+								$emailsSent++;
+							} catch (\Exception $e) {
+								// Log l'erreur mais continue le processus
+							}
+						}
+					}
+					
+					// Informer l'utilisateur si aucun email n'a pu être envoyé
+					if ($totalAdmins > 0 && $emailsSent == 0) {
+						$this->addFlash('warning', 'Le groupe a été créé mais les administrateurs n\'ont pas pu être notifiés par email.');
+					} elseif ($emailsSent < $totalAdmins) {
+						$this->addFlash('info', 'Le groupe a été créé. Certains administrateurs n\'ont pas pu être notifiés par email.');
 					}
 				}
 			}
@@ -269,7 +313,8 @@ class GroupController extends AbstractController {
 		$doActivate,
 		EntityManagerInterface $manager,
 		UserGroupRelation $userGroupRelation,
-		EmailSender $mailer
+		EmailSender $mailer,
+		SearchEngineManager $searchEngineManager
 	) {
 		if (!$this->isGranted(UserVoter::LOGGED)) {
 			return $this->redirectToRoute('user_login');
@@ -298,28 +343,43 @@ class GroupController extends AbstractController {
 		} else {
 			$group->setIsActive( true );
 			$manager->flush();
+			
+			// Réindexer les groupes pour inclure le nouveau groupe activé
+			try {
+				$searchEngineManager->reindexGroups();
+			} catch (\Exception $e) {
+				$this->addFlash('warning', 'Le groupe a été activé mais l\'index de recherche n\'a pas pu être mis à jour.');
+			}
 		}
 
 		$admins = $group->getMembersByRole( UsergroupMembership::ROLE_ADMIN );
 		foreach ( $admins as $adminMembership ) {
 			$admin = $adminMembership->getUser();
+			
+			// Vérifier que l'email est valide avant d'envoyer
+			if ($admin->getEmail() && filter_var($admin->getEmail(), FILTER_VALIDATE_EMAIL)) {
+				try {
+					$message = $this->renderView(
+						'emails/usergroup-activation_answer.html.twig',
+						[
+							'admin'       => $admin,
+							'usergroup'   => $group,
+							'isActivated' => $doActivate,
+							'url'         => $this->generateUrl( 'group_index', [ 'groupSlug' => $groupSlug ], UrlGeneratorInterface::ABSOLUTE_URL ),
+						]
+					);
 
-			$message = $this->renderView(
-				'emails/usergroup-activation_answer.html.twig',
-				[
-					'admin'       => $admin,
-					'usergroup'   => $group,
-					'isActivated' => $doActivate,
-					'url'         => $this->generateUrl( 'group_index', [ 'groupSlug' => $groupSlug ], UrlGeneratorInterface::ABSOLUTE_URL ),
-				]
-			);
-
-			$mailer->send(
-				[ $this->getParameter( 'plateform' )[ 'from' ] => $this->getParameter( 'plateform' )[ 'name' ] ],
-				$admin->getEmail(),
-				$mailer->getSubjectFromTitle( $message ),
-				$message
-			);
+					$mailer->send(
+						[ $this->getParameter( 'plateform' )[ 'from' ] => $this->getParameter( 'plateform' )[ 'name' ] ],
+						$admin->getEmail(),
+						$mailer->getSubjectFromTitle( $message ),
+						$message
+					);
+				} catch (\Exception $e) {
+					// Log l'erreur mais continue le processus
+					$this->addFlash('warning', 'L\'activation a réussi mais l\'email de notification n\'a pas pu être envoyé à ' . $admin->getName());
+				}
+			}
 		}
 
 		// Log Event

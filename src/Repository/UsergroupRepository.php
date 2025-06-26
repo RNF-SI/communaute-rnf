@@ -46,6 +46,18 @@ class UsergroupRepository extends ServiceEntityRepository {
 
 		$logEventRepository = $this->getEntityManager()->getRepository( LogEvent::class );
 		uasort( $results, function ( $a, $b ) use ( $logEventRepository ) {
+			// Trier d'abord par importance (les groupes importants en premier)
+			$aIsImportant = $a->getIsImportant();
+			$bIsImportant = $b->getIsImportant();
+			
+			if ($aIsImportant && !$bIsImportant) {
+				return -1;
+			}
+			if (!$aIsImportant && $bIsImportant) {
+				return 1;
+			}
+			
+			// Si les deux ont le même statut d'importance, trier par événements de log
 			$aLog = $logEventRepository->findOneBy( [ 'usergroup' => $a ], [ 'createdAt' => 'DESC' ] );
 			$bLog = $logEventRepository->findOneBy( [ 'usergroup' => $b ], [ 'createdAt' => 'DESC' ] );
 

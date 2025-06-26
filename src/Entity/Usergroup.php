@@ -124,6 +124,11 @@ class Usergroup {
 	 */
 	private $isActive;
 
+	/**
+	 * @ORM\Column(type="boolean", options={"default":"0"})
+	 */
+	private $isImportant = false;
+
 	public function __construct () {
 		$this->categories      = new ArrayCollection();
 		$this->members         = new ArrayCollection();
@@ -509,6 +514,16 @@ class Usergroup {
 
 	public function setIsActive ( ?bool $isActive ): self {
 		$this->isActive = $isActive ?? false;
+
+		return $this;
+	}
+
+	public function getIsImportant (): bool {
+		return $this->isImportant;
+	}
+
+	public function setIsImportant ( ?bool $isImportant ): self {
+		$this->isImportant = $isImportant ?? false;
 
 		return $this;
 	}

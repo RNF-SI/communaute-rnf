@@ -1,6 +1,11 @@
 {% set classes = ['group', 'group__teaser', 'group__' ~ group.visibility] %}
 {% set hasCover = (group.cover is defined) and (group.cover is not empty) %}
 <div class="{{ classes|join(' ') }}" {% if not hasCover %}style="--color: {{ group.name|color }}"{% endif %}>
+	{% if group.isImportant %}
+		<div class="group-important-badge" data-tooltip="{{ 'pages.group.is_important'|trans|default('Ce groupe est mis en avant par les administrateurs de la plateforme') }}">
+			<img src="/media/favicon/favicon-32x32.png" alt="RNF">
+		</div>
+	{% endif %}
 	<div class="group-illustration">
 		{% if hasCover %}
 			<img src="{{ group.cover.path | imagine_filter('cover_teaser') }}" alt="">

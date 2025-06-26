@@ -222,6 +222,14 @@ class SearchEngineManager
 		$results = $this->tnt->search($text);
 		return $results['ids'];
 	}
+	
+	public function reindexGroups(): void
+	{
+		$this->setTNTSearchConfiguration();
+		$indexer = $this->tnt->createIndex('groups.index');
+		$indexer->query('SELECT id, name, description, presentation, is_important FROM communaute_rnf_usergroups WHERE is_active<>0 ORDER BY is_important DESC, id ASC;');
+		$indexer->run();
+	}
 
 	public function applyTntStyles(string $text, array $entities, array $propertiestoHightlight, array $propertiestoSnippetAndHightlight): array
 	{

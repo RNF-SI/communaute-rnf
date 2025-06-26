@@ -1,5 +1,13 @@
-{% for group in groups %}
-	<li>
-		{% include 'contents/group/group--teaser.html.twig' with {'group':group} %}
-	</li>
-{% endfor %}
+{% if groups is not empty %}
+	<section class="groups-list">
+		<ul>
+			{% for group in groups %}
+				<li>
+					{% include 'contents/group/group--teaser.html.twig' with {'group':group} %}
+				</li>
+			{% endfor %}
+		</ul>
+	</section>
+{% else %}
+	<p>{{ 'pages.group.groups.no_results'|trans|default('Aucun groupe trouvé') }}</p>
+{% endif %}
