@@ -1,0 +1,53 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'pages.group.subgroups.title'|trans }} - {{ group.name }} | {{ plateform.name }}{% endblock %}
+
+{% block main %}
+	<section class="main main__subgroups-index">
+		<div class="main--content content-container">
+			{% include 'components/app-flashes.html.twig' %}
+
+			<div class="panel">
+				<h1 class="h1">{{ 'pages.group.subgroups.title'|trans }}</h1>
+				<p class="subtitle">{{ 'pages.group.subgroups.subtitle'|trans({'%group_name%': group.name})|default('Tous les sous-groupes de ' ~ group.name) }}</p>
+			</div>
+
+			{% include 'components/breadcrumb.html.twig' with {'items':[
+				{
+					label: 'pages.group.groups.title'|trans,
+					href: path('groups_index')
+				},
+				{
+					label: group.name,
+					href: path('group_index', {'groupSlug':group.slug})
+				},
+				{
+					label: 'pages.group.subgroups.title'|trans,
+				}
+			]} %}
+
+			{% if group.children is not empty %}
+				<section class="groups-list">
+					<ul>
+						{% for subgroup in group.children %}
+							<li>
+								{% include 'contents/group/group--teaser.html.twig' with {'group':subgroup} %}
+							</li>
+						{% endfor %}
+					</ul>
+				</section>
+			{% else %}
+				<section class="empty-state narrow">
+					<div class="empty-state__content">
+						<p>{{ 'pages.group.subgroups.empty'|trans({'%group_name%': group.name})|default('Ce groupe n\'a pas encore de sous-groupes.') }}</p>
+						{% if user_group_relation.isCommunityAdmin(app.user) %}
+							<p>
+								<a class="cta" href="{{ path('group_edit', {'groupSlug':group.slug}) }}">{{ 'pages.group.subgroups.manage'|trans|default('Gérer les sous-groupes') }}</a>
+							</p>
+						{% endif %}
+					</div>
+				</section>
+			{% endif %}
+		</div>
+	</section>
+{% endblock %}

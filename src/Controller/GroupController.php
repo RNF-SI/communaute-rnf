@@ -531,6 +531,34 @@ class GroupController extends AbstractController {
 	}
 
 	/**
+	 * @Route("/groups/{groupSlug}/sous-groupes", name="group_subgroups_index")
+	 * @param                                            $groupSlug
+	 * @param \Doctrine\ORM\EntityManagerInterface       $manager
+	 *
+	 * @return \Symfony\Component\HttpFoundation\Response
+	 */
+	public function groupSubgroupsIndex (
+			$groupSlug,
+			EntityManagerInterface $manager
+	) {
+		/**
+		 * @var \App\Entity\Usergroup $group
+		 */
+		$group = $manager->getRepository( Usergroup::class )
+						 ->findOneBy( [ 'slug' => $groupSlug ] );
+
+		if ( !$group ) {
+			throw $this->createNotFoundException( 'The group does not exist' );
+		}
+
+		$this->denyAccessUnlessGranted( GroupVoter::READ, $group );
+
+		return $this->render( 'pages/group/group-subgroups-index.html.twig', [
+				'group' => $group,
+		] );
+	}
+
+	/**
 	 * @Route("/groups/{groupSlug}", name="group_index")
 	 *
 	 * @param                                            $groupSlug

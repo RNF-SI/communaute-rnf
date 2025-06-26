@@ -405,6 +405,9 @@ pages:
             title: "Activités"
         subgroups:
             title: "Sous-groupes"
+            subtitle: "Tous les sous-groupes de %group_name%"
+            empty: "Ce groupe n'a pas encore de sous-groupes."
+            manage: "Gérer les sous-groupes"
 
     page:
         list:
