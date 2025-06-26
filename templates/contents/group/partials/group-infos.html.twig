@@ -10,6 +10,17 @@
 
 		<h1 class="h1 group-name">{{ group.name }}</h1>
 
+		{% if group.parents is defined and group.parents|length > 0 %}
+			<div class="group-parents">
+				<p class="small-text">
+					<strong>{{ group.parents|length == 1 ? 'Groupe parent :' : 'Groupes parents :' }}</strong>
+					{% for parent in group.parents %}
+						<a href="{{ path('group_index', {'groupSlug': parent.slug}) }}" class="group-parent-link">{{ parent.name }}</a>{% if not loop.last %}, {% endif %}
+					{% endfor %}
+				</p>
+			</div>
+		{% endif %}
+
 		<p class="group-status">
 			<span class="group-visibility group-visibility__{{ group.visibility }}"><span>{{ ('pages.group.status.' ~ group.visibility)|trans }}</span></span>
 			<span class="group-date">{{ 'pages.group.status.created_at'|trans|format(group.createdAt|localizeddate('long', 'none', app.request.locale)) }}</span>

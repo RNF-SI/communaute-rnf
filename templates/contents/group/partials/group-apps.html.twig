@@ -121,4 +121,25 @@
 		</div>
 	</div>
 
+	{% if group.children is defined and group.children|length > 0 %}
+		<div class="group-app group-app__subgroups">
+			<h2 class="h4">
+				{{ 'pages.group.subgroups.title'|trans|default('Sous-groupes') }}
+				<span class="count">{{ group.children|length }}</span>
+			</h2>
+			<ul class="items-list">
+				{% for subgroup in group.children|slice(0, 5) %}
+					<li>
+						{% include 'contents/group/group--in-items-list.html.twig' with {'group':subgroup} %}
+					</li>
+				{% endfor %}
+			</ul>
+			{% if group.children|length > 5 %}
+				<div class="see-all">
+					<span>{{ 'ui.see_all'|trans }}</span>
+				</div>
+			{% endif %}
+		</div>
+	{% endif %}
+
 </div>

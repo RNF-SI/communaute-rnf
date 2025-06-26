@@ -207,6 +207,65 @@
 }
 
 /**************************************************
+* GROUP HIERARCHY
+**************************************************/
+
+.group-parents {
+	margin-bottom: 1rem;
+	
+	.small-text {
+		font-size: 0.9rem;
+		color: $color_grey_medium;
+		margin-bottom: 0.5rem;
+	}
+	
+	.group-parent-link {
+		color: $color_action;
+		text-decoration: none;
+		font-weight: 500;
+		
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+}
+
+.form-row__hierarchy {
+	.hint {
+		font-style: italic;
+		color: $color_grey_medium;
+		font-size: 0.9rem;
+		margin-bottom: 1rem;
+	}
+	
+	.form-row__checkboxes {
+		max-height: 300px;
+		overflow-y: auto;
+		border: 1px solid #ddd;
+		border-radius: 4px;
+		padding: 10px;
+		background-color: #fafafa;
+		
+		input[type="checkbox"] {
+			margin-right: 8px;
+		}
+		
+		label {
+			display: block;
+			margin-bottom: 8px;
+			font-weight: normal;
+			cursor: pointer;
+			
+			&:hover {
+				background-color: #f0f0f0;
+				padding: 2px 4px;
+				border-radius: 2px;
+			}
+		}
+	}
+}
+
+/**************************************************
 * GROUP TEASER
 **************************************************/
 

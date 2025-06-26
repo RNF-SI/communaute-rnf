@@ -53,6 +53,28 @@
 		<div class="hint">{{ 'forms.group.presentation.hint'|trans }}</div>
 		{{ form_widget(form.presentation, {'attr': {'placeholder': 'forms.group.presentation.placeholder'}}) }}
 	</div>
+	
+	{% if form.parents is defined %}
+		<div class="form-row form-row__hierarchy">
+			{{ form_label(form.parents, 'forms.group.parents.label') }}
+			<div class="hint">{{ 'forms.group.parents.hint'|trans }}</div>
+			<div class="form-row__checkboxes checkboxes-autocomplete">
+				{{ form_widget(form.parents) }}
+			</div>
+			<div class="form_errors">{{ form_errors(form.parents) }}</div>
+		</div>
+	{% endif %}
+	
+	{% if form.children is defined %}
+		<div class="form-row form-row__hierarchy">
+			{{ form_label(form.children, 'forms.group.children.label') }}
+			<div class="hint">{{ 'forms.group.children.hint'|trans }}</div>
+			<div class="form-row__checkboxes checkboxes-autocomplete">
+				{{ form_widget(form.children) }}
+			</div>
+			<div class="form_errors">{{ form_errors(form.children) }}</div>
+		</div>
+	{% endif %}
 </div>
 <div class="form-row form-row__submit">
 	{{ form_widget(form.submit, {'label': form_submit}) }}

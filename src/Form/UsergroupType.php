@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\Usergroup;
 use App\Service\FileManager;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
@@ -13,17 +14,25 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\File;
+use Symfony\Component\Security\Core\Security;
+use App\Service\UserGroupRelation;
 
 class UsergroupType extends AbstractType {
 	private $fileManager;
+	private $security;
+	private $userGroupRelation;
 
 	/**
 	 * DocumentType constructor.
 	 *
 	 * @param \App\Service\FileManager $fileManager
+	 * @param \Symfony\Component\Security\Core\Security $security
+	 * @param \App\Service\UserGroupRelation $userGroupRelation
 	 */
-	public function __construct ( FileManager $fileManager ) {
+	public function __construct ( FileManager $fileManager, Security $security, UserGroupRelation $userGroupRelation ) {
 		$this->fileManager = $fileManager;
+		$this->security = $security;
+		$this->userGroupRelation = $userGroupRelation;
 	}
 
 	/**
@@ -77,8 +86,67 @@ class UsergroupType extends AbstractType {
 								'pages.group.status.' . Usergroup::PUBLIC  => Usergroup::PUBLIC,
 								'pages.group.status.' . Usergroup::PRIVATE => Usergroup::PRIVATE,
 						],
+				] );
+
+		// Ajouter les champs de hiérarchie uniquement pour les administrateurs de la communauté
+		$user = $this->security->getUser();
+		if ( $user && $this->userGroupRelation->isCommunityAdmin( $user ) ) {
+			$currentGroup = $options['data'] ?? null;
+			
+			$builder
+				->add( 'parents', EntityType::class, [
+					'class'        => Usergroup::class,
+					'choice_label' => 'name',
+					'multiple'     => true,
+					'expanded'     => true,  // Utiliser des cases à cocher comme dans la page admin
+					'required'     => false,
+					'query_builder' => function ( $repository ) use ( $currentGroup ) {
+						$qb = $repository->createQueryBuilder( 'g' )
+								->where( 'g.isActive = :active' )
+								->setParameter( 'active', true )
+								->orderBy( 'g.name', 'ASC' );
+						
+						// Exclure le groupe actuel pour éviter l'auto-référence
+						if ( $currentGroup && $currentGroup->getId() ) {
+							$qb->andWhere( 'g.id != :currentGroup' )
+							   ->setParameter( 'currentGroup', $currentGroup->getId() );
+						}
+						
+						return $qb;
+					},
+					'attr' => [
+						'class' => 'form-checkboxes-list',
+						'data-help' => 'Sélectionnez les groupes parents de ce groupe'
+					]
 				] )
-				->add( 'submit', SubmitType::class );
+				->add( 'children', EntityType::class, [
+					'class'        => Usergroup::class,
+					'choice_label' => 'name',
+					'multiple'     => true,
+					'expanded'     => true,  // Utiliser des cases à cocher comme dans la page admin
+					'required'     => false,
+					'query_builder' => function ( $repository ) use ( $currentGroup ) {
+						$qb = $repository->createQueryBuilder( 'g' )
+								->where( 'g.isActive = :active' )
+								->setParameter( 'active', true )
+								->orderBy( 'g.name', 'ASC' );
+						
+						// Exclure le groupe actuel pour éviter l'auto-référence
+						if ( $currentGroup && $currentGroup->getId() ) {
+							$qb->andWhere( 'g.id != :currentGroup' )
+							   ->setParameter( 'currentGroup', $currentGroup->getId() );
+						}
+						
+						return $qb;
+					},
+					'attr' => [
+						'class' => 'form-checkboxes-list',
+						'data-help' => 'Sélectionnez les sous-groupes de ce groupe'
+					]
+				] );
+		}
+
+		$builder->add( 'submit', SubmitType::class );
 	}
 
 	/**

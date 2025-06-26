@@ -175,6 +175,9 @@ class GroupController extends AbstractController {
 			$group->setCreatedAt( new DateTime() );
 			$group->setIsActive( $doActivate );
 
+			// Gérer les relations hiérarchiques
+			$this->handleHierarchyRelations( $group, $manager );
+
 			$manager->persist( $group );
 
 			$membership = new UsergroupMembership();
@@ -444,6 +447,9 @@ class GroupController extends AbstractController {
 				$modifications[] = 'name';
 			}
 
+			// Gérer les relations hiérarchiques
+			$this->handleHierarchyRelations( $group, $manager );
+
 			if ( $original->getDescription() !== $group->getDescription() ) {
 				$modifications[] = 'description';
 			}
@@ -653,5 +659,66 @@ class GroupController extends AbstractController {
 		return $this->render( 'pages/confirm.html.twig', [
 				'form' => $form->createView(),
 		] );
+	}
+
+	/**
+	 * Gère les relations hiérarchiques parent/enfant d'un groupe
+	 */
+	private function handleHierarchyRelations( Usergroup $group, EntityManagerInterface $manager ): void {
+		// Vérifier les permissions - seuls les administrateurs communauté peuvent modifier la hiérarchie
+		// Cette vérification est déjà faite dans le formulaire, mais on la garde pour sécurité
+
+		// IMPORTANT: Pour les relations ManyToMany avec Symfony Forms,
+		// nous devons gérer manuellement les enfants car le formulaire 
+		// met à jour seulement l'inverse side qui n'est pas persistée par Doctrine
+		
+		// Récupérer les enfants depuis le formulaire
+		$formChildren = $group->getChildren()->toArray();
+		
+		// Pour chaque enfant, s'assurer que la relation est bien établie côté owning side
+		foreach ( $formChildren as $child ) {
+			// Vérifier les boucles circulaires
+			if ( $child->wouldCreateCircularReference( $group ) ) {
+				$this->addFlash( 'error', 'Relation circulaire détectée avec le groupe enfant "' . $child->getName() . '". Cette relation n\'a pas été créée.' );
+				continue;
+			}
+			
+			// Ajouter ce groupe comme parent de l'enfant (owning side)
+			if ( !$child->getParents()->contains( $group ) ) {
+				$child->addParent( $group );
+				$manager->persist( $child );
+			}
+		}
+		
+		// Gérer les enfants qui ont été retirés (seulement pour les groupes existants)
+		if ( $group->getId() ) {
+			// Récupérer tous les groupes qui ont ce groupe comme parent
+			$existingChildren = $manager->getRepository( Usergroup::class )
+				->createQueryBuilder( 'g' )
+				->join( 'g.parents', 'p' )
+				->where( 'p.id = :parentId' )
+				->setParameter( 'parentId', $group->getId() )
+				->getQuery()
+				->getResult();
+				
+			foreach ( $existingChildren as $existingChild ) {
+				if ( !$group->getChildren()->contains( $existingChild ) ) {
+					// Cet enfant a été retiré dans le formulaire
+					$existingChild->removeParent( $group );
+					$manager->persist( $existingChild );
+				}
+			}
+		}
+
+		// Validation des boucles circulaires pour les nouveaux parents
+		foreach ( $group->getParents() as $parent ) {
+			if ( $group->wouldCreateCircularReference( $parent ) ) {
+				$this->addFlash( 'error', 'Relation circulaire détectée avec le groupe parent "' . $parent->getName() . '". Cette relation n\'a pas été créée.' );
+				$group->removeParent( $parent );
+			}
+		}
+
+		// Persister le groupe principal
+		$manager->persist( $group );
 	}
 }

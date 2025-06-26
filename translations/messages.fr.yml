@@ -128,6 +128,12 @@ forms:
             label: "Présentation"
             hint: "Présentez votre groupe. La présentation sera affichée sur la page du groupe."
             placeholder: "Présentation du groupe, ses objectifs…"
+        parents:
+            label: "Groupes parents"
+            hint: "Sélectionnez les groupes parents de ce groupe (visible aux administrateurs uniquement)"
+        children:
+            label: "Sous-groupes"
+            hint: "Sélectionnez les sous-groupes de ce groupe (visible aux administrateurs uniquement)"
 
     page:
         cover:
@@ -397,6 +403,8 @@ pages:
             title: "Bannis"
         events:
             title: "Activités"
+        subgroups:
+            title: "Sous-groupes"
 
     page:
         list:

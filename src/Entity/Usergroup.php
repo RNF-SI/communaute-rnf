@@ -129,6 +129,20 @@ class Usergroup {
 	 */
 	private $isImportant = false;
 
+	/**
+	 * @ORM\ManyToMany(targetEntity="App\Entity\Usergroup", inversedBy="children")
+	 * @ORM\JoinTable(name="usergroup_hierarchy",
+	 *      joinColumns={@ORM\JoinColumn(name="child_id", referencedColumnName="id")},
+	 *      inverseJoinColumns={@ORM\JoinColumn(name="parent_id", referencedColumnName="id")}
+	 * )
+	 */
+	private $parents;
+
+	/**
+	 * @ORM\ManyToMany(targetEntity="App\Entity\Usergroup", mappedBy="parents")
+	 */
+	private $children;
+
 	public function __construct () {
 		$this->categories      = new ArrayCollection();
 		$this->members         = new ArrayCollection();
@@ -139,6 +153,8 @@ class Usergroup {
 		$this->logEvents       = new ArrayCollection();
 		$this->documentFolders = new ArrayCollection();
 		$this->discussions     = new ArrayCollection();
+		$this->parents         = new ArrayCollection();
+		$this->children        = new ArrayCollection();
 	}
 
 	public function getId (): ?int {
@@ -526,5 +542,82 @@ class Usergroup {
 		$this->isImportant = $isImportant ?? false;
 
 		return $this;
+	}
+
+	/**
+	 * @return Collection|Usergroup[]
+	 */
+	public function getParents (): Collection {
+		return $this->parents;
+	}
+
+	public function addParent ( Usergroup $parent ): self {
+		if ( !$this->parents->contains( $parent ) ) {
+			$this->parents[] = $parent;
+			// Pas besoin d'appeler addChild ici car la relation est bidirectionnelle
+			// et Doctrine gère automatiquement l'inverse side
+		}
+
+		return $this;
+	}
+
+	public function removeParent ( Usergroup $parent ): self {
+		if ( $this->parents->contains( $parent ) ) {
+			$this->parents->removeElement( $parent );
+			// Pas besoin d'appeler removeChild ici car la relation est bidirectionnelle
+		}
+
+		return $this;
+	}
+
+	/**
+	 * @return Collection|Usergroup[]
+	 */
+	public function getChildren (): Collection {
+		return $this->children;
+	}
+
+	public function addChild ( Usergroup $child ): self {
+		// Pour les relations ManyToMany, on doit modifier l'owning side (parents)
+		if ( !$child->getParents()->contains( $this ) ) {
+			$child->addParent( $this );
+		}
+
+		return $this;
+	}
+
+	public function removeChild ( Usergroup $child ): self {
+		// Pour les relations ManyToMany, on doit modifier l'owning side (parents)
+		if ( $child->getParents()->contains( $this ) ) {
+			$child->removeParent( $this );
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Vérifie s'il y aurait une boucle circulaire si on ajoute ce parent
+	 */
+	public function wouldCreateCircularReference ( Usergroup $potentialParent ): bool {
+		// Si le potentiel parent est ce groupe même, c'est circulaire
+		if ( $potentialParent === $this ) {
+			return true;
+		}
+
+		// Si le potentiel parent a ce groupe comme parent (directement ou indirectement), c'est circulaire
+		return $this->isAncestorOf( $potentialParent );
+	}
+
+	/**
+	 * Vérifie si ce groupe est un ancêtre du groupe donné
+	 */
+	private function isAncestorOf ( Usergroup $group ): bool {
+		foreach ( $group->getParents() as $parent ) {
+			if ( $parent === $this || $this->isAncestorOf( $parent ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }
