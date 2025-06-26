@@ -205,6 +205,11 @@ class User implements UserInterface, JsonSerializable {
 	 */
 	private $rnfRoleInfo = [];
 
+	/**
+	 * @ORM\Column(type="boolean", options={"default":"0"})
+	 */
+	private $firstLoginNotified = false;
+
 	public function __construct () {
 		$this->usergroupMemberships = new ArrayCollection();
 		$this->skills               = new ArrayCollection();
@@ -641,6 +646,17 @@ class User implements UserInterface, JsonSerializable {
 	public function setRnfRoleInfo(?array $rnfRoleInfo): self
 	{
 		$this->rnfRoleInfo = $rnfRoleInfo ?? [];
+		return $this;
+	}
+
+	public function getFirstLoginNotified(): bool
+	{
+		return $this->firstLoginNotified ?? false;
+	}
+
+	public function setFirstLoginNotified(bool $firstLoginNotified): self
+	{
+		$this->firstLoginNotified = $firstLoginNotified;
 		return $this;
 	}
 
