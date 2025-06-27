@@ -147,13 +147,14 @@ Create the tables:
 php bin/console doctrine:migrations:migrate
 ```
 
-Create the file containing administrators informations:
+Initialize platform configuration:
 
 ```bash
-test ! -f config/platform/config.yaml && cp config/platform/default.config.yaml config/platform/config.yaml || true
-
+# Copier la configuration par défaut (OBLIGATOIRE pour le déploiement)
 cp config/platform/default.config.yaml config/platform/config.yaml
 ```
+
+**Note importante** : Cette étape est **obligatoire** lors du déploiement en production. Le fichier `config.yaml` contient la configuration des menus et autres paramètres de la plateforme.
 
 ### Installation Frontend
 
