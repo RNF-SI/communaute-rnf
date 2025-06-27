@@ -296,6 +296,8 @@ class GroupController extends AbstractController {
 		return $this->render( 'pages/group/group-create.html.twig', [
 				'group' => $group,
 				'form'  => $form->createView(),
+				'form_submit' => 'pages.group.group_create.button',
+				'delete' => false
 		] );
 	}
 
