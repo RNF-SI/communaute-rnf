@@ -97,12 +97,12 @@ class GroupsVisualization {
     
     getNodeColor(d) {
         if (d.isImportant) {
-            return '#DC8063'; // Copper Crayola pour les groupes importants
+            return '#0B885D'; // Sea Green (couleur primaire RNF) pour les groupes importants
         }
         
         switch (d.visibility) {
             case 'public':
-                return '#0B885D'; // Sea Green (couleur primaire)
+                return '#C8D469'; // Straw (couleur secondaire)
             case 'open':
                 return '#31B7BC'; // Maximum Blue Green
             case 'moderate':
@@ -115,9 +115,11 @@ class GroupsVisualization {
     }
     
     render() {
+        // Create defs section for reusable elements
+        const defs = this.svg.append('defs');
+        
         // Define arrow markers for parent-child relationships
-        this.svg.append('defs')
-            .append('marker')
+        defs.append('marker')
             .attr('id', 'arrowhead')
             .attr('viewBox', '-0 -5 10 10')
             .attr('refX', 13)
@@ -130,6 +132,26 @@ class GroupsVisualization {
             .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
             .attr('fill', '#8E8F94')
             .style('stroke', 'none');
+
+        // Create image patterns for nodes with logos
+        this.nodes.forEach(d => {
+            if (d.logoUrl) {
+                const patternId = `image-pattern-${d.id}`;
+                const pattern = defs.append('pattern')
+                    .attr('id', patternId)
+                    .attr('patternUnits', 'objectBoundingBox')
+                    .attr('width', 1)
+                    .attr('height', 1);
+                
+                pattern.append('image')
+                    .attr('href', d.logoUrl)
+                    .attr('width', this.getNodeRadius(d) * 2)
+                    .attr('height', this.getNodeRadius(d) * 2)
+                    .attr('x', 0)
+                    .attr('y', 0)
+                    .attr('preserveAspectRatio', 'xMidYMid slice');
+            }
+        });
 
         // Render links
         const link = this.linksGroup
@@ -155,22 +177,27 @@ class GroupsVisualization {
         // Add circles for nodes
         node.append('circle')
             .attr('r', d => this.getNodeRadius(d))
-            .attr('fill', d => this.getNodeColor(d))
-            .attr('stroke', '#fff')
-            .attr('stroke-width', 2);
+            .attr('fill', d => {
+                if (d.logoUrl) {
+                    return `url(#image-pattern-${d.id})`;
+                }
+                return this.getNodeColor(d);
+            })
+            .attr('stroke', d => d.isImportant ? '#0B885D' : '#fff')
+            .attr('stroke-width', d => d.isImportant ? 4 : 2);
         
         // Add labels with text wrapping
         const labels = node.append('text')
             .attr('text-anchor', 'middle')
             .attr('font-size', d => Math.max(9, this.getNodeRadius(d) / 5))
             .attr('font-weight', d => d.isImportant ? 'bold' : 'bold')
-            .attr('fill', '#fff')
-            .attr('stroke', 'rgba(0,0,0,0.7)')
-            .attr('stroke-width', 0.8)
+            .attr('fill', d => d.logoUrl ? '#fff' : '#fff')
+            .attr('stroke', d => d.logoUrl ? 'rgba(0,0,0,0.9)' : 'rgba(0,0,0,0.7)')
+            .attr('stroke-width', d => d.logoUrl ? 1.2 : 0.8)
             .attr('stroke-linejoin', 'round')
             .attr('stroke-linecap', 'round')
             .attr('paint-order', 'stroke fill')
-            .style('text-shadow', '1px 1px 1px rgba(0,0,0,0.5)')
+            .style('text-shadow', d => d.logoUrl ? '2px 2px 2px rgba(0,0,0,0.8)' : '1px 1px 1px rgba(0,0,0,0.5)')
             .attr('pointer-events', 'none');
 
         labels.each(function(d) {
@@ -202,6 +229,25 @@ class GroupsVisualization {
             const totalLines = text.selectAll('tspan').size();
             text.attr('dy', `${-((totalLines - 1) * lineHeight) / 2}em`);
         });
+
+        // Add importance badges for important groups
+        node.filter(d => d.isImportant)
+            .append('circle')
+            .attr('r', 12)
+            .attr('cx', d => this.getNodeRadius(d) * 0.7)
+            .attr('cy', d => -this.getNodeRadius(d) * 0.7)
+            .attr('fill', '#fff')
+            .attr('stroke', '#0B885D')
+            .attr('stroke-width', 2);
+
+        node.filter(d => d.isImportant)
+            .append('image')
+            .attr('href', '/media/favicon/favicon-32x32.png')
+            .attr('x', d => this.getNodeRadius(d) * 0.7 - 8)
+            .attr('y', d => -this.getNodeRadius(d) * 0.7 - 8)
+            .attr('width', 16)
+            .attr('height', 16)
+            .attr('pointer-events', 'none');
         
         // Add tooltips
         node
@@ -364,6 +410,9 @@ class GroupsVisualization {
         // Remove existing elements
         this.nodesGroup.selectAll('*').remove();
         this.linksGroup.selectAll('*').remove();
+        
+        // Clear existing patterns from defs
+        this.svg.select('defs').selectAll('pattern').remove();
         
         // Recreate simulation with filtered data
         this.createSimulation();

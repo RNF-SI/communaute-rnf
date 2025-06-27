@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Usergroup;
 use App\Security\UserVoter;
 use Doctrine\ORM\EntityManagerInterface;
+use Liip\ImagineBundle\Imagine\Cache\CacheManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,7 +28,7 @@ class GroupVisualizationController extends AbstractController
     /**
      * @Route("/api/groups/graph-data", name="groups_graph_data", methods={"GET"})
      */
-    public function getGraphData(EntityManagerInterface $manager): JsonResponse
+    public function getGraphData(EntityManagerInterface $manager, CacheManager $imagineCacheManager): JsonResponse
     {
         try {
             $this->denyAccessUnlessGranted(UserVoter::LOGGED);
@@ -48,6 +49,17 @@ class GroupVisualizationController extends AbstractController
                 $nodeId = 'group_' . $group->getId();
                 $nodeMap[$group->getId()] = $nodeId;
 
+                // Get logo URL if available
+                $logoUrl = null;
+                if ($group->getLogo() && $group->getLogo()->getPath()) {
+                    try {
+                        $logoUrl = $imagineCacheManager->getBrowserPath($group->getLogo()->getPath(), 'logo');
+                    } catch (\Exception $e) {
+                        // Fallback if imagine filter fails
+                        $logoUrl = '/uploads/' . $group->getLogo()->getPath();
+                    }
+                }
+
                 $nodes[] = [
                     'id' => $nodeId,
                     'name' => $group->getName(),
@@ -56,7 +68,8 @@ class GroupVisualizationController extends AbstractController
                     'isImportant' => $group->getIsImportant() ?? false,
                     'memberCount' => count($group->getMembers()),
                     'visibility' => $group->getVisibility(),
-                    'url' => $this->generateUrl('group_index', ['groupSlug' => $group->getSlug()])
+                    'url' => $this->generateUrl('group_index', ['groupSlug' => $group->getSlug()]),
+                    'logoUrl' => $logoUrl
                 ];
             }
 
