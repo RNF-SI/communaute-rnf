@@ -1,0 +1,258 @@
+// Groups Visualization Styles
+
+// Toggle controls for groups page
+.groups-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+
+    .small-title {
+        margin: 0;
+    }
+
+    .groups-view-toggle {
+        display: flex;
+        gap: 0;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        overflow: hidden;
+
+        .view-toggle-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #fff;
+            border: none;
+            color: #6c757d;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background: #f8f9fa;
+                color: #495057;
+            }
+
+            &.active {
+                background: #007bff;
+                color: white;
+            }
+
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+    }
+}
+
+.groups-view {
+    width: 100%;
+}
+
+.groups-visualization {
+    .graph-bottom-controls {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 1rem 0;
+        padding: 0 1rem;
+
+        .btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+    }
+    
+    .legend {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        margin-top: 1rem;
+        text-align: center;
+
+        h3 {
+            margin: 0 0 1rem 0;
+            font-size: 1rem;
+            color: #495057;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            margin: 0 1rem 0.5rem 0;
+            font-size: 0.875rem;
+
+            &:last-child {
+                margin-right: 0;
+            }
+
+            .legend-circle {
+                width: 16px;
+                height: 16px;
+                border-radius: 50%;
+                margin-right: 0.5rem;
+                border: 2px solid #fff;
+
+                &--important {
+                    background-color: #DC8063;
+                }
+
+                &--normal {
+                    background-color: #0B885D;
+                }
+            }
+
+            .legend-line {
+                width: 20px;
+                height: 2px;
+                background-color: #8E8F94;
+                margin-right: 0.5rem;
+                opacity: 0.6;
+            }
+        }
+    }
+
+    .groups-graph {
+        position: relative;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        background: #fff;
+        overflow: hidden;
+        min-height: 600px;
+
+        .loading {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 400px;
+            color: #6c757d;
+
+            .spinner {
+                width: 40px;
+                height: 40px;
+                border: 4px solid #f3f3f3;
+                border-top: 4px solid #3498db;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin-bottom: 1rem;
+            }
+
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        }
+
+        svg {
+            cursor: grab;
+
+            &:active {
+                cursor: grabbing;
+            }
+        }
+
+        .node {
+            cursor: pointer;
+            transition: all 0.3s ease;
+
+            &:hover circle {
+                stroke-width: 3;
+                filter: brightness(1.1);
+            }
+
+            text {
+                user-select: none;
+                text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+            }
+        }
+
+        .link {
+            transition: all 0.3s ease;
+
+            &:hover {
+                stroke-width: 3;
+                stroke-opacity: 0.8;
+            }
+        }
+    }
+
+    .node-tooltip {
+        position: absolute;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 1rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        max-width: 250px;
+        z-index: 1000;
+        pointer-events: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+        .tooltip-title {
+            margin: 0 0 0.5rem 0;
+            font-weight: bold;
+            font-size: 1rem;
+            color: #fff;
+        }
+
+        .tooltip-description {
+            margin: 0 0 0.5rem 0;
+            color: #ccc;
+            line-height: 1.4;
+        }
+
+        .tooltip-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+
+    }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+    .groups-visualization {
+        .graph-bottom-controls {
+            margin: 0.5rem 0;
+        }
+        
+        .legend {
+            .legend-item {
+                display: flex;
+                justify-content: center;
+                margin: 0 0 0.5rem 0;
+                
+                &:last-child {
+                    margin-bottom: 0;
+                }
+            }
+        }
+
+        .groups-graph {
+            min-height: 400px;
+
+            svg {
+                width: 100%;
+                height: auto;
+            }
+        }
+
+        .node-tooltip {
+            max-width: 200px;
+            font-size: 0.8rem;
+        }
+    }
+}

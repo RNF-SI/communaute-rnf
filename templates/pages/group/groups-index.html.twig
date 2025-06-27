@@ -26,11 +26,6 @@
 			</div>
 		</div>
 		<div class="content-container">
-			<div class="group-search-bar">
-				{{ form_widget(form.groups_search_bar, {'attr': {'placeholder': 'Rechercher'}}) }}
-			</div>
-		</div>
-		<div class="content-container">
 			{% set displayableGroupsToActivate = user_group_relation.getGroupsUserCanAdmin(app.user, groupsToActivate) %}
 			{% if groupsToActivate is defined and displayableGroupsToActivate is not empty %}
 				<section class="groups-list groups-pending">
@@ -53,11 +48,127 @@
 			{% endif %}
 
 			<section class="groups-list groups-active">
-				<p class="small-title">{{ 'pages.group.groups.list.active'|trans|default('Groupes actifs') }}</p>
-				<div id="all-groups-container">
-					{% include 'pages/group/groups-list.html.twig' with {'groups': groups} %}
+				<div class="groups-header">
+					<p class="small-title">{{ 'pages.group.groups.list.active'|trans|default('Groupes actifs') }}</p>
+					<div class="groups-view-toggle">
+						<button id="list-view-btn" class="view-toggle-btn active">
+							<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+								<path d="M2 4h12v1H2V4zm0 3h12v1H2V7zm0 3h12v1H2v-1z"/>
+							</svg>
+							Liste
+						</button>
+						<button id="graph-view-btn" class="view-toggle-btn">
+							<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+								<circle cx="3" cy="3" r="2"/>
+								<circle cx="13" cy="3" r="2"/>
+								<circle cx="8" cy="13" r="2"/>
+								<line x1="5" y1="3" x2="11" y2="3" stroke="currentColor" stroke-width="1"/>
+								<line x1="3" y1="5" x2="6" y2="11" stroke="currentColor" stroke-width="1"/>
+								<line x1="13" y1="5" x2="10" y2="11" stroke="currentColor" stroke-width="1"/>
+							</svg>
+							Graphique
+						</button>
+					</div>
+				</div>
+				
+				<div id="search-container" class="group-search-bar">
+					{{ form_widget(form.groups_search_bar, {'attr': {'placeholder': 'Rechercher'}}) }}
+				</div>
+				
+				<div id="list-view" class="groups-view">
+					<div id="all-groups-container">
+						{% include 'pages/group/groups-list.html.twig' with {'groups': groups} %}
+					</div>
+				</div>
+				
+				<div id="graph-view" class="groups-view" style="display: none;">
+					<div class="groups-visualization">
+						<div id="groups-graph" class="groups-graph">
+							<div class="loading">
+								<div class="spinner"></div>
+								<p>Chargement de la visualisation...</p>
+							</div>
+						</div>
+						
+						<div class="graph-bottom-controls">
+							<button id="center-graph" class="btn btn--secondary">Centrer le graphique</button>
+						</div>
+						
+						<div class="legend">
+							<h3>Légende</h3>
+							<div class="legend-item">
+								<div class="legend-circle legend-circle--important"></div>
+								<span>Groupes importants</span>
+							</div>
+							<div class="legend-item">
+								<div class="legend-circle legend-circle--normal"></div>
+								<span>Groupes standard</span>
+							</div>
+							<div class="legend-item">
+								<div class="legend-line"></div>
+								<span>Relations parent-enfant</span>
+							</div>
+						</div>
+						
+						<div id="node-tooltip" class="node-tooltip" style="display: none;">
+							<h4 class="tooltip-title"></h4>
+							<p class="tooltip-description"></p>
+							<div class="tooltip-stats">
+								<span class="member-count"></span>
+								<span class="visibility"></span>
+							</div>
+						</div>
+					</div>
 				</div>
 			</section>
 		</div>
 	</section>
+{% endblock %}
+
+{% block stylesheets %}
+	{{ parent() }}
+	{{ encore_entry_link_tags('groups-visualization') }}
+{% endblock %}
+
+{% block javascripts %}
+	{{ parent() }}
+	{{ encore_entry_script_tags('groups-visualization') }}
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			const listViewBtn = document.getElementById('list-view-btn');
+			const graphViewBtn = document.getElementById('graph-view-btn');
+			const listView = document.getElementById('list-view');
+			const graphView = document.getElementById('graph-view');
+			
+			let visualizationLoaded = false;
+			
+			function switchToListView() {
+				listViewBtn.classList.add('active');
+				graphViewBtn.classList.remove('active');
+				listView.style.display = 'block';
+				graphView.style.display = 'none';
+				document.getElementById('search-container').style.display = 'block';
+			}
+			
+			function switchToGraphView() {
+				listViewBtn.classList.remove('active');
+				graphViewBtn.classList.add('active');
+				listView.style.display = 'none';
+				graphView.style.display = 'block';
+				document.getElementById('search-container').style.display = 'none';
+				
+				// Charger la visualisation seulement quand nécessaire
+				if (!visualizationLoaded) {
+					// Créer une instance de GroupsVisualization directement
+					if (window.GroupsVisualization) {
+						window.currentVisualization = new window.GroupsVisualization();
+						visualizationLoaded = true;
+					}
+				}
+			}
+			
+			listViewBtn.addEventListener('click', switchToListView);
+			graphViewBtn.addEventListener('click', switchToGraphView);
+		});
+	</script>
 {% endblock %}
