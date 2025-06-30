@@ -234,6 +234,11 @@ pages:
         status:
             public: "Public group"
             private: "Private group"
+            PUBLIC: "Public group"
+            PRIVATE: "Private group"
+            OPEN: "Open group"
+            MODERATE: "Moderated group"
+            RESTRICTED: "Restricted group"
             created_at: "Created on %s"
             active_ago: "Active %s"
         is_member: "Subscribed"

@@ -343,6 +343,11 @@ pages:
         status:
             public: "Groupe public"
             private: "Groupe privé"
+            PUBLIC: "Groupe public"
+            PRIVATE: "Groupe privé"
+            OPEN: "Groupe ouvert"
+            MODERATE: "Groupe modéré"
+            RESTRICTED: "Groupe restreint"
             created_at: "Créé le %s"
             active_ago: "Actif %s"
         is_member: "Abonné·e"
