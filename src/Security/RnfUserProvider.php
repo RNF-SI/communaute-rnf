@@ -39,14 +39,25 @@ class RnfUserProvider implements UserProviderInterface
         // Find or create local user
         $userRepository = $this->entityManager->getRepository(User::class);
         
-        // Use the real email field first, fallback to identifiant (same logic as RnfAuthService)
-        $email = $rnfUserData['email'] ?? '';
-        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $login = $rnfUserData['identifiant'] ?? $rnfUserData['user_login'] ?? '';
-            $email = $login . '@rnf.local';
+        // First try to find by RNF ID (most stable identifier)
+        $user = null;
+        if (isset($rnfUserData['id_role']) && $rnfUserData['id_role']) {
+            $user = $userRepository->findOneBy(['rnfIdRole' => $rnfUserData['id_role']]);
+            if ($user) {
+                error_log('RnfUserProvider: Found user by RNF ID: ' . $rnfUserData['id_role']);
+            }
         }
         
-        $user = $userRepository->findOneBy(['email' => $email]);
+        // If not found by RNF ID, try by email
+        if (!$user) {
+            $email = $rnfUserData['email'] ?? '';
+            if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $login = $rnfUserData['identifiant'] ?? $rnfUserData['user_login'] ?? '';
+                $email = $login . '@rnf.local';
+            }
+            
+            $user = $userRepository->findOneBy(['email' => $email]);
+        }
         
         // Debug log to see which user is being loaded
         error_log('RnfUserProvider: Looking for user with email: ' . $email);
