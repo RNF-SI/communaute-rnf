@@ -3,6 +3,9 @@
 namespace App\Service;
 
 use App\Entity\User;
+use App\Entity\UsergroupMembership;
+use App\Service\Community;
+use App\Service\UserGroupRelation;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -22,19 +25,27 @@ class RnfAuthService
     private $logger;
     /** @var EntityManagerInterface */
     private $entityManager;
+    /** @var Community */
+    private $community;
+    /** @var UserGroupRelation */
+    private $userGroupRelation;
 
     public function __construct(
         HttpClientInterface $httpClient,
         ParameterBagInterface $params,
         SessionInterface $session,
         LoggerInterface $logger,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        Community $community,
+        UserGroupRelation $userGroupRelation
     ) {
         $this->httpClient = $httpClient;
         $this->params = $params;
         $this->session = $session;
         $this->logger = $logger;
         $this->entityManager = $entityManager;
+        $this->community = $community;
+        $this->userGroupRelation = $userGroupRelation;
     }
 
     /**
@@ -270,8 +281,27 @@ class RnfAuthService
         }
         
         $userRepository = $this->entityManager->getRepository(User::class);
-        $user = $userRepository->findOneBy(['email' => $email]);
         
+        // First try to find by RNF ID (most stable identifier)
+        $user = null;
+        if (isset($rnfUserData['id_role']) && $rnfUserData['id_role']) {
+            $user = $userRepository->findOneBy(['rnfIdRole' => $rnfUserData['id_role']]);
+            if ($user) {
+                error_log('RNF syncLocalUser: Found user by RNF ID: ' . $rnfUserData['id_role']);
+                // Update email if it has changed
+                if ($email !== $user->getEmail()) {
+                    error_log('RNF syncLocalUser: Updating email from ' . $user->getEmail() . ' to ' . $email);
+                    $user->setEmail($email);
+                }
+            }
+        }
+        
+        // If not found by RNF ID, try by email
+        if (!$user) {
+            $user = $userRepository->findOneBy(['email' => $email]);
+        }
+        
+        $isNewUser = false;
         if (!$user) {
             // Create new user
             $user = new User();
@@ -280,6 +310,7 @@ class RnfAuthService
             $user->setStatus(User::STATUS_ACTIVE);
             $user->setHasAgreedTermsOfUse(true);
             $user->setPassword(''); // RNF users don't need local passwords
+            $isNewUser = true;
         }
         
         // Update user data from RNF
@@ -295,7 +326,7 @@ class RnfAuthService
         $user->setRnfRoleInfo($rnfUserData['roleOPNLInfo'] ?? []);
         
         // Only set roles for new users, preserve existing roles for existing users
-        if (!$user->getId()) {
+        if ($isNewUser) {
             // New user - set initial roles
             $roles = ['ROLE_USER'];
             if (isset($rnfUserData['is_admin']) && $rnfUserData['is_admin']) {
@@ -311,6 +342,38 @@ class RnfAuthService
         // Persist user
         $this->entityManager->persist($user);
         $this->entityManager->flush();
+        
+        // Add new users to community group if it exists
+        if ($isNewUser) {
+            $communityGroup = $this->community->getGroup();
+            if ($communityGroup) {
+                // Check if user is not already a member
+                if (!$this->userGroupRelation->isMember($user, $communityGroup)) {
+                    // Create membership
+                    $membership = new UsergroupMembership();
+                    $membership->setUsergroup($communityGroup);
+                    $membership->setUser($user);
+                    $membership->setRole(UsergroupMembership::ROLE_USER);
+                    $membership->setStatus(UsergroupMembership::STATUS_MEMBER);
+                    $membership->setNotificationsSettings(['subscribed' => true]);
+                    $membership->setJoinedAt(new \DateTime());
+                    
+                    $this->entityManager->persist($membership);
+                    $this->entityManager->flush();
+                    
+                    $this->logger->info('Added new user to community group', [
+                        'user_id' => $user->getId(),
+                        'user_email' => $user->getEmail(),
+                        'group_id' => $communityGroup->getId(),
+                        'group_slug' => $communityGroup->getSlug()
+                    ]);
+                }
+            } else {
+                $this->logger->warning('Community group not found, cannot add user', [
+                    'user_email' => $user->getEmail()
+                ]);
+            }
+        }
 
         return $user;
     }
