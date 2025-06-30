@@ -267,6 +267,18 @@ npm run watch
 npm run build
 ```
 
+## Déploiement en production
+
+### Résolution des problèmes de permissions
+
+Si vous rencontrez des problèmes d'affichage des images de profil ou des erreurs de permissions en production, consultez le guide détaillé : [DEPLOYMENT_PERMISSIONS_FIX.md](DEPLOYMENT_PERMISSIONS_FIX.md)
+
+Ce guide couvre notamment :
+- La configuration correcte des permissions pour PHP-FPM
+- La résolution des problèmes d'upload et d'affichage d'images
+- La configuration des index de recherche TNTSearch
+- Les scripts de diagnostic disponibles
+
 ### Structure du projet
 
 ```
