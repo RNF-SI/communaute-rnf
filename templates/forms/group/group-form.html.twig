@@ -58,7 +58,7 @@
 		<div class="form-row form-row__hierarchy">
 			{{ form_label(form.parents, 'forms.group.parents.label') }}
 			<div class="hint">{{ 'forms.group.parents.hint'|trans }}</div>
-			<div class="form-row__checkboxes checkboxes-autocomplete">
+			<div class="checkboxes-autocomplete">
 				{{ form_widget(form.parents) }}
 			</div>
 			<div class="form_errors">{{ form_errors(form.parents) }}</div>
@@ -69,7 +69,7 @@
 		<div class="form-row form-row__hierarchy">
 			{{ form_label(form.children, 'forms.group.children.label') }}
 			<div class="hint">{{ 'forms.group.children.hint'|trans }}</div>
-			<div class="form-row__checkboxes checkboxes-autocomplete">
+			<div class="checkboxes-autocomplete">
 				{{ form_widget(form.children) }}
 			</div>
 			<div class="form_errors">{{ form_errors(form.children) }}</div>
