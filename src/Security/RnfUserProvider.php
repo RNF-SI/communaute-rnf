@@ -39,6 +39,13 @@ class RnfUserProvider implements UserProviderInterface
         // Find or create local user
         $userRepository = $this->entityManager->getRepository(User::class);
         
+        // Prepare email for fallback search and logging
+        $email = $rnfUserData['email'] ?? '';
+        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $login = $rnfUserData['identifiant'] ?? $rnfUserData['user_login'] ?? '';
+            $email = $login . '@rnf.local';
+        }
+        
         // First try to find by RNF ID (most stable identifier)
         $user = null;
         if (isset($rnfUserData['id_role']) && $rnfUserData['id_role']) {
@@ -50,12 +57,6 @@ class RnfUserProvider implements UserProviderInterface
         
         // If not found by RNF ID, try by email
         if (!$user) {
-            $email = $rnfUserData['email'] ?? '';
-            if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $login = $rnfUserData['identifiant'] ?? $rnfUserData['user_login'] ?? '';
-                $email = $login . '@rnf.local';
-            }
-            
             $user = $userRepository->findOneBy(['email' => $email]);
         }
         
