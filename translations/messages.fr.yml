@@ -439,7 +439,7 @@ pages:
             activity: "Dernière activité"
             introduction:
                 title: "Comment ça marche ?"
-                body: "<p>Chaque liste de discussion a un mail dédié (par exemple <a href=\"mailto:%s\">%s</a> pour le groupe <strong>%s</strong>), auquel on peut écrire pour lancer une discussion.</p><p>Vous pouvez également lancer une discussion depuis cette interface web.</p>"
+                body: "<p>Les discussions se déroulent directement sur cette plateforme web. Lancez une nouvelle discussion en cliquant sur le bouton \"Créer un sujet\".</p><p>Tous les membres du groupe recevront une notification par email des nouvelles discussions et pourront y répondre depuis la plateforme.</p>"
         discussion_create:
             title: "Créer un sujet"
             link: "Créer un sujet"

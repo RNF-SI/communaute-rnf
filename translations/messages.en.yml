@@ -317,7 +317,7 @@ pages:
             activity: "Latest activity"
             introduction:
                 title: "How does this work?"
-                body: "<p>Each discussion list has a dedicated email (for instance <a href=\"mailto:%s\">%s</a> for the <strong>%s</strong> group), to which you can write to start a discussion.</p><p>You can also start a discussion from this web interface.</p>"
+                body: "<p>Discussions take place directly on this web platform. Start a new discussion by clicking the \"Create a topic\" button.</p><p>All group members will receive email notifications about new discussions and can reply from the platform.</p>"
         discussion_create:
             title: "Create a topic"
             link: "Create a topic"
