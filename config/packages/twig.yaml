@@ -13,10 +13,10 @@ twig:
             group_slug:  '%env(string:PLATFORM_CHARTER_PAGE_GROUP_SLUG)%'
             page_slug: '%env(string:PLATFORM_CHARTER_PAGE_SLUG)%'
         terms_of_use:
-            group_slug:  '%env(string:GROUP_CREATION_HELP_PAGE_GROUP_SLUG)%'
+            group_slug:  '%env(string:TERMS_OF_USE_PAGE_GROUP_SLUG)%'
             page_slug: '%env(string:TERMS_OF_USE_PAGE_SLUG)%'
         group_creation_help:
-            group_slug:  '%env(string:TERMS_OF_USE_PAGE_GROUP_SLUG)%'
+            group_slug:  '%env(string:GROUP_CREATION_HELP_PAGE_GROUP_SLUG)%'
             page_slug: '%env(string:GROUP_CREATION_HELP_PAGE_SLUG)%'
         resources:
             group_slug: '%env(string:RESOURCES_PAGE_GROUP_SLUG)%'

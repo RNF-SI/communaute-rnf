@@ -65,7 +65,7 @@
 		</div>
 	{% endif %}
 	
-	{% if form.children is defined and form.children is not empty %}
+	{% if form.children is defined %}
 		<div class="form-row form-row__hierarchy">
 			{{ form_label(form.children, 'forms.group.children.label') }}
 			<div class="hint">{{ 'forms.group.children.hint'|trans }}</div>
