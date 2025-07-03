@@ -28,10 +28,7 @@ class RnfUserProvider implements UserProviderInterface
     {
         $rnfUserData = $this->rnfAuthService->getCurrentUser();
         
-        // Debug: log what data we have
-        error_log('RnfUserProvider: Loading user for username: ' . $username);
-        error_log('RnfUserProvider: RNF session data: ' . json_encode($rnfUserData));
-        
+
         if (!$rnfUserData) {
             throw new UsernameNotFoundException('User not found in RNF session');
         }
@@ -51,7 +48,6 @@ class RnfUserProvider implements UserProviderInterface
         if (isset($rnfUserData['id_role']) && $rnfUserData['id_role']) {
             $user = $userRepository->findOneBy(['rnfIdRole' => $rnfUserData['id_role']]);
             if ($user) {
-                error_log('RnfUserProvider: Found user by RNF ID: ' . $rnfUserData['id_role']);
             }
         }
         
@@ -60,13 +56,6 @@ class RnfUserProvider implements UserProviderInterface
             $user = $userRepository->findOneBy(['email' => $email]);
         }
         
-        // Debug log to see which user is being loaded
-        error_log('RnfUserProvider: Looking for user with email: ' . $email);
-        if ($user) {
-            error_log('RnfUserProvider: Found user ID: ' . $user->getId() . ', Name: ' . $user->getName());
-        } else {
-            error_log('RnfUserProvider: No user found with email: ' . $email);
-        }
         
         if (!$user) {
             // Create new user from RNF data
