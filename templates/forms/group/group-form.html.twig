@@ -54,27 +54,28 @@
 		{{ form_widget(form.presentation, {'attr': {'placeholder': 'forms.group.presentation.placeholder'}}) }}
 	</div>
 	
-	{% if attribute(form, 'parents', null) is not null %}
-		<div class="form-row form-row__hierarchy">
-			{{ form_label(form.parents, 'forms.group.parents.label') }}
-			<div class="hint">{{ 'forms.group.parents.hint'|trans }}</div>
-			<div class="checkboxes-autocomplete">
-				{{ form_widget(form.parents) }}
+	{# Afficher les champs parents/children uniquement s'ils existent dans le formulaire #}
+	{% for child in form %}
+		{% if child.vars.name == 'parents' %}
+			<div class="form-row form-row__hierarchy">
+				{{ form_label(child, 'forms.group.parents.label') }}
+				<div class="hint">{{ 'forms.group.parents.hint'|trans }}</div>
+				<div class="checkboxes-autocomplete">
+					{{ form_widget(child) }}
+				</div>
+				<div class="form_errors">{{ form_errors(child) }}</div>
 			</div>
-			<div class="form_errors">{{ form_errors(form.parents) }}</div>
-		</div>
-	{% endif %}
-	
-	{% if attribute(form, 'children', null) is not null %}
-		<div class="form-row form-row__hierarchy">
-			{{ form_label(form.children, 'forms.group.children.label') }}
-			<div class="hint">{{ 'forms.group.children.hint'|trans }}</div>
-			<div class="checkboxes-autocomplete">
-				{{ form_widget(form.children) }}
+		{% elseif child.vars.name == 'children' %}
+			<div class="form-row form-row__hierarchy">
+				{{ form_label(child, 'forms.group.children.label') }}
+				<div class="hint">{{ 'forms.group.children.hint'|trans }}</div>
+				<div class="checkboxes-autocomplete">
+					{{ form_widget(child) }}
+				</div>
+				<div class="form_errors">{{ form_errors(child) }}</div>
 			</div>
-			<div class="form_errors">{{ form_errors(form.children) }}</div>
-		</div>
-	{% endif %}
+		{% endif %}
+	{% endfor %}
 </div>
 <div class="form-row form-row__submit">
 	{{ form_widget(form.submit, {'label': form_submit}) }}
