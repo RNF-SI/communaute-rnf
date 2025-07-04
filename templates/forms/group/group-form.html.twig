@@ -54,7 +54,7 @@
 		{{ form_widget(form.presentation, {'attr': {'placeholder': 'forms.group.presentation.placeholder'}}) }}
 	</div>
 	
-	{% if form.parents is defined %}
+	{% if attribute(form, 'parents', null) is not null %}
 		<div class="form-row form-row__hierarchy">
 			{{ form_label(form.parents, 'forms.group.parents.label') }}
 			<div class="hint">{{ 'forms.group.parents.hint'|trans }}</div>
@@ -65,7 +65,7 @@
 		</div>
 	{% endif %}
 	
-	{% if form.children is defined %}
+	{% if attribute(form, 'children', null) is not null %}
 		<div class="form-row form-row__hierarchy">
 			{{ form_label(form.children, 'forms.group.children.label') }}
 			<div class="hint">{{ 'forms.group.children.hint'|trans }}</div>
