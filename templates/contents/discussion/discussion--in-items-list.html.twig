@@ -1,9 +1,13 @@
 {% set classes = ['discussion', 'discussion__in-items-list'] %}
-{% set lastMessage = (discussion.messages|reverse).0 %}
+{% set lastMessage = (discussion.messages|reverse)|first %}
 <a class="{{ classes|join(' ') }}" href="{{ path('group_discussion_index', {'groupSlug': discussion.usergroup.slug, 'discussionUuid': discussion.uuid}) }}">
 	<div class="discussion--title">{{ discussion.title }}</div>
 	<div class="discussion--body">
-		<span class="user--name">{{ lastMessage.author.name }}.</span>
-		<span class="message--date">{{ lastMessage.createdAt|ago|capitalize }}</span>
+		{% if lastMessage %}
+			<span class="user--name">{{ lastMessage.author.name }}.</span>
+			<span class="message--date">{{ lastMessage.createdAt|ago|capitalize }}</span>
+		{% else %}
+			<span class="message--date">Aucun message</span>
+		{% endif %}
 	</div>
 </a>
