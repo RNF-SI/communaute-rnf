@@ -7,7 +7,6 @@
 
 namespace App\Tests\Entity;
 
-use App\Entity\Site;
 use App\Entity\User;
 use PHPUnit\Framework\TestCase;
 
@@ -105,21 +104,6 @@ class UserTest extends TestCase {
 				'Web developer',
 				$user->getPresentation(),
 				'Assert User has presentation'
-		);
-	}
-
-	public function testUserHasSite () {
-		$user = new User();
-
-		$site = new Site();
-		$site->setName( 'Test' );
-
-		$user->setSite( $site );
-
-		$this->assertEquals(
-				'Test',
-				$user->getSite()->getName(),
-				'Assert User has Site'
 		);
 	}
 }

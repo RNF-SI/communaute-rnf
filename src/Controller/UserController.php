@@ -4,7 +4,6 @@ namespace App\Controller;
 
 use App\Entity\File;
 use App\Entity\LogEvent;
-use App\Entity\Site;
 use App\Entity\User;
 use App\Entity\UsergroupMembership;
 use App\Form\UserProfileType;
@@ -115,21 +114,6 @@ class UserController extends AbstractController
 		$form->handleRequest($request);
 
 		if ($form->isSubmitted() && $form->isValid()) {
-			// Site
-			$siteName = trim($form->get('siteName')->getData());
-			if (!empty($siteName)) {
-				$site = $manager->getRepository(Site::class)->findOneBy(['name' => $siteName]);
-				if (!$site) {
-					$site = new Site();
-					$site->setName($siteName);
-
-					$manager->persist($site);
-				}
-				$user->setSite($site);
-			} else {
-				$user->setSite(NULL);
-			}
-
 			// Avatar
 			$uploadFile = $form->get('avatarfile')->getData();
 
@@ -163,11 +147,6 @@ class UserController extends AbstractController
 			$this->addFlash('notice', 'messages.user.profile_updated');
 
 			return $this->redirectToRoute('user_dashboard');
-		} else {
-			$site = $user->getSite();
-			if ($site) {
-				$form->get('siteName')->setData($site->getName());
-			}
 		}
 
 		return $this->render('pages/user/profile-edit.html.twig', ['form' => $form->createView(), 'user' => $user]);

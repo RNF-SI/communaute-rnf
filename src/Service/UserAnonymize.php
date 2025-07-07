@@ -65,7 +65,6 @@ class UserAnonymize {
 		$user->setResetToken(null);
 		$user->setLatitude(null);
 		$user->setLongitude(null);
-		$user->setSite(null);
 		$user->setEmailNew(null);
 		$user->setEmailToken(null);
 	}

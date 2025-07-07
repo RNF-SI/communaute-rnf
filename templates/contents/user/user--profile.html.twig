@@ -14,10 +14,6 @@
 					{% if location is not empty %}
 						<div class="user--location">{{ location|join(', ') }}</div>
 					{% endif %}
-
-					{% if user.site is not empty %}
-						<div class="user--site">{{ user.site.name }}</div>
-					{% endif %}
 				</div>
 			</div>
 			{% if app.user == user %}

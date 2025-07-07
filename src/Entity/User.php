@@ -149,11 +149,6 @@ class User implements UserInterface, JsonSerializable {
 	private $longitude;
 
 	/**
-	 * @ORM\ManyToOne(targetEntity="App\Entity\Site")
-	 */
-	private $site;
-
-	/**
 	 * @ORM\Column(type="string", length=180, nullable=true)
 	 */
 	private $emailNew;
@@ -545,16 +540,6 @@ class User implements UserInterface, JsonSerializable {
 		return $this;
 	}
 
-	public function getSite (): ?Site {
-		return $this->site;
-	}
-
-	public function setSite ( ?Site $site ): self {
-		$this->site = $site;
-
-		return $this;
-	}
-
 	public function getEmailNew (): ?string {
 		return $this->emailNew;
 	}
@@ -683,7 +668,6 @@ class User implements UserInterface, JsonSerializable {
             'name' => $this->name,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
-			'site' => $this->site,
 			'city' => $this->city,
 			'zipcode' => $this->zipcode,
 			'rnf_id_role' => $this->rnfIdRole,

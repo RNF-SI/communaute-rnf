@@ -64,12 +64,6 @@
         </div>
         <div class="form_errors">{{ form_errors(form.skills) }}</div>
     </div>
-    <div class="form-row form-row__field">
-        {{ form_label(form.siteName, 'forms.user.site.label') }}
-        <div class="hint">{{ 'forms.user.site.hint'|trans }}</div>
-        {{ form_widget(form.siteName, {'attr': {'placeholder': 'forms.user.site.placeholder', 'data-query': path('search_site', {'query':'query'})}}) }}
-        <div class="form_errors">{{ form_errors(form.siteName) }}</div>
-    </div>
 
     {{ form_widget(form.latitude) }}
     {{ form_widget(form.longitude) }}
