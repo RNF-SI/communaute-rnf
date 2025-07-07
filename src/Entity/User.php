@@ -210,6 +210,11 @@ class User implements UserInterface, JsonSerializable {
 	 */
 	private $firstLoginNotified = false;
 
+	/**
+	 * @ORM\Column(type="datetime", nullable=true)
+	 */
+	private $profileUpdatedAt;
+
 	public function __construct () {
 		$this->usergroupMemberships = new ArrayCollection();
 		$this->skills               = new ArrayCollection();
@@ -657,6 +662,17 @@ class User implements UserInterface, JsonSerializable {
 	public function setFirstLoginNotified(bool $firstLoginNotified): self
 	{
 		$this->firstLoginNotified = $firstLoginNotified;
+		return $this;
+	}
+
+	public function getProfileUpdatedAt(): ?\DateTimeInterface
+	{
+		return $this->profileUpdatedAt;
+	}
+
+	public function setProfileUpdatedAt(?\DateTimeInterface $profileUpdatedAt): self
+	{
+		$this->profileUpdatedAt = $profileUpdatedAt;
 		return $this;
 	}
 

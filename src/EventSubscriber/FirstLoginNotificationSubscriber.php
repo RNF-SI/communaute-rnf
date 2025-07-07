@@ -42,32 +42,21 @@ class FirstLoginNotificationSubscriber implements EventSubscriberInterface
             return;
         }
 
-        // Check if this is the first login notification
-        if (!$user->getFirstLoginNotified()) {
-            // Check if profile needs completion
-            if ($this->needsProfileCompletion($user)) {
-                $profileUrl = $this->urlGenerator->generate('user_profile_edit');
-                $message = sprintf(
-                    'Bienvenue ! Pour tirer le meilleur parti de la plateforme, nous vous encourageons à <a href="%s">compléter votre profil</a>.',
-                    $profileUrl
-                );
-                
-                $this->session->getFlashBag()->add('info', $message);
+        // Show notification if profile has never been updated
+        if ($user->getProfileUpdatedAt() === null) {
+            $profileUrl = $this->urlGenerator->generate('user_profile_edit');
+            $message = sprintf(
+                'Bienvenue ! Pour tirer le meilleur parti de la plateforme, nous vous encourageons à <a href="%s">compléter votre profil</a>.',
+                $profileUrl
+            );
+            
+            $this->session->getFlashBag()->add('info', $message);
+            
+            // Mark as notified only the first time
+            if (!$user->getFirstLoginNotified()) {
+                $user->setFirstLoginNotified(true);
+                $this->entityManager->flush();
             }
-
-            // Mark as notified
-            $user->setFirstLoginNotified(true);
-            $this->entityManager->flush();
         }
-    }
-
-    private function needsProfileCompletion(User $user): bool
-    {
-        // Check if important profile fields are missing
-        return empty($user->getName()) || 
-               empty($user->getPresentation()) || 
-               empty($user->getBio()) ||
-               empty($user->getCity()) ||
-               $user->getSkills()->isEmpty();
     }
 }

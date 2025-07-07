@@ -155,6 +155,9 @@ class UserController extends AbstractController
 				$user->setRegion($NUTS_ID);
 			}
 
+			// Mark profile as updated
+			$user->setProfileUpdatedAt(new \DateTime());
+
 			$manager->flush();
 
 			$this->addFlash('notice', 'messages.user.profile_updated');
