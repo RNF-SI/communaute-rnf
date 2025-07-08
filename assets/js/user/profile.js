@@ -77,23 +77,6 @@ domready( () => {
 			});
 		}
 
-		// Natural Site autocomplete
-
-		const inputSite = form.querySelector( '[name="user_profile[siteName]"]' );
-
-		if ( inputSite ) {
-			autocomplete( inputSite, { hint: false }, [
-				{
-					source:     ( query, callback ) => {
-						const ajax = new XMLHttpRequest();
-						ajax.open( 'GET', inputSite.getAttribute( 'data-query' ).replace( 'query', query ), true );
-						ajax.onload = () => callback( JSON.parse( ajax.responseText ).results );
-						ajax.send();
-					},
-					displayKey: ( item ) => item.name,
-				} ] );
-		}
-
 		// TODO: Enlever cette partie de code quand la plupart des longitude et lattitude est renseignée
 		// TODO: Il faudra mettre à jour latitude et longitude lorsque la ville est changée 
 		// Ajoutez un gestionnaire d'événement 'submit' au formulaire

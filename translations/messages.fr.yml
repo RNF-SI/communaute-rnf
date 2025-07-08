@@ -449,6 +449,7 @@ pages:
             active: "Actif %s"
             date: "Créée le %s"
             date_edited: "Éditée le %s"
+            no_message: "Aucun message"
         actions:
             hide_message: "Masquer le message"
             show_message: "Afficher le message"
