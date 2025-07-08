@@ -2,7 +2,6 @@
 	"name": "communaute-rnf",
 	"description": "Plateforme collaborative pour animer la communauté des réserves naturelles de France et leurs commissions",
 	"devDependencies": {
-		"@ckeditor/ckeditor5-build-classic": "^18.0.0",
 		"@symfony/webpack-encore": "^0.31.0",
 		"@zemax/sass-svg": "^2.0.1",
 		"autocomplete.js": "^0.37.1",
@@ -36,6 +35,8 @@
 		"d3": "^7.9.0",
 		"intl": "^1.2.5",
 		"leaflet": "^1.9.3",
-		"leaflet.markercluster": "^1.5.3"
+		"leaflet.markercluster": "^1.5.3",
+		"quill": "^1.3.7",
+		"quill-image-uploader": "^1.3.0"
 	}
 }

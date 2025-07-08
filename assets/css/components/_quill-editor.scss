@@ -1,0 +1,226 @@
+// Styles personnalisés pour l'éditeur Quill
+.quill-container .ql-editor {
+	// Synchroniser l'apparence de l'éditeur avec le rendu final
+	
+	// Headers
+	h1 {
+		font-size: 2em;
+		font-weight: bold;
+		margin: 1em 0 0.5em 0;
+		line-height: 1.2;
+	}
+
+	h2 {
+		font-size: 1.5em;
+		font-weight: bold;
+		margin: 1em 0 0.5em 0;
+		line-height: 1.2;
+	}
+
+	h3 {
+		font-size: 1.2em;
+		font-weight: bold;
+		margin: 1em 0 0.5em 0;
+		line-height: 1.2;
+	}
+
+	// Blocs de code
+	pre.ql-code-block {
+		background-color: #f4f4f4;
+		border: 1px solid #ddd;
+		border-radius: 4px;
+		padding: 1em;
+		margin: 1em 0;
+		font-family: 'Courier New', Courier, monospace;
+		font-size: 0.9em;
+		overflow-x: auto;
+		white-space: pre-wrap;
+	}
+
+	// Code inline
+	code {
+		background-color: #f4f4f4;
+		border: 1px solid #ddd;
+		border-radius: 3px;
+		padding: 0.2em 0.4em;
+		font-family: 'Courier New', Courier, monospace;
+		font-size: 0.9em;
+	}
+
+	// Citations
+	blockquote {
+		border-left: 4px solid #ddd;
+		margin: 1em 0;
+		padding-left: 1em;
+		font-style: italic;
+		color: #666;
+	}
+
+	// Listes - Corriger le problème de double puces
+	// Quill génère des éléments <p> avec des attributs data-list
+	// Il faut masquer les puces par défaut et laisser Quill gérer l'affichage
+	
+	// Masquer toutes les puces par défaut dans l'éditeur Quill
+	ul, ol {
+		list-style: none !important;
+		margin: 1em 0;
+		padding-left: 0;
+	}
+	
+	ul li, ol li {
+		list-style: none !important;
+		margin: 0.5em 0;
+		padding-left: 1.5em;
+		position: relative;
+	}
+	
+	// Laisser Quill gérer les puces avec ses propres styles
+	// Les puces de Quill sont gérées via des pseudo-éléments dans son CSS
+	// On s'assure juste qu'il n'y a pas de conflit
+
+	// Liens
+	a {
+		color: #007bff;
+		text-decoration: none;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+
+	// Images
+	img {
+		max-width: 100%;
+		height: auto;
+		display: block;
+		margin: 1em auto;
+	}
+	
+	// Module de redimensionnement d'images custom
+	.ql-image-selected {
+		outline: 2px solid #007bff;
+		outline-offset: 2px;
+	}
+	
+	.ql-image-resize-overlay {
+		position: absolute;
+		pointer-events: none;
+		z-index: 1000;
+	}
+	
+	.ql-image-resize-handle {
+		position: absolute;
+		width: 16px;
+		height: 16px;
+		background-color: #007bff;
+		border: 3px solid #ffffff;
+		border-radius: 50%;
+		cursor: nw-resize;
+		z-index: 10;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+		
+		&:hover {
+			background-color: #0056b3;
+			transform: scale(1.1);
+		}
+	}
+	
+	.ql-image-resize-handle-nw {
+		top: -8px;
+		left: -8px;
+		cursor: nw-resize;
+	}
+	
+	.ql-image-resize-handle-ne {
+		top: -8px;
+		right: -8px;
+		cursor: ne-resize;
+	}
+	
+	.ql-image-resize-handle-sw {
+		bottom: -8px;
+		left: -8px;
+		cursor: sw-resize;
+	}
+	
+	.ql-image-resize-handle-se {
+		bottom: -8px;
+		right: -8px;
+		cursor: se-resize;
+	}
+	
+	.ql-image-resize-toolbar {
+		position: absolute;
+		background-color: rgba(0, 0, 0, 0.9);
+		border-radius: 6px;
+		padding: 6px;
+		top: -45px;
+		left: 50%;
+		transform: translateX(-50%);
+		white-space: nowrap;
+		z-index: 20;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+		
+		button {
+			background: rgba(255, 255, 255, 0.1);
+			border: 1px solid rgba(255, 255, 255, 0.2);
+			color: white;
+			padding: 4px 8px;
+			margin: 0 2px;
+			border-radius: 3px;
+			cursor: pointer;
+			font-size: 11px;
+			font-weight: 500;
+			
+			&:hover {
+				background: rgba(255, 255, 255, 0.2);
+				border-color: rgba(255, 255, 255, 0.4);
+			}
+			
+			&:active {
+				background: rgba(255, 255, 255, 0.3);
+			}
+		}
+	}
+
+	// Tableaux
+	table {
+		border-collapse: collapse;
+		width: 100%;
+		margin: 1em 0;
+	}
+
+	table td, table th {
+		border: 1px solid #ddd;
+		padding: 0.5em;
+		text-align: left;
+	}
+
+	table th {
+		background-color: #f2f2f2;
+		font-weight: bold;
+	}
+
+	// Espacement des paragraphes
+	p {
+		margin: 1em 0;
+		line-height: 1.6;
+	}
+}
+
+// Ajustements de la barre d'outils Quill
+.quill-container .ql-toolbar {
+	border-top: 1px solid #ccc;
+	border-left: 1px solid #ccc;
+	border-right: 1px solid #ccc;
+	border-bottom: none;
+	background-color: #f8f9fa;
+}
+
+.quill-container .ql-container {
+	border-bottom: 1px solid #ccc;
+	border-left: 1px solid #ccc;
+	border-right: 1px solid #ccc;
+	border-top: none;
+	min-height: 200px;
+}
