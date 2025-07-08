@@ -29,7 +29,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 [{ 'direction': 'rtl' }],
                 [{ 'size': ['small', false, 'large', 'huge'] }],
                 [{ 'color': [] }, { 'background': [] }],
-                [{ 'font': [] }],
                 [{ 'align': [] }],
                 ['link', 'image', 'video'],
                 ['clean']
@@ -49,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'header', 'bold', 'italic', 'underline', 'strike',
                     'blockquote', 'code-block', 'list', 'bullet',
                     'script', 'indent', 'direction', 'size',
-                    'color', 'background', 'font', 'align',
+                    'color', 'background', 'align',
                     'link', 'image', 'video'
                 ]
             };
