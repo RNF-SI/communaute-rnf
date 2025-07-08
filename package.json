@@ -23,7 +23,7 @@
 		"dev-server": "encore dev-server",
 		"dev": "encore dev",
 		"watch": "encore dev --watch",
-		"build": "NODE_OPTIONS=--openssl-legacy-provider encore production --progress",
+		"build": "encore production --progress",
 		"test": "php bin/console doctrine:migrations:migrate --no-interaction --env=test ; php bin/console doctrine:fixtures:load --no-interaction --env=test ; ./bin/phpunit"
 	},
 	"browserslist": [
