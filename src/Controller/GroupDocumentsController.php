@@ -458,7 +458,12 @@ class GroupDocumentsController extends AbstractController {
 
 		$this->denyAccessUnlessGranted( GroupDocumentVoter::READ, $document );
 
-		return $fileManager->getFile( $document->getFile() );
+		$file = $document->getFile();
+		if ( !$file ) {
+			throw $this->createNotFoundException( 'The document file does not exist' );
+		}
+
+		return $fileManager->getFile( $file );
 	}
 
 	/**
