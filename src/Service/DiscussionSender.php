@@ -42,6 +42,7 @@ class DiscussionSender {
 		$from    = 'noreply@' . $this->params[ 'list_domain' ];
 
 		$to       = $discussionMessage->getDiscussion()->getUsergroup()->getMembers();
+		$author   = $discussionMessage->getAuthor();
 		$messages = [];
 
 		/**
@@ -50,6 +51,11 @@ class DiscussionSender {
 		foreach ( $to as $membership ) {
 			if ( $membership->shouldReceiveDiscussionsEmails() ) {
 				$user = $membership->getUser();
+
+				// don't notify the author of their own message
+				if ( $author && $user && ( $author->getId() === $user->getId() ) ) {
+					continue;
+				}
 
 				try {
 					$body = $this->twig->render( $first ? 'emails/discussion-new.html.twig' : 'emails/discussion-message.html.twig', [
