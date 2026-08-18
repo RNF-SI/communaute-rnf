@@ -136,12 +136,12 @@ class RnfAuthenticatorGuard extends AbstractGuardAuthenticator
         // The user is already set in the token by Symfony's authentication system
         // We just need to redirect to the appropriate page
         
-        // Clear any stored target path and always redirect to homepage
+        // Clear any stored target path and always redirect to the user's groups page
         $this->removeTargetPath($request->getSession(), $providerKey);
 
-        $homepageUrl = $this->router->generate('homepage');
-        error_log('RNF Auth Success - Homepage URL: ' . $homepageUrl);
-        return new RedirectResponse($homepageUrl);
+        $landingUrl = $this->router->generate('user_groups');
+        error_log('RNF Auth Success - Landing URL: ' . $landingUrl);
+        return new RedirectResponse($landingUrl);
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception)

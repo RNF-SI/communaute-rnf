@@ -27,7 +27,7 @@ class RnfAuthController extends AbstractController
     {
         // If user is already authenticated through Symfony security, redirect
         if ($this->getUser()) {
-            return $this->redirectToRoute('user_dashboard');
+            return $this->redirectToRoute('user_groups');
         }
 
         // Get the login error if there is one
