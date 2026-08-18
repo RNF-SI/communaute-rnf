@@ -567,6 +567,20 @@ class GroupDiscussionsController extends AbstractController {
 
 		$data = json_decode( $request->getContent(), TRUE );
 
+		// Postmark retries a webhook it believes failed, and the same delivery
+		// would then be recorded — and notified — a second time. Recognise a
+		// delivery already handled before doing any work. (#12)
+		$inboundMessageId = !empty( $data[ 'MessageID' ] ) ? $data[ 'MessageID' ] : NULL;
+
+		if ( $inboundMessageId ) {
+			$alreadyHandled = $manager->getRepository( DiscussionMessage::class )
+									  ->findOneBy( [ 'inboundMessageId' => $inboundMessageId ] );
+
+			if ( $alreadyHandled ) {
+				return new JsonResponse( [ 'status' => 'This message was already processed' ] );
+			}
+		}
+
 		// Ignore automatically generated messages
 		if ( !empty( $data[ 'Headers' ] ) ) {
 			foreach ( $data[ 'Headers' ] as $header ) {
@@ -659,6 +673,7 @@ class GroupDiscussionsController extends AbstractController {
 		$discussionMessage->setCreatedAt( new DateTime() );
 		$discussionMessage->setAuthor( $user );
 		$discussionMessage->setBody( nl2br( $body ) );
+		$discussionMessage->setInboundMessageId( $inboundMessageId );
 		$manager->persist( $discussionMessage );
 		$manager->flush();
 

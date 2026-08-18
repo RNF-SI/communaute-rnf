@@ -49,12 +49,31 @@ class DiscussionMessage {
 	 */
 	private $files;
 
+	/**
+	 * Identifier of the inbound e-mail this message was created from, when it
+	 * comes from a reply by e-mail. Postmark retries a webhook it believes
+	 * failed, so it is used to recognise a delivery that was already handled.
+	 *
+	 * @ORM\Column(type="string", length=255, nullable=true, unique=true)
+	 */
+	private $inboundMessageId;
+
 	public function __construct () {
 		$this->files = new ArrayCollection();
 	}
 
 	public function getId (): ?int {
 		return $this->id;
+	}
+
+	public function getInboundMessageId (): ?string {
+		return $this->inboundMessageId;
+	}
+
+	public function setInboundMessageId ( ?string $inboundMessageId ): self {
+		$this->inboundMessageId = $inboundMessageId;
+
+		return $this;
 	}
 
 	public function getDiscussion (): ?Discussion {
