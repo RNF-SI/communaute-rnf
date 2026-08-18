@@ -87,28 +87,31 @@ domready( () => {
 			const inputCity = form.querySelector('[name="user_profile[city]"]');
 			const inputCountry = form.querySelector('[name="user_profile[country]"]'); // Ajoutez cette ligne pour récupérer le pays
 
-			if (inputCity.value) {
-				const city = inputCity.value;
-				const country = inputCountry.value;
-				searchCoords(`${city}`, `${country}`)
-				.then((coordinates) => {
-					if (coordinates) {
-					form.querySelector('[name="user_profile[latitude]"]').value = coordinates.lat || '';
-					form.querySelector('[name="user_profile[longitude]"]').value = coordinates.lng || '';
-					} else {
-					console.warn("Impossible de récupérer les coordonnées pour la ville.");
-					}
-		
-					// Soumet le formulaire une fois les coordonnées mises à jour
-					form.submit();
-				})
-				.catch((error) => {
-					console.error("Erreur lors de la récupération des coordonnées :", error);
-				});
-			} else {
-				// Si la valeur de la ville n'est pas définie, soumettez simplement le formulaire
+			// Si la valeur de la ville n'est pas définie, soumettez simplement le formulaire
+			if (!inputCity.value) {
 				form.submit();
+
+				return;
 			}
+
+			const city = inputCity.value;
+			const country = inputCountry.value;
+
+			searchCoords(`${city}`, `${country}`)
+			.then((coordinates) => {
+				if (coordinates) {
+				form.querySelector('[name="user_profile[latitude]"]').value = coordinates.lat || '';
+				form.querySelector('[name="user_profile[longitude]"]').value = coordinates.lng || '';
+				} else {
+				console.warn("Impossible de récupérer les coordonnées pour la ville.");
+				}
+			})
+			.catch((error) => {
+				console.error("Erreur lors de la récupération des coordonnées :", error);
+			})
+			// Le géocodage est facultatif : le profil doit être enregistré
+			// même quand la recherche de coordonnées échoue.
+			.then(() => form.submit());
 			});
 
 
