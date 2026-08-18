@@ -52,8 +52,13 @@ class DiscussionSender {
 			if ( $membership->shouldReceiveDiscussionsEmails() ) {
 				$user = $membership->getUser();
 
-				// don't notify the author of their own message
-				if ( $author && $user && ( $author->getId() === $user->getId() ) ) {
+				// don't notify the author of their own message. Compare the
+				// instances first, then the identifiers, so that two entities
+				// that are not persisted yet — both with a NULL id — are never
+				// mistaken for one another.
+				if ( $author && $user
+					 && ( ( $author === $user )
+						  || ( ( $author->getId() !== NULL ) && ( $author->getId() === $user->getId() ) ) ) ) {
 					continue;
 				}
 
