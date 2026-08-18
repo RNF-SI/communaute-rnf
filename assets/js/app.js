@@ -38,6 +38,7 @@ import './ui/documents-folding';
 import './ui/url-to-link';
 import './ui/confirm';
 import './ui/copy-to-clipboard';
+import './ui/prevent-double-submit';
 import './ui/oembed-to-iframe';
 import './ui/removable-tag-list';
 import './ui/groups-search';
