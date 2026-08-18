@@ -206,6 +206,8 @@ pages:
         profile:
             title: "Profile"
             contact: "Send an email"
+            email_copy: "Copy the address"
+            email_copied: "Address copied!"
             link: "My profile"
         is_admin: "Administrator"
         my_groups:

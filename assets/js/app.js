@@ -37,6 +37,7 @@ import './ui/wysiwyg';
 import './ui/documents-folding';
 import './ui/url-to-link';
 import './ui/confirm';
+import './ui/copy-to-clipboard';
 import './ui/oembed-to-iframe';
 import './ui/removable-tag-list';
 import './ui/groups-search';

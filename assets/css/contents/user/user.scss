@@ -214,6 +214,31 @@
 			text-align: right;
 		}
 
+		.user--email {
+			margin-top: rem(6px);
+
+			font-size:  rem(14px);
+			color:      $color_grey_neutral;
+
+			a {
+				word-break: break-all;
+			}
+		}
+
+		.user--email-copy {
+			display:         block;
+			margin-left:     auto;
+			padding:         0;
+
+			border:          none;
+			background:      none;
+
+			font-size:       rem(14px);
+			color:           $color_action;
+			text-decoration: underline;
+			cursor:          pointer;
+		}
+
 		.user--name {
 			margin-bottom: rem(6px);
 		}

@@ -311,6 +311,8 @@ pages:
         profile:
             title: "Profil"
             contact: "Contacter par e-mail"
+            email_copy: "Copier l’adresse"
+            email_copied: "Adresse copiée !"
             link: "Mon profil"
         is_admin: "Administrateur"
         my_groups:
