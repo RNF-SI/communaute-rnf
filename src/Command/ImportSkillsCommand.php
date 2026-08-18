@@ -65,6 +65,15 @@ class ImportSkillsCommand extends Command {
 				'environmental-law',
 				'environmental-education',
 				'project-management',
+				'geoconservation',
+				'grazing',
+				'invasive-species-management',
+				'reserve-extension',
+				'protocols',
+				'ct88',
+				'dat-methodology',
+				'naturadapt-methodology',
+				'retex',
 		];
 
 		foreach ( $slugs as $slug ) {
