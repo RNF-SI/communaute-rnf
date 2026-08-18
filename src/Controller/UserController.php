@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Discussion;
 use App\Entity\File;
 use App\Entity\LogEvent;
 use App\Entity\User;
@@ -213,6 +214,32 @@ class UserController extends AbstractController
 		$user = $this->getUser();
 
 		return $this->render('pages/user/my-groups.html.twig', ['user' => $user]);
+	}
+
+	/**
+	 * @Route("/user/discussions", name="user_discussions")
+	 *
+	 * @param \Doctrine\ORM\EntityManagerInterface      $manager
+	 *
+	 * @return \Symfony\Component\HttpFoundation\RedirectResponse|\Symfony\Component\HttpFoundation\Response
+	 */
+	public function userDiscussions(
+		EntityManagerInterface $manager
+	) {
+		$this->denyAccessUnlessGranted(UserVoter::LOGGED);
+
+		/**
+		 * @var User $user
+		 */
+		$user = $this->getUser();
+
+		$discussions = $manager->getRepository(Discussion::class)
+							   ->findByParticipant($user);
+
+		return $this->render('pages/user/my-discussions.html.twig', [
+				'user'        => $user,
+				'discussions' => $discussions,
+		]);
 	}
 
 	/**

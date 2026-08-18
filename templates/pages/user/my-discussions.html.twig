@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'pages.user.my_discussions.title'|trans }} | {{ plateform.name }}{% endblock %}
+
+{% block main %}
+	<section class="main main__user-page main__user-page__my-discussions">
+		<div class="main--content content-container">
+			{% include 'components/app-flashes.html.twig' %}
+
+			<div class="panel">
+				<h1 class="h1">{{ 'pages.user.my_discussions.title'|trans }}</h1>
+			</div>
+
+			<p>{{ 'pages.user.my_discussions.introduction'|trans }}</p>
+
+			{% if discussions is not empty %}
+				<section class="discussions-list">
+					<div class="discussions-list--headers discussions-list--row">
+						<div>{{ 'pages.discussion.list.subjects'|trans }}</div>
+						<div>{{ 'pages.discussion.list.messages_count'|trans }}</div>
+						<div>{{ 'pages.discussion.list.activity'|trans }}</div>
+					</div>
+					<ul>
+						{% for discussion in discussions %}
+							<li>
+								{% include 'contents/discussion/discussion--teaser.html.twig' with {'discussion':discussion, 'showGroup':true} %}
+							</li>
+						{% endfor %}
+					</ul>
+				</section>
+			{% else %}
+				<p>{{ 'pages.user.my_discussions.empty'|trans }}</p>
+			{% endif %}
+		</div>
+	</section>
+{% endblock %}

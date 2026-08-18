@@ -317,6 +317,11 @@ pages:
             title: "Mes groupes"
             introduction: "Gérez rapidement vos adhésions aux groupes"
             link: "Mes groupes"
+        my_discussions:
+            title: "Mes discussions"
+            introduction: "Retrouvez les discussions que vous avez ouvertes ou auxquelles vous avez participé, tous groupes confondus."
+            empty: "Vous ne participez à aucune discussion pour le moment."
+            link: "Mes discussions"
         administration_edit:
             title: "Administration du site"
             # introduction: "Gérez rapidement vos adhésions aux groupes"

@@ -3,6 +3,9 @@
 <a class="{{ classes|join(' ') }}" href="{{ path('group_discussion_index', {'groupSlug': discussion.usergroup.slug, 'discussionUuid': discussion.uuid}) }}">
 	<div>
 		<h2 class="h4">{{ discussion.title }}</h2>
+		{% if showGroup|default(false) %}
+			<span class="discussion--group">{{ discussion.usergroup.name }}</span>
+		{% endif %}
 		{% if lastMessage %}
 			<span class="message--date">{{ 'pages.discussion.view.active'|trans|format(lastMessage.createdAt|ago) }}</span>
 		{% else %}

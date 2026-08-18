@@ -3,7 +3,10 @@
 namespace App\Repository;
 
 use App\Entity\Discussion;
+use App\Entity\User;
+use App\Entity\UsergroupMembership;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -15,6 +18,37 @@ use Doctrine\Persistence\ManagerRegistry;
 class DiscussionRepository extends ServiceEntityRepository {
 	public function __construct ( ManagerRegistry $registry ) {
 		parent::__construct( $registry, Discussion::class );
+	}
+
+	/**
+	 * Discussions the user takes part in: they either opened the discussion
+	 * or posted at least one message in it. Restricted to the groups they are
+	 * still an active member of, so every listed discussion stays reachable.
+	 *
+	 * @param \App\Entity\User $user
+	 *
+	 * @return Discussion[]
+	 */
+	public function findByParticipant ( User $user ) {
+		return $this->createQueryBuilder( 'd' )
+					->distinct()
+					->innerJoin( 'd.usergroup', 'g' )
+					->innerJoin(
+							UsergroupMembership::class,
+							'm',
+							Join::WITH,
+							'm.usergroup = g AND m.user = :user AND m.status = :status'
+					)
+					->leftJoin( 'd.messages', 'msg' )
+					->andWhere( 'g.isActive = :active' )
+					->andWhere( 'd.author = :user OR msg.author = :user' )
+					->setParameter( 'active', TRUE )
+					->setParameter( 'user', $user )
+					->setParameter( 'status', UsergroupMembership::STATUS_MEMBER )
+					->orderBy( 'd.activeAt', 'DESC' )
+					->addOrderBy( 'd.createdAt', 'DESC' )
+					->getQuery()
+					->getResult();
 	}
 
 	// /**

@@ -212,6 +212,11 @@ pages:
             title: "My groups"
             introduction: "Quickly manage your group memberships"
             link: "My groups"
+        my_discussions:
+            title: "My discussions"
+            introduction: "Find the discussions you started or took part in, across all your groups."
+            empty: "You are not taking part in any discussion yet."
+            link: "My discussions"
 
     group:
         group_create:

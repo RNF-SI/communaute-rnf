@@ -125,6 +125,12 @@
 		color:         $color_grey_medium;
 	}
 
+	.discussion--group {
+		display: block;
+
+		color:   $color_grey_neutral;
+	}
+
 	@include picto-arrow($color_action, 7, 12, 1.5);
 	background-repeat:   no-repeat;
 	background-position: right 8px center;
