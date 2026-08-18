@@ -38,13 +38,28 @@ domready( () => Array.from( document.querySelectorAll( '.checkboxes-autocomplete
 
 	// Enable autocomplete
 
-	const autocompleteComponent = autocomplete( input, { hint: false, clearOnSelected: true }, [
+	const autocompleteComponent = autocomplete( input, {
+		hint:            false,
+		clearOnSelected: true,
+		openOnFocus:     true,
+	}, [
 		{
+			// The whole list is short enough to be browsed, so show it all
+			// rather than the default 5 first matches.
+			limit:      list.length,
 			source:     ( query, callback ) => {
 				const keys = query
 					.split( ' ' )
 					.map( ( key ) => normalizeKey( key ) )
 					.filter( ( key ) => key.length > 0 );
+
+				// No query yet: offer the whole list so the available
+				// options are discoverable without typing.
+				if ( keys.length === 0 ) {
+					callback( list.map( ( item ) => Object.assign( { suggestion: item.label }, item ) ) );
+
+					return;
+				}
 
 				const results = list
 					.map( ( item ) => {
@@ -72,13 +87,10 @@ domready( () => Array.from( document.querySelectorAll( '.checkboxes-autocomplete
 	// Add tag from a given value
 
 	const addTag = ( value, force = false ) => {
-		console.log( 'addTag', value );
-
 		// Check matching checboxes
 		const matchingCheckboxes = Array.from( element.querySelectorAll( `[value="${value}"]` ) );
 
 		if ( !force && (matchingCheckboxes.filter( ( checkbox ) => checkbox.checked ).length > 0) ) {
-			console.log( 'skipped' );
 			return;
 		}
 

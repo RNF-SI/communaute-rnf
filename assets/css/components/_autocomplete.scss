@@ -50,6 +50,8 @@ label.autocomplete-tags {
 
 	.aa-dropdown-menu {
 		width:            100%;
+		max-height:       rem(280px);
+		overflow-y:       auto;
 		background-color: white;
 		border:           1px solid $color_grey_border;
 
