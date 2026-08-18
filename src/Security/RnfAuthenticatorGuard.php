@@ -130,18 +130,22 @@ class RnfAuthenticatorGuard extends AbstractGuardAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, $providerKey)
     {
-        // DEBUG: Log what's happening
-        error_log('RNF Auth Success - Provider Key: ' . $providerKey);
-        
         // The user is already set in the token by Symfony's authentication system
         // We just need to redirect to the appropriate page
-        
-        // Clear any stored target path and always redirect to the user's groups page
+
+        // Send the user back to the page they were trying to reach, typically
+        // a deep link from a notification e-mail.
+        $targetPath = $this->getTargetPath($request->getSession(), $providerKey);
         $this->removeTargetPath($request->getSession(), $providerKey);
 
-        $landingUrl = $this->router->generate('user_groups');
-        error_log('RNF Auth Success - Landing URL: ' . $landingUrl);
-        return new RedirectResponse($landingUrl);
+        $loginPath = $this->router->generate('rnf_auth_login');
+
+        // Never bounce back to the login page itself, that would loop.
+        if ($targetPath && (strpos($targetPath, $loginPath) === false)) {
+            return new RedirectResponse($targetPath);
+        }
+
+        return new RedirectResponse($this->router->generate('user_groups'));
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception)
