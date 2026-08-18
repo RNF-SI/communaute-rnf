@@ -30,7 +30,7 @@ class DiscussionType extends AbstractType {
 	 * {@inheritdoc}
 	 */
 	public function buildForm ( FormBuilderInterface $builder, array $options ) {
-		$maxFileSize = $this->fileManager->fileUploadMaxSize( '32M' );
+		$maxFileSize = $this->fileManager->fileUploadMaxSize( '50M' );
 
 		$builder
 				->add( 'title', TextType::class, [
