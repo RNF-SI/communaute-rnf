@@ -25,6 +25,7 @@ forms:
         display_name:
             label: "How do you want to be called?"
             placeholder: "Enter your first name, your full name, a nickname…"
+        identity_from_rnf: "This information comes from your RNF account and cannot be changed here."
         avatar:
             label: "Profile picture"
             button: "Browse"

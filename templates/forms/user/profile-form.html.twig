@@ -4,11 +4,17 @@
 <div class="form-rows">
     <div class="form-row form-row__field">
         {{ form_label(form.name, 'forms.user.name.label') }}
+        {% if form.name.vars.disabled %}
+            <div class="hint">{{ 'forms.user.identity_from_rnf'|trans }}</div>
+        {% endif %}
         {{ form_widget(form.name, {'attr': {'placeholder': 'forms.user.name.placeholder'}}) }}
         <div class="form_errors">{{ form_errors(form.name) }}</div>
     </div>
     <div class="form-row form-row__field">
         {{ form_label(form.displayname, 'forms.user.display_name.label') }}
+        {% if form.displayname.vars.disabled %}
+            <div class="hint">{{ 'forms.user.identity_from_rnf'|trans }}</div>
+        {% endif %}
         {{ form_widget(form.displayname, {'attr': {'placeholder': 'forms.user.display_name.placeholder'}}) }}
         <div class="form_errors">{{ form_errors(form.displayname) }}</div>
     </div>

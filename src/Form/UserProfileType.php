@@ -37,9 +37,24 @@ class UserProfileType extends AbstractType {
 	public function buildForm ( FormBuilderInterface $builder, array $options) {
 		$maxFileSize = $this->fileManager->fileUploadMaxSize( '5M' );
 
+		/**
+		 * @var \App\Entity\User $user
+		 */
+		$user = $builder->getData();
+
+		// GeoNature is the reference for the identity of an account coming from
+		// the single sign-on: it is rewritten at every login. Offering these
+		// two fields for editing would only promise a change that does not
+		// survive the next connection. (#36)
+		$identityComesFromRnf = ( $user instanceof User ) && !empty( $user->getRnfIdRole() );
+
 		$builder
-				->add( 'name', TextType::class )
-				->add( 'displayname', TextType::class )
+				->add( 'name', TextType::class, [
+						'disabled' => $identityComesFromRnf,
+				] )
+				->add( 'displayname', TextType::class, [
+						'disabled' => $identityComesFromRnf,
+				] )
 				->add( 'avatarfile', FileType::class, [
 						'required'    => FALSE,
 						'mapped'      => FALSE,

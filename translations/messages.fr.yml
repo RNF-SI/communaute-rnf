@@ -25,6 +25,7 @@ forms:
         display_name:
             label: "Comment faut-il vous appeler ?"
             placeholder: "Entrez, au choix, votre prénom, votre nom, un pseudo…"
+        identity_from_rnf: "Cette information provient de votre compte RNF et ne peut pas être modifiée ici."
         avatar:
             label: "Image de profil"
             button: "Parcourir"
