@@ -80,6 +80,23 @@ swiftmailer:
     delivery_addresses: ['toi@rnfrance.org']
 ```
 
+### Vérifier l'environnement en une commande
+
+Une fois le code déployé, sur le serveur :
+
+```bash
+php bin/console app:preflight
+```
+
+Elle contrôle tout ce dont l'absence provoque une panne **silencieuse** plutôt
+qu'une erreur : l'extension `imagick`, les migrations restantes, `SITE_HOST`,
+les trois jetons Postmark, `config/platform/config.yaml`, les répertoires de
+fichiers, et la présence des assets compilés — donc que `npm run build` n'a pas
+échoué faute d'une version de Node compatible.
+
+Elle sort en erreur sur ce qui empêche l'application de fonctionner, et signale
+en « attention » ce qui la laisse tourner en silence.
+
 ## 2. Déployer
 
 `clevercloud/post_build.sh` enchaîne migrations, cache, `import:skills` et build
