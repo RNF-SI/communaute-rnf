@@ -95,6 +95,22 @@ class PreflightCommand extends Command {
 				TRUE,
 		];
 
+		// Le mode debug en production expose les traces d'exécution, ralentit
+		// tout, et surtout change le comportement des gabarits : il active
+		// strict_variables, qui transforme une valeur absente en erreur fatale
+		// plutôt qu'en silence. C'est ce qui rendait #3 visible aux membres.
+		$debug = (bool) $this->parameters->get( 'kernel.debug' );
+		$prod  = $this->parameters->get( 'kernel.environment' ) === 'prod';
+
+		$checks[] = [
+				'Mode debug',
+				!( $prod && $debug ),
+				$prod && $debug
+						? 'actif en production — traces exposées, et les gabarits ne se comportent pas comme prévu'
+						: ( $debug ? 'actif, cohérent avec cet environnement' : 'désactivé' ),
+				FALSE,
+		];
+
 		$checks[] = [
 				'Connexion base de données',
 				$this->canReachDatabase(),

@@ -20,6 +20,7 @@ use Ramsey\Uuid\Uuid;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use Faker;
+use RuntimeException;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 class AppFixtures extends Fixture {
@@ -58,17 +59,45 @@ class AppFixtures extends Fixture {
 	private $slugGenerator;
 	private $testAccountsEmail;
 	private $communitySlug;
+	private $environment;
+	private $allowed;
 
 	public function __construct (
 			UserPasswordEncoderInterface $passwordEncoder,
 			SlugGenerator $slugGenerator,
 			string $testAccountsEmail = '',
-			string $communitySlug = 'communaute'
+			string $communitySlug = 'communaute',
+			string $environment = 'dev',
+			string $allowFixtures = ''
 	) {
 		$this->passwordEncoder   = $passwordEncoder;
 		$this->slugGenerator     = $slugGenerator;
 		$this->testAccountsEmail = $testAccountsEmail;
 		$this->communitySlug     = $communitySlug;
+		$this->environment       = $environment;
+		$this->allowed           = filter_var( $allowFixtures, FILTER_VALIDATE_BOOLEAN );
+	}
+
+	/**
+	 * Charger les fixtures commence par **vider toute la base**.
+	 *
+	 * En dev et en test, c'est ce qu'on attend. En production, ce serait la
+	 * perte de tout : comptes, groupes, discussions, documents. Une
+	 * préproduction tournant elle aussi en environnement « prod », on ne peut
+	 * pas se contenter de l'environnement pour distinguer les deux : il faut
+	 * une autorisation explicite, que seule une préproduction porte.
+	 */
+	private function refuseOnProduction () {
+		if ( ( $this->environment !== 'prod' ) || $this->allowed ) {
+			return;
+		}
+
+		throw new RuntimeException(
+				"Refus de charger les fixtures : elles VIDENT la base avant de la remplir.\n"
+				. "Si cet environnement est une préproduction et que la perte des données est voulue,\n"
+				. "ajoutez ALLOW_FIXTURES=1 dans le .env.local de ce serveur.\n"
+				. "Ne le faites JAMAIS en production."
+		);
 	}
 
 	/**
@@ -98,6 +127,8 @@ class AppFixtures extends Fixture {
 	}
 
 	public function load ( ObjectManager $manager ) {
+		$this->refuseOnProduction();
+
 		$countries        = [ 'fr_FR', 'en_GB', 'es_ES', 'en_US', 'de_DE' ];
 
 		/**

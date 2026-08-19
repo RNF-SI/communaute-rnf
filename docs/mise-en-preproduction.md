@@ -191,6 +191,115 @@ Puis, quand le résultat est satisfaisant, planifier :
 échec, ou vers des adresses anonymisées, abîme la réputation de `rnfrance.org`
 bien au-delà de la plateforme.
 
+## 5. Retour d'expérience — ce qui a réellement coincé
+
+Premier déploiement en préproduction, le 19 août 2026. Rien de ce qui suit
+n'était prévisible depuis un poste de développement ; tout se reproduira sur la
+production si on ne s'y prépare pas.
+
+### Droits d'écriture — trois fois de suite
+
+| Symptôme | Cause | Remède |
+|---|---|---|
+| `SQLSTATE[HY000]: General error: 8 attempt to write a readonly database` **à la connexion** | Créer un compte déclenche l'indexation. TNTSearch écrit dans des fichiers SQLite créés par la dernière commande console lancée à la main, donc appartenant à celui qui l'a lancée et non au serveur web. | ACL par défaut, voir §1 |
+| `chmod: Operation not permitted` | Propriété mêlée : certains fichiers appartiennent au serveur web (journaux SQLite `-wal`/`-shm`, cache Symfony), et on ne peut modifier que ce qu'on possède. | `sudo chown -R`, puis ACL |
+| La panne revient après chaque `search:reindex:all` | `chmod g+w` ne vaut que pour l'existant ; le bit `setgid` fait hériter le groupe mais **pas** le droit d'écriture. | ACL **par défaut** (`setfacl -d`) |
+
+C'est le point le plus coûteux du déploiement, et il se manifeste au pire endroit
+possible : **la première connexion d'un membre**. Une réindexation lancée un jour
+de maintenance suffirait à bloquer toutes les nouvelles inscriptions sans que
+rien d'autre ne semble cassé.
+
+### Rattacher un serveur existant au dépôt
+
+La préproduction avait été fabriquée en **copiant** les fichiers de production :
+un répertoire `.git` vide, aucun distant, et des fichiers appartenant au serveur
+web. Marche à suivre :
+
+1. sauvegarder `.env.local`, `config/platform/config.yaml`, `var/files/` et la base ;
+2. `sudo chown -R DEPLOYEUR:UTILISATEUR_WEB .` — sans quoi git refuse d'opérer
+   (« dubious ownership ») et ne peut de toute façon rien écrire ;
+3. `rm -rf .git`, puis `git init`, `git remote add`, `git fetch` ;
+4. `git reset --mixed <commit que le serveur porte réellement>` — il ne touche
+   pas aux fichiers, et `git status` révèle alors les seules vraies
+   modifications faites à la main sur le serveur ;
+5. les examiner, puis `git checkout -B develop origin/develop`.
+
+⚠️ Un `chmod -R g+rX` sur l'arborescence pose le bit d'exécution sur des fichiers
+qui le portaient déjà pour leur propriétaire — git voit alors des dizaines
+d'images « modifiées ». Sans conséquence, mais déroutant : `git diff --summary`
+distingue un `mode change` d'une vraie différence.
+
+### Ni composer ni node sur le serveur
+
+Conséquence de la copie. Deux constats :
+
+- **composer était inutile** : `composer.lock` n'ayant pas changé, il n'y avait
+  rien à installer, et l'autoloader PSR-4 trouve les nouvelles classes sans être
+  régénéré. Se vérifie en une commande :
+  ```bash
+  php -r 'require "vendor/autoload.php"; var_dump(class_exists("App\Service\MailGuard"));'
+  ```
+- **node était indispensable** et absent. Les assets ont été compilés sur un
+  poste de développement puis copiés :
+  ```bash
+  NODE_OPTIONS=--openssl-legacy-provider npm run build
+  rsync -avz --delete public/build/ UTILISATEUR@SERVEUR:/chemin/public/build/
+  ```
+  À trancher pour la production : installer node sur le serveur, ou verser
+  `public/build/` dans le dépôt.
+
+### Lire les journaux sans se tromper
+
+Une erreur dans `var/log/prod.log` peut être **antérieure** à la commande qu'on
+vient de lancer. Une table manquante y était signalée alors que les migrations
+étaient passées : l'erreur datait d'une visite faite avant. Toujours vider le
+journal avant de vérifier :
+
+```bash
+: > var/log/prod.log
+# puis naviguer, et seulement ensuite :
+grep -E "request\.(CRITICAL|ERROR)" var/log/prod.log | tail -5
+```
+
+Avec `APP_DEBUG=1`, le journal enfle très vite et noie les vraies erreurs sous le
+bavardage des évènements.
+
+### Charger des données de test sur une base peuplée
+
+`doctrine:fixtures:load` échoue sur une clé étrangère : la purge supprime les
+comptes avant les fichiers qui les référencent. Il faut repartir d'un schéma
+vide — `doctrine:database:drop --force`, `create`, `migrations:migrate`, puis les
+fixtures. Voir [`donnees-reelles.md`](donnees-reelles.md).
+
+### Les comptes de test ne peuvent pas se connecter en ligne
+
+Le pare-feu ne branche **que** le SSO RNF ; la connexion par formulaire n'est
+plus câblée. Les six comptes des fixtures et leur mot de passe ne servent qu'en
+local. Sur un serveur, seul un vrai compte GeoNature entre — et il faut lui
+redonner ses droits après chaque rechargement des fixtures :
+
+```bash
+php bin/console user:set-admin adresse@rnfrance.org
+```
+
+Corollaire : **recetter les notifications demande deux personnes**, puisqu'on
+n'est jamais notifié de ses propres actions.
+
+### Points laissés ouverts
+
+- `preg_match(): Compilation failed: length of lookbehind assertion is not
+  limited` à chaque vidage de cache — incompatibilité entre le routeur de
+  Symfony 4.4 et une version récente de PCRE. Sans effet constaté, mais à
+  surveiller : si une page renvoie un 404 inattendu, c'est la première piste.
+- `POSTMARK_INBOUND_KEY` vide en préproduction. Si elle l'est aussi en
+  production, c'est une seconde cause au fait que la réponse par e-mail n'a
+  jamais fonctionné, en plus de la règle de sécurité corrigée dans #12.
+- `APP_DEBUG=1` avec `APP_ENV=prod`. En plus d'exposer les traces, le mode debug
+  active `strict_variables` dans Twig, qui transforme une valeur absente en
+  erreur fatale — c'est ce qui rendait #3 visible aux membres. `app:preflight`
+  le signale désormais.
+
 ## 4. Si quelque chose ne va pas
 
 ### Deux autres pièges de la préproduction
@@ -218,3 +327,83 @@ bien au-delà de la plateforme.
 | Le build front échoue au déploiement | version de Node trop récente pour webpack 4 |
 | Les réponses par e-mail n'arrivent pas | l'URL `/ws/list/inbound/{clé}` doit être publiquement joignable |
 | Un compte de test ne reçoit rien en préproduction | son adresse est en `@example.org` : `MailGuard` la refuse. Renseigner `TEST_ACCOUNTS_EMAIL` et recharger les fixtures |
+
+## 6. Déployer en PRODUCTION — sans perdre de données
+
+⚠️ **Les commandes des sections précédentes ne s'appliquent pas toutes.** La mise
+en préproduction repartait d'une base vide ; la production, elle, porte les
+données du réseau. Trois commandes sont à proscrire absolument :
+
+| À ne JAMAIS lancer en production | Effet |
+|---|---|
+| `doctrine:database:drop` | supprime la base entière |
+| `doctrine:fixtures:load` | **vide** la base avant de la remplir de données inventées |
+| `doctrine:schema:update --force` | modifie le schéma hors migrations, sans trace ni retour arrière |
+
+`AppFixtures` refuse désormais de s'exécuter en environnement « prod » sans un
+`ALLOW_FIXTURES=1` explicite. **Ne posez jamais cette variable sur la
+production** : elle n'a de sens que sur une préproduction dont on assume la
+perte des données.
+
+### La séquence, sans destruction
+
+```bash
+cd /chemin/vers/communaute-rnf
+
+# 1. SAUVEGARDE — d'abord, toujours
+mysqldump -u USER -p BASE | gzip > ~/avant-deploiement-$(date +%Y%m%d-%H%M).sql.gz
+tar czf ~/avant-deploiement-files.tgz var/files/
+cp .env.local config/platform/config.yaml ~/
+
+# 2. Récupérer le code
+git pull origin develop
+
+# 3. Migrations — elles ajoutent des colonnes et une table, sans rien supprimer
+php bin/console doctrine:migrations:migrate --no-interaction
+
+# 4. Assets : compilés ailleurs puis copiés, ou npm run build si node est présent
+
+# 5. Finalisation
+php bin/console cache:clear
+php bin/console import:skills          # ne crée que ce qui manque, ne supprime rien
+php bin/console search:reindex:all     # reconstruit les index, ne touche pas aux données
+
+# 6. Contrôle
+php bin/console app:preflight
+```
+
+### Ce que font réellement les huit migrations
+
+Aucune ne supprime de donnée. Elles ajoutent :
+
+| Migration | Effet |
+|---|---|
+| `Version20260818151610` | colonne `inbound_message_id` sur les messages |
+| `Version20260819072259` | colonne `description` sur les documents |
+| `Version20260819073810` | colonne `edited_at` sur les messages |
+| `Version20260819075409` | colonne `notifications_settings` sur les comptes |
+| `Version20260819075543` | **table** `notifications` |
+| `Version20260819110800` | colonnes `deleted_at` et `archived_at` |
+| `Version20260819111534` | colonne `is_important` sur les pages |
+| `Version20260819125414` | colonne `parent_id` sur les dossiers de documents |
+
+Toutes réversibles par `doctrine:migrations:migrate prev`, mais **la sauvegarde
+reste le vrai filet** : un retour arrière de migration ne restitue pas une donnée
+qu'un défaut applicatif aurait effacée entre-temps.
+
+### Les préférences de notification ne sont pas migrées, et c'est voulu
+
+Les réglages par groupe vivent dans une colonne JSON qui existait déjà. La
+lecture interprète l'ancien indicateur `unsubscribed` comme un refus sur les
+quatre catégories : **personne n'est réabonné de force**, et aucune donnée n'est
+réécrite. Rien à annuler si l'on revient en arrière.
+
+### Avant d'allumer les e-mails
+
+L'ordre importe, et le dernier point est irréversible :
+
+1. les trois enregistrements DNS de [`delivrabilite-emails.md`](delivrabilite-emails.md) ;
+2. vérifier `POSTMARK_SENDER`, `POSTMARK_SERVER_TOKEN`, `POSTMARK_BULK_TOKEN` et
+   `POSTMARK_INBOUND_KEY` — cette dernière était vide en préproduction ;
+3. `app:notifications:digest --dry-run` pour voir ce qui partirait ;
+4. **et seulement alors** planifier la tâche quotidienne.

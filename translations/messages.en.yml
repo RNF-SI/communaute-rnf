@@ -246,6 +246,7 @@ pages:
         notifications:
             title: "My notifications"
             link: "My notifications"
+            settings: "Notification settings"
             empty: "You have no notification yet."
             types:
                 discussion_message: "New message in the discussion"

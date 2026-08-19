@@ -67,6 +67,41 @@
 	.groups-tree--node {
 		margin-bottom: rem(12px);
 	}
+
+	// Sur toute la largeur, la vignette verticale devenait une bannière de
+	// couleur de 500px de haut. En rangée, l'illustration n'occupe plus qu'une
+	// vignette à gauche du texte.
+	.group__teaser {
+		@include medium-or-more {
+			flex-flow:   row nowrap;
+			align-items: stretch;
+		}
+	}
+
+	.group-illustration {
+		@include medium-or-more {
+			flex:       0 0 rem(180px);
+			min-height: rem(102px);
+
+			&::before {
+				padding-bottom: 0;
+			}
+		}
+	}
+
+	.group-content {
+		@include medium-or-more {
+			min-width: 0;
+		}
+	}
+
+	.group-logo {
+		@include medium-or-more {
+			position:   static;
+			margin:     0 0 rem(10px);
+			left:       auto;
+		}
+	}
 }
 
 .my-groups-list {
@@ -77,13 +112,47 @@
 	}
 }
 
-.group-search-bar{
-	padding: 2.5rem 0 2.5rem 0;
-	display: flex;
+// Le champ de recherche et le filtre par commission forment une seule barre :
+// ils partagent la même ligne de base, se séparent d'une gouttière et passent
+// l'un sous l'autre quand la place manque. (#23)
+.group-search-bar {
+	padding:         padding_vertical('large') 0;
+
+	display:         flex;
+	flex-flow:       row wrap;
 	justify-content: center;
-	input {
-		width: 645px;
-		display: inline-block;
+	align-items:     flex-end;
+	gap:             column_gap('small') * .4;
+
+	input[type="search"] {
+		flex:      1 1 rem(320px);
+		width:     auto;
+		min-width: 0;
+		max-width: rem(645px);
+	}
+}
+
+.groups-filter {
+	display:     flex;
+	flex-flow:   column nowrap;
+
+	flex:        0 1 rem(260px);
+	min-width:   rem(180px);
+
+	label {
+		margin-bottom: rem(4px);
+
+		font-size:     rem(14px);
+		color:         $color_grey_medium;
+	}
+
+	select {
+		width:      100%;
+		min-height: rem(50px);
+	}
+
+	button {
+		margin-top: rem(4px);
 	}
 }
 
@@ -398,8 +467,6 @@
 	.group-name {
 		margin-top: rem(4px);
 
-		flex-grow:  1;
-
 		@include font_title_bold;
 
 		a {
@@ -408,6 +475,9 @@
 		}
 	}
 
+	// La description est tronquée à quatre lignes, mais elle n'en réserve plus
+	// la hauteur : un groupe sans description laissait un grand blanc sous son
+	// titre.
 	.group-description {
 		display:            -webkit-box;
 		-webkit-line-clamp: 4;
@@ -415,18 +485,21 @@
 		text-overflow:      ellipsis;
 
 		line-height:        line_height_default();
-		height:             4 * line_height_default() * 1em;
+		max-height:         4 * line_height_default() * 1em;
 
 		@include medium-or-more {
 			line-height: line_height_default('large');
-			height:      4 * line_height_default('large') * 1em;
+			max-height:  4 * line_height_default('large') * 1em;
 		}
 
 		overflow:           hidden;
 	}
 
+	// Les membres restent en bas de la carte : dans une rangée, toutes les
+	// vignettes ont la même hauteur et leurs avatars s'alignent.
 	.group-members {
-		margin-top:      padding_vertical('small');
+		margin-top:      auto;
+		padding-top:     padding_vertical('small');
 
 		text-decoration: none;
 	}

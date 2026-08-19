@@ -119,6 +119,8 @@ services:
     arguments:
       $testAccountsEmail: "%env(string:TEST_ACCOUNTS_EMAIL)%"
       $communitySlug: "%env(string:COMMUNITY_SLUG)%"
+      $environment: "%kernel.environment%"
+      $allowFixtures: "%env(string:ALLOW_FIXTURES)%"
 
   App\Service\MailGuard:
     arguments:

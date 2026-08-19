@@ -351,6 +351,7 @@ pages:
         notifications:
             title: "Mes notifications"
             link: "Mes notifications"
+            settings: "Régler mes notifications"
             empty: "Vous n’avez aucune notification pour le moment."
             types:
                 discussion_message: "Nouveau message dans la discussion"

@@ -9,6 +9,10 @@
 
 			<div class="panel">
 				<h1 class="h1">{{ 'pages.user.notifications.title'|trans }}</h1>
+
+				<div class="panel--edit">
+					<a class="cta__inverted" href="{{ path('user_parameters_edit') }}#notifications-settings">{{ 'pages.user.notifications.settings'|trans }}</a>
+				</div>
 			</div>
 
 			{% if notifications is not empty %}
