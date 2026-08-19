@@ -54,10 +54,13 @@ class GroupController extends AbstractController {
 		$selected = $request->query->get( 'commission' );
 		$parent   = $selected ? $userGroupsManager->getGroupBySlug( $selected ) : NULL;
 
+		$groups = $parent
+				? $userGroupsManager->getGroupsUnder( $parent )
+				: $userGroupsManager->getGroups();
+
 		return $this->render( 'pages/group/groups-index.html.twig', [
-				'groups' => $parent
-						? $userGroupsManager->getGroupsUnder( $parent )
-						: $userGroupsManager->getGroups(),
+				'groups' => $groups,
+				'groupsTree' => $userGroupsManager->asTree( $groups ),
 				'groupsToActivate' => $userGroupsManager->getGroupsToActivate(),
 				'parents' => $userGroupsManager->getParentGroups(),
 				'selectedCommission' => $parent ? $parent->getSlug() : '',
@@ -125,6 +128,7 @@ class GroupController extends AbstractController {
 			} else {
 				$groupListHTML = $this->render( 'pages/group/groups-list.html.twig', [
 					'groups' => $groupList,
+					'groups_tree' => $userGroupsManager->asTree( $groupList ),
 				] );
 				$contentGroups = $groupListHTML->getContent();
 				$contentGroups = $searchEngineManager->highlightText($query, $contentGroups);
@@ -151,6 +155,7 @@ class GroupController extends AbstractController {
 			} else {
 				$groupListHTML = $this->render( 'pages/group/groups-list.html.twig', [
 					'groups' => $groupList,
+					'groups_tree' => $userGroupsManager->asTree( $groupList ),
 				] );
 				$contentGroups = $groupListHTML->getContent();
 			}

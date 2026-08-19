@@ -26,6 +26,49 @@
 	}
 }
 
+/**************************************************
+* GROUP TREE
+**************************************************/
+
+// La liste des groupes suit la hiérarchie commission > pôle > atelier. Une
+// grille en trois colonnes ne dit rien de cette dépendance : l'arborescence
+// s'affiche donc en pleine largeur, chaque niveau décalé sous son parent. (#22)
+.groups-list.groups-tree {
+	> ul {
+		display:         block;
+		justify-content: initial;
+	}
+
+	> ul > li {
+		width:       100%;
+		max-width:   none;
+		margin-left: 0;
+
+		@include medium-or-more {
+			&:not(:nth-child(3n+1)) {
+				margin-left: 0;
+			}
+		}
+	}
+
+	.groups-tree--children {
+		margin:     0 0 0 rem(18px);
+		padding:    0 0 0 rem(18px);
+		list-style: none;
+
+		border-left: 2px solid $color_grey_border;
+
+		> li {
+			width:       100%;
+			margin-left: 0;
+		}
+	}
+
+	.groups-tree--node {
+		margin-bottom: rem(12px);
+	}
+}
+
 .my-groups-list {
 	@include clearulli(true);
 

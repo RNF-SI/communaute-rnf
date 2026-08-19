@@ -1,10 +1,25 @@
+{% macro branch(node, depth) %}
+	{% import _self as tree %}
+	<li class="groups-tree--node groups-tree--node__depth-{{ depth }}">
+		{% include 'contents/group/group--teaser.html.twig' with {'group': node.group} %}
+
+		{% if node.children is not empty %}
+			<ul class="groups-tree--children">
+				{% for child in node.children %}
+					{{ tree.branch(child, depth + 1) }}
+				{% endfor %}
+			</ul>
+		{% endif %}
+	</li>
+{% endmacro %}
+
+{% import _self as tree %}
+
 {% if groups is not empty %}
-	<section class="groups-list">
+	<section class="groups-list groups-tree">
 		<ul>
-			{% for group in groups %}
-				<li>
-					{% include 'contents/group/group--teaser.html.twig' with {'group':group} %}
-				</li>
+			{% for node in groups_tree %}
+				{{ tree.branch(node, 0) }}
 			{% endfor %}
 		</ul>
 	</section>

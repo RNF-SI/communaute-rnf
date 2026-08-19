@@ -162,6 +162,86 @@ class UserGroupsManager {
 		return $visible;
 	}
 
+	/**
+	 * Range une liste plate de groupes selon la hiérarchie qui les relie.
+	 *
+	 * Un groupe est une racine quand aucun de ses parents ne figure dans la
+	 * liste affichée : une recherche qui ne remonte qu'un atelier le montre
+	 * donc au premier niveau plutôt que de le faire disparaître sous une
+	 * commission absente.
+	 *
+	 * Un même groupe peut dépendre de plusieurs parents — « Atelier inter
+	 * commissions Montagne » en dépend de cinq — et apparaît alors sous chacun
+	 * d'eux. Le chemin parcouru est suivi pour qu'un cycle ne fasse pas tourner
+	 * la construction en rond. (#22)
+	 *
+	 * @param \App\Entity\Usergroup[] $groups
+	 *
+	 * @return array liste de ['group' => Usergroup, 'children' => array]
+	 */
+	public function asTree(array $groups): array {
+		$visible = [];
+
+		foreach ($groups as $group) {
+			$visible[$group->getId()] = $group;
+		}
+
+		$roots = [];
+
+		foreach ($groups as $group) {
+			$hasVisibleParent = FALSE;
+
+			foreach ($group->getParents() as $parent) {
+				if (isset($visible[$parent->getId()])) {
+					$hasVisibleParent = TRUE;
+					break;
+				}
+			}
+
+			if (!$hasVisibleParent) {
+				$roots[] = $group;
+			}
+		}
+
+		$tree = [];
+
+		foreach ($roots as $root) {
+			$tree[] = $this->branch($root, $visible, []);
+		}
+
+		return $tree;
+	}
+
+	/**
+	 * @param \App\Entity\Usergroup   $group
+	 * @param \App\Entity\Usergroup[] $visible
+	 * @param array                    $path identifiants déjà traversés
+	 *
+	 * @return array
+	 */
+	private function branch(Usergroup $group, array $visible, array $path): array {
+		$path[$group->getId()] = TRUE;
+
+		$children = [];
+
+		foreach ($group->getChildren() as $child) {
+			if (!isset($visible[$child->getId()]) || isset($path[$child->getId()])) {
+				continue;
+			}
+
+			$children[] = $this->branch($child, $visible, $path);
+		}
+
+		usort($children, function (array $a, array $b) {
+			return strcoll((string) $a['group']->getName(), (string) $b['group']->getName());
+		});
+
+		return [
+				'group'    => $group,
+				'children' => $children,
+		];
+	}
+
 	public function getGroupsFilteredByIds(array $idsList, string $groupType): array{
 		$groups = $this->getGroupsFromType($groupType);
 		$result = [];
