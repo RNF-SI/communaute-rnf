@@ -10,6 +10,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Console\Tester\CommandTester;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
  * Issue #34 — one e-mail a day per member, and nothing at all on a quiet day.
@@ -193,6 +194,27 @@ class NotificationDigestTest extends KernelTestCase {
 		$this->digest();
 
 		$this->assertStringContainsString( '0 dropped', $this->command->getDisplay() );
+	}
+
+	/**
+	 * The summary is sent by a scheduled command, with no HTTP request to take
+	 * a host from. Without a configured request context the router falls back
+	 * on "localhost" and every link of the e-mail — including the unsubscribe
+	 * header — points nowhere.
+	 */
+	public function testLinksBuiltOutsideARequestCarryTheRealHost () {
+		$url = self::$container->get( 'router' )->generate(
+				'user_parameters_edit',
+				[],
+				UrlGeneratorInterface::ABSOLUTE_URL
+		);
+
+		$this->assertStringStartsWith( 'http', $url );
+		$this->assertStringNotContainsString(
+				'localhost',
+				$url,
+				'Assert a scheduled command does not build links towards localhost'
+		);
 	}
 
 	public function testDryRunSendsNothingAndMarksNothing () {

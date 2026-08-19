@@ -464,7 +464,8 @@ pages:
 emails:
     digest:
         subject: "Your community summary"
-        preheader: "%d new things in your groups"
+        preheader_one: "1 new thing in your groups"
+        preheader_many: "%d new things in your groups"
         hello: "Hello %s,"
         introduction: "Here is what happened in your groups since the last summary."
         settings: "You can choose what you receive from your"

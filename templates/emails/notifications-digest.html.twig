@@ -2,7 +2,7 @@
 
 {% block title %}{{ 'emails.digest.subject'|trans }}{% endblock %}
 
-{% block preheader %}{{ 'emails.digest.preheader'|trans|format(total) }}{% endblock %}
+{% block preheader %}{{ (total > 1 ? 'emails.digest.preheader_many' : 'emails.digest.preheader_one')|trans|format(total) }}{% endblock %}
 
 {% block body %}
 	<p>{{ 'emails.digest.hello'|trans|format(user.displayName) }}</p>

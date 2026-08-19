@@ -309,3 +309,14 @@ Ou `TRUST_ALL=1` pour faire confiance à tous les headers `X-Forwarded-*`.
 ### Problème de connexion base de données ?
 
 Vérifiez que le `DATABASE_PREFIX` est bien défini et que l'utilisateur MySQL a les droits sur la base.
+
+## Documentation interne
+
+- [`docs/tester-les-emails.md`](docs/tester-les-emails.md) — par quel chemin part
+  chaque e-mail selon l'environnement, et comment les observer en local. **Deux
+  transports coexistent avec deux jetons Postmark différents** : à lire avant de
+  toucher à l'envoi.
+- [`docs/delivrabilite-emails.md`](docs/delivrabilite-emails.md) — SPF, DKIM,
+  DMARC : ce que le DNS doit dire pour que les e-mails arrivent.
+- [`docs/donnees-reelles.md`](docs/donnees-reelles.md) — jeux de données pour le
+  développement, comptes de test, et import anonymisé d'une copie de production.

@@ -3,6 +3,10 @@
 # MAILER_URL nor delivery_addresses; this one hands the messages to the
 # configured mailer.
 services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
   postmark_bulk:
     class: App\Postmark\LocalBulkTransport
     arguments: ["@mailer"]

@@ -14,6 +14,13 @@ parameters:
     list_domain: "%env(string:POSTMARK_LIST_DOMAIN)%"
     inbound_key: "%env(string:POSTMARK_INBOUND_KEY)%"
     bulk_token: "%env(string:POSTMARK_BULK_TOKEN)%"
+  # Hors requête HTTP — les commandes console, dont le résumé quotidien des
+  # notifications — le routeur n'a aucun hôte à qui se référer et bâtit des
+  # liens vers "localhost". Ces paramètres lui en donnent un. (#34)
+  router.request_context.host: "%env(string:SITE_HOST)%"
+  router.request_context.scheme: "%env(string:SECURE_SCHEME)%"
+  router.request_context.base_url: ""
+
   google_recaptcha_site_key: "%env(GOOGLE_RECAPTCHA_SITE_KEY)%"
   google_recaptcha_secret_key: "%env(GOOGLE_RECAPTCHA_SECRET_KEY)%"
 

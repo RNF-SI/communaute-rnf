@@ -642,7 +642,8 @@ search:
 emails:
     digest:
         subject: "Votre résumé de la communauté"
-        preheader: "%d nouveautés dans vos groupes"
+        preheader_one: "1 nouveauté dans vos groupes"
+        preheader_many: "%d nouveautés dans vos groupes"
         hello: "Bonjour %s,"
         introduction: "Voici ce qui s’est passé dans vos groupes depuis le dernier résumé."
         settings: "Vous pouvez régler ce que vous recevez depuis vos"

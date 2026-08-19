@@ -1,5 +1,34 @@
 # Tester les e-mails
 
+## Le chemin d'un e-mail selon l'environnement
+
+C'est la chose à retenir : **la plateforme n'envoie pas ses e-mails par un seul
+canal**, et le canal change selon l'environnement.
+
+| | `dev` | `test` | `prod` (et préproduction) |
+|---|---|---|---|
+| Résumé quotidien, adhésion, mot de passe oublié | `MAILER_URL` | rien n'est envoyé (`disable_delivery`) | transport Postmark, jeton `POSTMARK_SERVER_TOKEN` |
+| Messages de discussion | `MAILER_URL` *(via `LocalBulkTransport`)* | `MAILER_URL` *(via `LocalBulkTransport`)* | **API Postmark en direct**, jeton `POSTMARK_BULK_TOKEN` |
+
+Ce qui se joue derrière :
+
+- En **production**, deux transports coexistent avec **deux jetons Postmark
+  différents**. L'un peut fonctionner pendant que l'autre est muet — c'est
+  exactement ce qui s'est produit dans #4, où les e-mails de discussion
+  arrivaient alors que les demandes d'adhésion ne partaient pas.
+- En **dev et en test**, `postmark_bulk` est remplacé par
+  `App\Postmark\LocalBulkTransport` (voir `config/services_dev.yaml` et
+  `config/services_test.yaml`), qui remet les messages au mailer configuré. Sans
+  ce remplacement, les messages de discussion échapperaient à toute observation.
+- Le transport de production **n'obéit à aucun réglage Symfony**. Ni
+  `MAILER_URL`, ni `disable_delivery`, ni `delivery_addresses` ne le concernent.
+  Sa seule échappatoire est un `POSTMARK_BULK_TOKEN` vide, auquel cas il ne fait
+  rien, silencieusement et sans erreur.
+
+Conséquence pratique : **un e-mail de discussion qui ne part pas en production
+ne lève aucune alerte.** Si les messages cessent d'arriver, commencer par
+vérifier ce jeton.
+
 ## Ce qui part, et par quel chemin
 
 | E-mail | Service | Transport |
@@ -7,14 +36,8 @@
 | Message de discussion | `DiscussionSender` | `BulkTransport` → **API Postmark en direct** |
 | Résumé quotidien, demande d'adhésion, mot de passe oublié, inscription | `EmailSender` | Swift_Mailer → `MAILER_URL` |
 
-C'est la distinction qui compte : le premier **court-circuite la configuration
-Symfony**. Il n'obéit ni à `MAILER_URL`, ni à `disable_delivery`, ni à
-`delivery_addresses`. Sa seule échappatoire est un `POSTMARK_BULK_TOKEN` vide,
-auquel cas il ne fait rien du tout, silencieusement.
-
-En dev et en test, `postmark_bulk` est donc remplacé par
-`App\Postmark\LocalBulkTransport`, qui remet les messages au mailer configuré.
-Tout passe alors par le même chemin, et tout devient lisible.
+(Rappel du tableau ci-dessus : en dev et en test, le premier passe lui aussi par
+`MAILER_URL`, grâce au transport de remplacement.)
 
 ## En local : un collecteur, jamais Postmark
 
