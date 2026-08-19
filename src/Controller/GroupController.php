@@ -40,7 +40,8 @@ class GroupController extends AbstractController {
 	 */
 	public function groupsIndex (
 		EntityManagerInterface $manager,
-		UserGroupsManager $userGroupsManager
+		UserGroupsManager $userGroupsManager,
+		Request $request
 	) {
 		$form = $this->createFormBuilder()
 					 ->add( 'groups_search_bar', SearchType::class, [
@@ -48,9 +49,18 @@ class GroupController extends AbstractController {
 						] )
 					 ->getForm();
 
+		// Filtre par commission : la hiérarchie des groupes est la seule donnée
+		// dont on dispose réellement pour trier une liste de 58 groupes. (#23)
+		$selected = $request->query->get( 'commission' );
+		$parent   = $selected ? $userGroupsManager->getGroupBySlug( $selected ) : NULL;
+
 		return $this->render( 'pages/group/groups-index.html.twig', [
-				'groups' => $userGroupsManager->getGroups(),
+				'groups' => $parent
+						? $userGroupsManager->getGroupsUnder( $parent )
+						: $userGroupsManager->getGroups(),
 				'groupsToActivate' => $userGroupsManager->getGroupsToActivate(),
+				'parents' => $userGroupsManager->getParentGroups(),
+				'selectedCommission' => $parent ? $parent->getSlug() : '',
 				'form' => $form->createView()
 		] );
 	}
@@ -71,6 +81,19 @@ class GroupController extends AbstractController {
         $query = $request->query->get('q');
         $type = $request->query->get('type');
 
+		// Le filtre en cours doit survivre à une recherche par texte, sans quoi
+		// taper une lettre ramènerait les 58 groupes. (#23)
+		$selected = $request->query->get('commission');
+		$parent   = $selected ? $userGroupsManager->getGroupBySlug($selected) : NULL;
+
+		if ($parent) {
+			$allowed = [];
+
+			foreach ($userGroupsManager->getGroupsUnder($parent) as $group) {
+				$allowed[$group->getId()] = TRUE;
+			}
+		}
+
 		if($query!==''){
 			$em = $this->getDoctrine()->getManager();
 			//Launch Search
@@ -79,6 +102,12 @@ class GroupController extends AbstractController {
 
 			// Simplifier: toujours utiliser le type passé en paramètre
 			$groupList = $userGroupsManager->getGroupsFilteredByIds($result, $type);
+
+			if ($parent) {
+				$groupList = array_values(array_filter($groupList, function ($group) use ($allowed) {
+					return isset($allowed[$group->getId()]);
+				}));
+			}
 			
 			$groupList = $searchEngineManager->snippetGroupsText($query, $groupList);
 
@@ -102,6 +131,13 @@ class GroupController extends AbstractController {
 			}
 		} else {
 			$groupList = $userGroupsManager->getGroupsFromType($type);
+
+			if ($parent) {
+				$groupList = array_values(array_filter($groupList, function ($group) use ($allowed) {
+					return isset($allowed[$group->getId()]);
+				}));
+			}
+
 			// Pour les groupes en attente, utiliser un template spécialisé
 			if ($type === 'groups-to-activate-elements') {
 				if (empty($groupList)) {

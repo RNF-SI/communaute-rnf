@@ -415,6 +415,10 @@ pages:
             title: "Groupes"
             subtitle: "Trouvez les groupes de discussion qui vous intéressent"
             no_results: "Aucun groupe trouvé"
+            filter:
+                label: "Filtrer par commission"
+                all: "Toutes les commissions"
+                submit: "Filtrer"
             list:
                 all: "Groupes"
                 important: "Groupes importants"

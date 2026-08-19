@@ -302,6 +302,10 @@ pages:
             home: "Overview"
             events: "Recent activity"
         groups:
+            filter:
+                label: "Filter by commission"
+                all: "All commissions"
+                submit: "Filter"
             title: "Groups"
             subtitle: "Find the groups that interest you"
             list:

@@ -45,6 +45,14 @@ class AppFixtures extends Fixture {
 	 */
 	private const PRIVATE_GROUP = 'groupe-prive-de-test';
 
+	/**
+	 * Slug of the group that stands above the two others, so that the
+	 * hierarchy — and the filter that relies on it — can be tried out. The
+	 * production database is built this way: commissions, then groups and
+	 * pôles, then ateliers.
+	 */
+	private const PARENT_GROUP = 'commission-de-test';
+
 	private $passwordEncoder;
 	private $slugGenerator;
 	private $testAccountsEmail;
@@ -393,6 +401,10 @@ class AppFixtures extends Fixture {
 		$faker = Faker\Factory::create( 'fr_FR' );
 
 		$groups = [
+				self::PARENT_GROUP    => [
+						'name'       => 'Commission de test',
+						'visibility' => Usergroup::PUBLIC,
+				],
 				self::REFERENCE_GROUP => [
 						'name'       => 'Groupe de test',
 						'visibility' => Usergroup::PUBLIC,
@@ -402,6 +414,8 @@ class AppFixtures extends Fixture {
 						'visibility' => Usergroup::PRIVATE,
 				],
 		];
+
+		$built = [];
 
 		foreach ( $groups as $slug => $definition ) {
 			$group = new Usergroup();
@@ -461,8 +475,17 @@ class AppFixtures extends Fixture {
 
 			$manager->flush();
 
+			$built[ $slug ] = $group;
+
 			$this->fillReferenceGroup( $manager, $group, $named, $faker );
 		}
+
+		// Les deux groupes de test dépendent de la commission de test.
+		foreach ( [ self::REFERENCE_GROUP, self::PRIVATE_GROUP ] as $slug ) {
+			$built[ $slug ]->addParent( $built[ self::PARENT_GROUP ] );
+		}
+
+		$manager->flush();
 	}
 
 	/**
