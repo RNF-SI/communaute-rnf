@@ -335,6 +335,11 @@ pages:
             title: "Editing discussion"
             link: "Edit discussion"
             button: "Save changes"
+        message_edit:
+            title: "Edit your message"
+            link: "Edit message"
+            submit: "Save changes"
+            edited: "— edited %s"
         view:
             active: "Active %s"
             date: "Created on %s"
@@ -482,6 +487,7 @@ messages:
         discussion_created: "The discussion has been created"
         message_created: "The message has been posted to the discussion"
         message_deleted: "The message has been deleted"
+        message_edited: "The message has been updated"
         message_error: "Your message cannot be posted, please retry"
         discussion_updated: "The discussion has been updated"
         discussion_deleted: "The discussion has been deleted"

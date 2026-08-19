@@ -379,6 +379,81 @@ class GroupDiscussionsController extends AbstractController {
 	}
 
 	/**
+	 * @Route("/groups/{groupSlug}/message/{messageId}/edit", name="group_message_edit")
+	 * @param                                            $groupSlug
+	 * @param                                            $messageId
+	 * @param \Symfony\Component\HttpFoundation\Request  $request
+	 * @param \Doctrine\ORM\EntityManagerInterface       $manager
+	 * @param \Symfony\Component\Routing\Generator\UrlGeneratorInterface $router
+	 *
+	 * @return \Symfony\Component\HttpFoundation\Response
+	 */
+	public function groupMessageEdit (
+			$groupSlug,
+			$messageId,
+			Request $request,
+			EntityManagerInterface $manager,
+			UrlGeneratorInterface $router
+	) {
+		/**
+		 * @var \App\Entity\Usergroup $group
+		 */
+		$group = $manager->getRepository( Usergroup::class )
+						 ->findOneBy( [ 'slug' => $groupSlug ] );
+
+		if ( !$group ) {
+			throw $this->createNotFoundException( 'The group does not exist' );
+		}
+
+		/**
+		 * @var \App\Entity\DiscussionMessage $message
+		 */
+		$message = $manager->getRepository( DiscussionMessage::class )
+						   ->findOneBy( [ 'id' => $messageId ] );
+
+		if ( !$message || ( $message->getDiscussion()->getUsergroup() !== $group ) ) {
+			throw $this->createNotFoundException( 'The message does not exist' );
+		}
+
+		$this->denyAccessUnlessGranted( GroupDiscussionVoter::EDIT_MESSAGE, $message );
+
+		$form = $this->createForm( DiscussionMessageType::class, $message );
+		$form->get( 'body' )->setData( $message->getBody() );
+
+		$form->handleRequest( $request );
+
+		if ( $form->isSubmitted() && $form->isValid() ) {
+			if ( empty( $form->get( 'body' )->getData() ) ) {
+				$this->addFlash( 'warning', 'messages.discussion.message_error' );
+			}
+			else {
+				$message->setBody( $form->get( 'body' )->getData() );
+				$message->setEditedAt( new DateTime() );
+
+				$manager->flush();
+
+				// No notification is sent: a correction is not a new message,
+				// and re-notifying everyone would be worse than the typo.
+
+				$this->addFlash( 'notice', 'messages.discussion.message_edited' );
+
+				return $this->redirectToRoute( 'group_discussion_index', [
+						'groupSlug'      => $group->getSlug(),
+						'discussionUuid' => $message->getDiscussion()->getUuid(),
+				] );
+			}
+		}
+
+		return $this->render( 'pages/discussion/message-edit.html.twig', [
+				'group'      => $group,
+				'discussion' => $message->getDiscussion(),
+				'message'    => $message,
+				'form'       => $form->createView(),
+				'upload'     => $router->generate( 'file_upload', [ 'groupId' => $group->getId() ] ),
+		] );
+	}
+
+	/**
 	 * @Route("/groups/{groupSlug}/message/{messageId}/delete", name="group_message_delete")
 	 * @param                                            $groupSlug
 	 * @param                                            $messageId

@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'pages.discussion.message_edit.title'|trans }} - {{ discussion.title }} | {{ plateform.name }}{% endblock %}
+
+{% block main %}
+	<section class="main main__discussion-message-edit">
+		<div class="main--content content-container">
+			{% include 'components/app-flashes.html.twig' %}
+
+			<div class="panel">
+				<h1 class="h1">{{ 'pages.discussion.message_edit.title'|trans }}</h1>
+			</div>
+
+			{% include 'components/breadcrumb.html.twig' with {'items':[
+				{
+					label: 'pages.group.groups.title'|trans,
+					href: path('groups_index')
+				},
+				{
+					label: group.name,
+					href: path('group_index', {'groupSlug':group.slug})
+				},
+				{
+					label: discussion.title,
+					href: path('group_discussion_index', {'groupSlug':group.slug, 'discussionUuid':discussion.uuid})
+				},
+				{
+					label: 'pages.discussion.message_edit.title'|trans,
+				}
+			]} %}
+
+			<div class="thin">
+				{% include 'forms/discussion/message-form.html.twig' with {
+					'form': form,
+					'form_submit': 'pages.discussion.message_edit.submit'|trans,
+					'upload': upload
+				} %}
+			</div>
+		</div>
+	</section>
+{% endblock %}

@@ -11,16 +11,30 @@
 				<div class="user--name">
 					<a href="{{ path('member', {'user_id':message.author.id}) }}"{{ isDisabled ? "class=disabled" }}>{{ message.author.name }}</a>
 				</div>
-				<div class="message--date">{{ message.createdAt|ago|capitalize }}</div>
+				<div class="message--date">
+					{{ message.createdAt|ago|capitalize }}
+					{% if message.editedAt %}
+						<span class="message--edited">{{ 'pages.discussion.message_edit.edited'|trans|format(message.editedAt|ago) }}</span>
+					{% endif %}
+				</div>
 			</div>
 
-			{% if is_granted(constant('App\\Security\\GroupDiscussionVoter::EDIT'), message.discussion) %}
+			{% if is_granted(constant('App\\Security\\GroupDiscussionVoter::EDIT_MESSAGE'), message) %}
 				<div class="in-list-admin-panel">
 					<button class="toggle-button" type="button" data-toggle-element="sibling" title="{{ 'ui.settings'|trans|escape('html_attr') }}">
 						<span>{{ 'ui.settings'|trans }}</span>
 					</button>
 					<ul aria-hidden="true">
-						{% if not message.masked %}
+						<li>
+							<a class="edit_message"
+								href="{{ path('group_message_edit', {
+									'groupSlug':message.discussion.usergroup.slug,
+									'messageId':message.id,
+								}) }}" title="{{ 'pages.discussion.message_edit.link'|trans|escape('html_attr') }}">
+								<span>{{ 'pages.discussion.message_edit.link'|trans }}</span>
+							</a>
+						</li>
+						{% if is_granted(constant('App\\Security\\GroupDiscussionVoter::EDIT'), message.discussion) and not message.masked %}
 							<li>
 								<a class="hide_message"
 									href="{{ path('group_message_hide', {
@@ -31,7 +45,7 @@
 								</a>
 							</li>
 						{% endif %}
-						{% if message.masked %}
+						{% if is_granted(constant('App\\Security\\GroupDiscussionVoter::EDIT'), message.discussion) and message.masked %}
 							<li>
 								<a class="show_message"
 									href="{{ path('group_message_show', {

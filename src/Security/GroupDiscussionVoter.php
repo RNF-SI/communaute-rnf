@@ -3,6 +3,7 @@
 namespace App\Security;
 
 use App\Entity\Discussion;
+use App\Entity\DiscussionMessage;
 use App\Entity\User;
 use App\Entity\Usergroup;
 use Doctrine\ORM\EntityManagerInterface;
@@ -16,6 +17,12 @@ class GroupDiscussionVoter extends Voter {
 	const PARTICIPATE = 'group:discussion:participate';
 	const EDIT        = 'group:discussion:edit';
 	const DELETE      = 'group:discussion:delete';
+
+	/**
+	 * Applies to a single message rather than to the whole discussion: its
+	 * author may correct what they wrote. (#19)
+	 */
+	const EDIT_MESSAGE = 'group:discussion:message:edit';
 
 	/**
 	 * @var \Doctrine\ORM\EntityManagerInterface
@@ -38,6 +45,10 @@ class GroupDiscussionVoter extends Voter {
 		}
 
 		if ( in_array( $attribute, [ self::READ, self::PARTICIPATE, self::EDIT, self::DELETE ] ) && ( $subject instanceof Discussion ) ) {
+			return TRUE;
+		}
+
+		if ( ( $attribute === self::EDIT_MESSAGE ) && ( $subject instanceof DiscussionMessage ) ) {
 			return TRUE;
 		}
 
@@ -91,6 +102,23 @@ class GroupDiscussionVoter extends Voter {
 				$discussion = $subject;
 
 				return $this->security->isGranted( GroupVoter::DELETE, $discussion->getUsergroup() );
+
+			case self::EDIT_MESSAGE:
+				/**
+				 * @var \App\Entity\DiscussionMessage $message
+				 */
+				$message = $subject;
+				$group   = $message->getDiscussion()->getUsergroup();
+				$author  = $message->getAuthor();
+
+				// The author corrects their own message, as long as they may
+				// still take part in the group.
+				if ( ( $user instanceof User ) && $author && ( $author->getId() === $user->getId() ) ) {
+					return $this->security->isGranted( GroupVoter::PARTICIPATE, $group );
+				}
+
+				// Otherwise it takes the right to moderate the group.
+				return $this->security->isGranted( GroupVoter::EDIT, $group );
 		}
 
 		throw new \LogicException( 'This code should not be reached!' );

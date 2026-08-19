@@ -40,6 +40,14 @@ class DiscussionMessage {
 	private $createdAt;
 
 	/**
+	 * When the author last corrected their message. Displayed next to it, so
+	 * that a correction stays visible rather than silent. (#19)
+	 *
+	 * @ORM\Column(type="datetime", nullable=true)
+	 */
+	private $editedAt;
+
+	/**
 	 * @ORM\Column(type="boolean", nullable=true)
 	 */
 	private $masked;
@@ -64,6 +72,16 @@ class DiscussionMessage {
 
 	public function getId (): ?int {
 		return $this->id;
+	}
+
+	public function getEditedAt (): ?\DateTimeInterface {
+		return $this->editedAt;
+	}
+
+	public function setEditedAt ( ?\DateTimeInterface $editedAt ): self {
+		$this->editedAt = $editedAt;
+
+		return $this;
 	}
 
 	public function getInboundMessageId (): ?string {
