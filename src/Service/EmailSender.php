@@ -15,9 +15,15 @@ class EmailSender {
 	 */
 	private $htmlToText;
 
-	public function __construct ( \Swift_Mailer $mailer, HtmlToText $htmlToText ) {
+	/**
+	 * @var \App\Service\MailGuard
+	 */
+	private $guard;
+
+	public function __construct ( \Swift_Mailer $mailer, HtmlToText $htmlToText, MailGuard $guard ) {
 		$this->mailer     = $mailer;
 		$this->htmlToText = $htmlToText;
+		$this->guard      = $guard;
 	}
 
 	/**
@@ -30,6 +36,12 @@ class EmailSender {
 	 * @return int
 	 */
 	public function send ( $from, $to, $subject, $message, array $headers = [] ) {
+		// An address that cannot receive anything produces a hard bounce, and
+		// bounces are what get a sending account suspended. (#14)
+		if ( is_string( $to ) && !$this->guard->isDeliverable( $to ) ) {
+			return 0;
+		}
+
 		$mail = ( new Swift_Message( $subject ) )
 				->setFrom( $from )
 				->setTo( $to )

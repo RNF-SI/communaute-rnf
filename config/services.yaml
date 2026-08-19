@@ -111,6 +111,10 @@ services:
           index: "groups.index"
           class: "Usergroup"
 
+  App\Service\MailGuard:
+    arguments:
+      $environment: "%kernel.environment%"
+
   App\Service\HashGenerator:
     arguments:
       $secret: "%kernel.secret%"

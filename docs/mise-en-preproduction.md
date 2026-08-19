@@ -44,11 +44,31 @@ POSTMARK_BULK_TOKEN=…                       # vide = aucun e-mail de discussio
                                             # silencieusement
 ```
 
-⚠️ **Si la préproduction porte une copie anonymisée, toutes les adresses sont en
-`@example.org` et n'existent pas.** Un envoi groupé produirait autant de rebonds
-durs, et Postmark suspend un compte pour ça — la production tomberait avec.
-Utiliser **un serveur Postmark distinct** pour la préproduction, ou laisser
-`POSTMARK_BULK_TOKEN` vide et ajouter :
+### Volume : ce que ça représente vraiment
+
+Sur la volumétrie réelle de la production — 122 comptes, 58 groupes, 8,3 membres
+par groupe en moyenne :
+
+| | Volume |
+|---|---|
+| Un message de discussion | ~7 e-mails |
+| Résumé quotidien | **au plus 122 e-mails par jour**, quelle que soit l'activité |
+| Pire des cas mensuel | ~3 700 e-mails |
+
+Le résumé est un **plafond, pas une augmentation** : quelle que soit la quantité
+de contenu publié, un membre reçoit au plus un e-mail par jour. Ce n'est pas le
+volume qui menace le service d'envoi.
+
+⚠️ **Ce qui le menace, ce sont les rebonds.** Une copie anonymisée n'a que des
+adresses en `@example.org`, qui n'acceptent rien : chaque envoi produit un rebond
+dur, et Postmark suspend un compte dont le taux de rebond monte — la production
+tomberait avec la préproduction.
+
+`App\Service\MailGuard` refuse désormais ces adresses **en production, et donc
+en préproduction** : example.com/net/org, `localhost`, et les suffixes `.test`,
+`.invalid`, `.local`, `.example`. En dev et en test rien n'est refusé, un
+collecteur local sert précisément à ça. L'accident est donc structurellement
+impossible, mais deux précautions restent utiles :
 
 ```yaml
 # config/packages/prod/swiftmailer.yaml, préproduction seulement
@@ -128,6 +148,15 @@ bien au-delà de la plateforme.
 
 ## 4. Si quelque chose ne va pas
 
+### Deux autres pièges de la préproduction
+
+- **Ne jamais planifier la tâche du résumé sur la préproduction.** Si les deux
+  environnements l'exécutent, les destinataires reçoivent tout en double. La
+  lancer à la main, avec `--dry-run` d'abord.
+- **Attention aux comptes conservés avec `--keep-email`.** Ce sont les seules
+  adresses réelles d'une copie anonymisée : elles passent le garde-fou et
+  recevront donc pour de bon ce que la préproduction envoie.
+
 | Symptôme | Première chose à regarder |
 |---|---|
 | Aucun e-mail de discussion, aucune erreur | `POSTMARK_BULK_TOKEN` — vide, le transport ne fait rien silencieusement |
@@ -136,3 +165,4 @@ bien au-delà de la plateforme.
 | Les images ne s'affichent pas | permissions de `var/files`, voir `DEPLOYMENT_PERMISSIONS_FIX.md` |
 | Le build front échoue au déploiement | version de Node trop récente pour webpack 4 |
 | Les réponses par e-mail n'arrivent pas | l'URL `/ws/list/inbound/{clé}` doit être publiquement joignable |
+| Un compte de test ne reçoit rien en préproduction | son adresse est sans doute en `@example.org` : `MailGuard` la refuse, c'est voulu |

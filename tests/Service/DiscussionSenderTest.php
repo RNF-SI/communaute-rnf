@@ -11,6 +11,7 @@ use App\Postmark\BulkTransport;
 use App\Service\DiscussionSender;
 use App\Service\HashGenerator;
 use App\Service\HtmlToText;
+use App\Service\MailGuard;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use PHPUnit\Framework\TestCase;
 use Swift_Message;
@@ -126,7 +127,8 @@ class DiscussionSenderTest extends TestCase {
 				$twig,
 				new HtmlToText(),
 				$hashGenerator,
-				$router
+				$router,
+				new MailGuard( 'test' )
 		);
 	}
 

@@ -44,14 +44,21 @@ class DiscussionSender {
 	 */
 	private $router;
 
+	/**
+	 * @var \App\Service\MailGuard
+	 */
+	private $guard;
+
 	public function __construct (
 			BulkTransport $transport,
 			$params,
 			Environment $twig,
 			HtmlToText $htmlToText,
 			HashGenerator $hashGenerator,
-			UrlGeneratorInterface $router
+			UrlGeneratorInterface $router,
+			MailGuard $guard
 	) {
+		$this->guard = $guard;
 		$this->transport     = $transport;
 		$this->params        = $params;
 		$this->twig          = $twig;
@@ -96,6 +103,11 @@ class DiscussionSender {
 		$user = $membership->getUser();
 
 		if ( !$user || !$user->wantsEmails() ) {
+			return FALSE;
+		}
+
+		// Anonymised copies carry addresses that accept nothing. (#14)
+		if ( !$this->guard->isDeliverable( $user->getEmail() ) ) {
 			return FALSE;
 		}
 
