@@ -1,4 +1,29 @@
-# Travailler sur une copie des données de production
+# Jeux de données pour le développement
+
+Deux façons de remplir un environnement, selon le besoin.
+
+| | Données de test | Copie de la production |
+|---|---|---|
+| Commande | `php bin/console doctrine:fixtures:load` | `bin/import-production-data.sh dump.sql` |
+| Contenu | inventé de toutes pièces | le contenu réel du réseau, identités remplacées |
+| Données personnelles | aucune | contenu rédigé non anonymisé, voir plus bas |
+| Quand | développement courant, tests | reproduire un bug signalé, valider une migration |
+
+## Données de test
+
+`doctrine:fixtures:load` construit un réseau complet : 40 compétences, une
+centaine de comptes avec compétences et biographies, 20 groupes publics et
+privés avec leurs adhésions, et pour chaque groupe des pages, des discussions
+avec leurs messages, des actualités et des documents — dont une partie décrits.
+
+Un compte administrateur connu est créé : **admin@example.org**, mot de passe
+`test`.
+
+Les documents n'ont pas de fichier attaché : en écrire passerait par le stockage
+Gaufrette, ce qui n'est pas le rôle de fixtures. Titres et descriptions
+suffisent à éprouver les listes, la recherche et les filtres.
+
+## Travailler sur une copie des données de production
 
 Objectif : disposer en local et sur la préproduction d'un jeu de données réaliste
 — même volumétrie, mêmes groupes, mêmes discussions — **sans y transporter

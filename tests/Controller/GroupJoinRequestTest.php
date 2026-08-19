@@ -74,7 +74,10 @@ class GroupJoinRequestTest extends WebTestCase {
 	 */
 	private function user ( $email, $isSiteAdmin = FALSE ) {
 		$user = new User();
-		$user->setEmail( $email );
+
+		// Unique address: the fixtures populate the same database, and the
+		// column is unique.
+		$user->setEmail( uniqid() . '-' . $email );
 		$user->setName( 'Test User' );
 		$user->setCreatedAt( new DateTime() );
 		$user->setStatus( User::STATUS_ACTIVE );
@@ -148,28 +151,34 @@ class GroupJoinRequestTest extends WebTestCase {
 		$this->logIn( $candidate );
 
 		$this->assertEquals(
-				[ 'admin@example.org' ],
+				[ $admin->getEmail() ],
 				$this->askToJoin(),
 				'Assert the group administrator is warned of the request'
 		);
 	}
 
 	public function testEveryAdminIsWarned () {
-		$group = $this->group( Usergroup::PRIVATE );
-		$this->join( $this->user( 'admin1@example.org' ), $group, UsergroupMembership::ROLE_ADMIN );
-		$this->join( $this->user( 'admin2@example.org' ), $group, UsergroupMembership::ROLE_ADMIN );
+		$group  = $this->group( Usergroup::PRIVATE );
+		$first  = $this->user( 'admin1@example.org' );
+		$second = $this->user( 'admin2@example.org' );
+		$this->join( $first, $group, UsergroupMembership::ROLE_ADMIN );
+		$this->join( $second, $group, UsergroupMembership::ROLE_ADMIN );
 
 		$candidate = $this->user( 'candidate@example.org' );
 		$this->manager->flush();
 
 		$this->logIn( $candidate );
 
-		$this->assertEquals( [ 'admin1@example.org', 'admin2@example.org' ], $this->askToJoin() );
+		$expected = [ $first->getEmail(), $second->getEmail() ];
+		sort( $expected );
+
+		$this->assertEquals( $expected, $this->askToJoin() );
 	}
 
 	public function testPlainMembersAreNotWarned () {
 		$group = $this->group( Usergroup::PRIVATE );
-		$this->join( $this->user( 'admin@example.org' ), $group, UsergroupMembership::ROLE_ADMIN );
+		$admin = $this->user( 'admin@example.org' );
+		$this->join( $admin, $group, UsergroupMembership::ROLE_ADMIN );
 		$this->join( $this->user( 'member@example.org' ), $group, UsergroupMembership::ROLE_USER );
 
 		$candidate = $this->user( 'candidate@example.org' );
@@ -177,7 +186,7 @@ class GroupJoinRequestTest extends WebTestCase {
 
 		$this->logIn( $candidate );
 
-		$this->assertEquals( [ 'admin@example.org' ], $this->askToJoin() );
+		$this->assertEquals( [ $admin->getEmail() ], $this->askToJoin() );
 	}
 
 	public function testTheRequestIsRecordedAsPending () {
@@ -250,15 +259,17 @@ class GroupJoinRequestTest extends WebTestCase {
 		$group = $this->group( Usergroup::PRIVATE );
 		$this->join( $this->user( 'member@example.org' ), $group, UsergroupMembership::ROLE_USER );
 
-		$this->user( 'siteadmin@example.org', TRUE );
+		$siteAdmin = $this->user( 'siteadmin@example.org', TRUE );
 
 		$candidate = $this->user( 'candidate@example.org' );
 		$this->manager->flush();
 
 		$this->logIn( $candidate );
 
-		$this->assertEquals(
-				[ 'siteadmin@example.org' ],
+		// Other site administrators may exist in the database; what matters is
+		// that the request reaches them rather than nobody.
+		$this->assertContains(
+				$siteAdmin->getEmail(),
 				$this->askToJoin(),
 				'Assert a request to a group nobody administers is not lost'
 		);

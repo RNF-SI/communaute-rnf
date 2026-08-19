@@ -2,6 +2,7 @@
 
 namespace App\Tests\Command;
 
+use App\Command\ImportSkillsCommand;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Yaml\Yaml;
 
@@ -17,17 +18,7 @@ class SkillsConsistencyTest extends TestCase {
 	 * @return string[]
 	 */
 	private function commandSlugs () {
-		$source = file_get_contents( dirname( __DIR__, 2 ) . '/src/Command/ImportSkillsCommand.php' );
-
-		$this->assertNotEmpty( $source, 'Assert the import command can be read' );
-
-		preg_match( '/\$slugs\s*=\s*\[(.*?)\];/s', $source, $matches );
-
-		$this->assertNotEmpty( $matches, 'Assert the import command declares a $slugs array' );
-
-		preg_match_all( "/'([^']+)'/", $matches[ 1 ], $slugs );
-
-		return $slugs[ 1 ];
+		return ImportSkillsCommand::SLUGS;
 	}
 
 	/**

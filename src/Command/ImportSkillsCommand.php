@@ -11,6 +11,55 @@ use Symfony\Component\Console\Output\OutputInterface;
 class ImportSkillsCommand extends Command {
 	protected static $defaultName = 'import:skills';
 
+	/**
+	 * The skills offered on the profiles. Single source of truth: the
+	 * fixtures build the same list, and every slug must have a label in
+	 * translations/skills.*.yml.
+	 */
+	public const SLUGS = [
+			'botany',
+			'bryology',
+			'mycology',
+			'lichenology',
+			'entomology',
+			'mammalogy',
+			'ichthyology',
+			'ornithology',
+			'herpetology',
+			'malacology',
+			'arachnology',
+			'carcinology',
+			'cetology',
+			'pedology',
+			'geology',
+			'oceanography',
+			'hydrology',
+			'hydromorphology',
+			'climatology',
+			'sociology',
+			'data-management',
+			'statistics',
+			'cartography',
+			'web-development',
+			'communication',
+			'accounting',
+			'network-animation',
+			'concertation-of-actors',
+			'environmental-law',
+			'environmental-education',
+			'project-management',
+			'geoconservation',
+			'grazing',
+			'invasive-species-management',
+			'reserve-extension',
+			'protocols',
+			'ct88',
+			'dat-methodology',
+			'naturadapt-methodology',
+			'retex',
+	];
+
+
 	private $manager;
 
 	public function __construct ( EntityManagerInterface $manager ) {
@@ -33,48 +82,7 @@ class ImportSkillsCommand extends Command {
 
 		$skillsRepository = $manager->getRepository( Skill::class );
 
-		$slugs = [
-				'botany',
-				'bryology',
-				'mycology',
-				'lichenology',
-				'entomology',
-				'mammalogy',
-				'ichthyology',
-				'ornithology',
-				'herpetology',
-				'malacology',
-				'arachnology',
-				'carcinology',
-				'cetology',
-				'pedology',
-				'geology',
-				'oceanography',
-				'hydrology',
-				'hydromorphology',
-				'climatology',
-				'sociology',
-				'data-management',
-				'statistics',
-				'cartography',
-				'web-development',
-				'communication',
-				'accounting',
-				'network-animation',
-				'concertation-of-actors',
-				'environmental-law',
-				'environmental-education',
-				'project-management',
-				'geoconservation',
-				'grazing',
-				'invasive-species-management',
-				'reserve-extension',
-				'protocols',
-				'ct88',
-				'dat-methodology',
-				'naturadapt-methodology',
-				'retex',
-		];
+		$slugs = self::SLUGS;
 
 		foreach ( $slugs as $slug ) {
 			if ( !$skillsRepository->findOneBy( [ 'slug' => $slug ] ) ) {
