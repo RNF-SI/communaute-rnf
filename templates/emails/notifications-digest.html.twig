@@ -1,0 +1,28 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block title %}{{ 'emails.digest.subject'|trans }}{% endblock %}
+
+{% block preheader %}{{ 'emails.digest.preheader'|trans|format(total) }}{% endblock %}
+
+{% block body %}
+	<p>{{ 'emails.digest.hello'|trans|format(user.displayName) }}</p>
+
+	<p>{{ 'emails.digest.introduction'|trans }}</p>
+
+	{% for group in groups %}
+		<h3>{{ group.name }}</h3>
+		<ul>
+			{% for notification in group.notifications %}
+				<li>
+					{{ ('pages.user.notifications.types.' ~ notification.type|replace({':': '_'}))|trans }}
+					<a href="{{ absolute_url(notification.url) }}">{{ notification.title }}</a>
+				</li>
+			{% endfor %}
+		</ul>
+	{% endfor %}
+
+	<p class="sub">
+		{{ 'emails.digest.settings'|trans }}
+		<a href="{{ absolute_url(path('user_parameters_edit')) }}">{{ 'pages.user.parameters_edit.link'|trans }}</a>
+	</p>
+{% endblock %}

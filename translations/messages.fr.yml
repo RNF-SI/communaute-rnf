@@ -615,6 +615,14 @@ search:
         document: "Document"
         membre: "Membre"
 
+emails:
+    digest:
+        subject: "Votre résumé de la communauté"
+        preheader: "%d nouveautés dans vos groupes"
+        hello: "Bonjour %s,"
+        introduction: "Voici ce qui s’est passé dans vos groupes depuis le dernier résumé."
+        settings: "Vous pouvez régler ce que vous recevez depuis vos"
+
 messages:
     user:
         already_connected: "Vous êtes déjà connecté·e."

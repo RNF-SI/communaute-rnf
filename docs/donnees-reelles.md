@@ -137,3 +137,15 @@ SELECT COUNT(*) FROM communaute_rnf_users WHERE rnf_id_role IS NOT NULL;
   est configuré sur le pilote `imagick`, l'application ne démarre pas sans lui.
 - MySQL 5.7.
 - `config/platform/config.yaml`, copié depuis `default.config.yaml`.
+
+## Tâche planifiée
+
+Le résumé quotidien des notifications n'est envoyé que si une tâche le
+déclenche. À planifier une fois par jour, à l'heure qui convient au réseau :
+
+```cron
+30 7 * * * cd /chemin/vers/communaute-rnf && php bin/console app:notifications:digest
+```
+
+`--dry-run` indique ce qui partirait sans rien envoyer. Un membre qui n'a rien
+en attente ne reçoit rien : un jour calme n'envoie aucun e-mail.

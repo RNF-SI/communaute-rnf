@@ -437,6 +437,14 @@ pages:
         list:
             title: "Activities"
 
+emails:
+    digest:
+        subject: "Your community summary"
+        preheader: "%d new things in your groups"
+        hello: "Hello %s,"
+        introduction: "Here is what happened in your groups since the last summary."
+        settings: "You can choose what you receive from your"
+
 messages:
     user:
         already_connected: "You're already logged in."

@@ -6,6 +6,7 @@ use App\Entity\Notification;
 use App\Entity\User;
 use DateTimeInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -74,12 +75,15 @@ class NotificationRepository extends ServiceEntityRepository {
 	 * @return User[]
 	 */
 	public function findRecipientsAwaitingDigest () {
-		return $this->createQueryBuilder( 'n' )
+		return $this->getEntityManager()
+					->createQueryBuilder()
 					->select( 'DISTINCT u' )
-					->innerJoin( 'n.recipient', 'u' )
-					->andWhere( 'n.byEmail = TRUE' )
+					->from( User::class, 'u' )
+					->innerJoin( Notification::class, 'n', Join::WITH, 'n.recipient = u' )
+					->andWhere( 'n.byEmail = :byEmail' )
 					->andWhere( 'n.emailedAt IS NULL' )
 					->andWhere( 'u.status = :status' )
+					->setParameter( 'byEmail', TRUE )
 					->setParameter( 'status', User::STATUS_ACTIVE )
 					->getQuery()
 					->getResult();
@@ -93,8 +97,9 @@ class NotificationRepository extends ServiceEntityRepository {
 	public function findAwaitingDigestFor ( User $user ) {
 		return $this->createQueryBuilder( 'n' )
 					->andWhere( 'n.recipient = :user' )
-					->andWhere( 'n.byEmail = TRUE' )
+					->andWhere( 'n.byEmail = :byEmail' )
 					->andWhere( 'n.emailedAt IS NULL' )
+					->setParameter( 'byEmail', TRUE )
 					->setParameter( 'user', $user )
 					->orderBy( 'n.createdAt', 'ASC' )
 					->getQuery()
