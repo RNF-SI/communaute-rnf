@@ -25,6 +25,17 @@ class GroupDiscussionVoter extends Voter {
 	const EDIT_MESSAGE = 'group:discussion:message:edit';
 
 	/**
+	 * Retirer un message précis : son auteur, ou un animateur du groupe. (#19)
+	 */
+	const DELETE_MESSAGE = 'group:discussion:message:delete';
+
+	/**
+	 * Archiver une discussion. Son auteur tant que personne d'autre n'a
+	 * contribué, un animateur ensuite. (#20)
+	 */
+	const ARCHIVE = 'group:discussion:archive';
+
+	/**
 	 * @var \Doctrine\ORM\EntityManagerInterface
 	 */
 	private $manager;
@@ -48,7 +59,12 @@ class GroupDiscussionVoter extends Voter {
 			return TRUE;
 		}
 
-		if ( ( $attribute === self::EDIT_MESSAGE ) && ( $subject instanceof DiscussionMessage ) ) {
+		if ( in_array( $attribute, [ self::EDIT_MESSAGE, self::DELETE_MESSAGE ] )
+			 && ( $subject instanceof DiscussionMessage ) ) {
+			return TRUE;
+		}
+
+		if ( ( $attribute === self::ARCHIVE ) && ( $subject instanceof Discussion ) ) {
 			return TRUE;
 		}
 
@@ -103,6 +119,25 @@ class GroupDiscussionVoter extends Voter {
 
 				return $this->security->isGranted( GroupVoter::DELETE, $discussion->getUsergroup() );
 
+			case self::ARCHIVE:
+				/**
+				 * @var \App\Entity\Discussion $discussion
+				 */
+				$discussion = $subject;
+
+				// L'auteur reprend son sujet tant qu'il est seul à s'y être
+				// exprimé ; passé ce point la discussion ne lui appartient
+				// plus seul, et il faut être animateur.
+				if ( ( $user instanceof User )
+					 && $discussion->getAuthor()
+					 && ( $discussion->getAuthor()->getId() === $user->getId() )
+					 && !$discussion->hasAnswersFromOthers() ) {
+					return $this->security->isGranted( GroupVoter::PARTICIPATE, $discussion->getUsergroup() );
+				}
+
+				return $this->security->isGranted( GroupVoter::DELETE, $discussion->getUsergroup() );
+
+			case self::DELETE_MESSAGE:
 			case self::EDIT_MESSAGE:
 				/**
 				 * @var \App\Entity\DiscussionMessage $message

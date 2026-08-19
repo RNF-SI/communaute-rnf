@@ -40,6 +40,15 @@ class DiscussionMessage {
 	private $createdAt;
 
 	/**
+	 * When this message was removed. Its content goes, the message stays: a
+	 * discussion whose answers reply to something that vanished becomes
+	 * unreadable. (#19)
+	 *
+	 * @ORM\Column(type="datetime", nullable=true)
+	 */
+	private $deletedAt;
+
+	/**
 	 * When the author last corrected their message. Displayed next to it, so
 	 * that a correction stays visible rather than silent. (#19)
 	 *
@@ -72,6 +81,20 @@ class DiscussionMessage {
 
 	public function getId (): ?int {
 		return $this->id;
+	}
+
+	public function getDeletedAt (): ?\DateTimeInterface {
+		return $this->deletedAt;
+	}
+
+	public function setDeletedAt ( ?\DateTimeInterface $deletedAt ): self {
+		$this->deletedAt = $deletedAt;
+
+		return $this;
+	}
+
+	public function isDeleted (): bool {
+		return $this->deletedAt !== NULL;
 	}
 
 	public function getEditedAt (): ?\DateTimeInterface {

@@ -59,8 +59,51 @@ class Discussion {
 		$this->messages = new ArrayCollection();
 	}
 
+	/**
+	 * When this discussion was archived. It leaves the lists but nothing is
+	 * destroyed: the contributions of everybody else are not the author's to
+	 * throw away, and a mistaken deletion has to be recoverable. (#20)
+	 *
+	 * @ORM\Column(type="datetime", nullable=true)
+	 */
+	private $archivedAt;
+
 	public function getId (): ?int {
 		return $this->id;
+	}
+
+	public function getArchivedAt (): ?\DateTimeInterface {
+		return $this->archivedAt;
+	}
+
+	public function setArchivedAt ( ?\DateTimeInterface $archivedAt ): self {
+		$this->archivedAt = $archivedAt;
+
+		return $this;
+	}
+
+	public function isArchived (): bool {
+		return $this->archivedAt !== NULL;
+	}
+
+	/**
+	 * Whether somebody other than the author has taken part yet. Past that
+	 * point the discussion is no longer the author's alone. (#20)
+	 *
+	 * @return bool
+	 */
+	public function hasAnswersFromOthers (): bool {
+		$author = $this->getAuthor();
+
+		foreach ( $this->getMessages() as $message ) {
+			$writer = $message->getAuthor();
+
+			if ( !$writer || !$author || ( $writer->getId() !== $author->getId() ) ) {
+				return TRUE;
+			}
+		}
+
+		return FALSE;
 	}
 
 	public function getUuid (): ?string {

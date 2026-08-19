@@ -40,6 +40,7 @@ class DiscussionRepository extends ServiceEntityRepository {
 							'm.usergroup = g AND m.user = :user AND m.status = :status'
 					)
 					->leftJoin( 'd.messages', 'msg' )
+					->andWhere( 'd.archivedAt IS NULL' )
 					->andWhere( 'g.isActive = :active' )
 					->andWhere( 'd.author = :user OR msg.author = :user' )
 					->setParameter( 'active', TRUE )

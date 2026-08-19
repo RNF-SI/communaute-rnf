@@ -369,6 +369,11 @@ pages:
             title: "Editing discussion"
             link: "Edit discussion"
             button: "Save changes"
+        deleted:
+            notice: "Message deleted"
+        archived:
+            notice: "Discussion archived, invisible to members."
+            restore: "Put it back online"
         follow:
             follow: "Follow this discussion"
             mute: "Stop following this discussion"
@@ -537,6 +542,7 @@ messages:
         message_created: "The message has been posted to the discussion"
         message_deleted: "The message has been deleted"
         message_edited: "The message has been updated"
+        discussion_restored: "The discussion is back online"
         message_error: "Your message cannot be posted, please retry"
         discussion_updated: "The discussion has been updated"
         discussion_deleted: "The discussion has been deleted"

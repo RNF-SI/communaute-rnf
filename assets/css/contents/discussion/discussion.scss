@@ -232,3 +232,26 @@
 .message--edited {
 	font-style: italic;
 }
+
+/**************************************************
+* MESSAGE SUPPRIMÉ, DISCUSSION ARCHIVÉE
+**************************************************/
+
+.message__deleted {
+	padding:       rem(12px) 0;
+	border-bottom: 1px solid $color_grey_border;
+
+	color:         $color_grey_neutral;
+	font-style:    italic;
+}
+
+.discussion__archived {
+	opacity: .6;
+}
+
+.discussion--archived-notice {
+	padding:   rem(6px) 0;
+
+	color:     $color_grey_neutral;
+	font-size: rem(13px);
+}

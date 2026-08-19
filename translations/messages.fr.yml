@@ -491,6 +491,11 @@ pages:
             title: "Édition de la discussion"
             link: "Modifier la discussion"
             button: "Enregistrer les modifications"
+        deleted:
+            notice: "Message supprimé"
+        archived:
+            notice: "Discussion archivée, invisible pour les membres."
+            restore: "La remettre en ligne"
         follow:
             follow: "Suivre cette discussion"
             mute: "Ne plus suivre cette discussion"
@@ -717,6 +722,7 @@ messages:
         message_created: "Le message a été posté sur la liste"
         message_deleted: "Le message a été supprimé"
         message_edited: "Le message a été modifié"
+        discussion_restored: "La discussion a été remise en ligne"
         message_error: "Votre message n’a pas pû être posté, veuillez réessayer"
         discussion_updated: "La discussion a été mise à jour"
         discussion_deleted: "La discussion a été supprimée"

@@ -45,10 +45,24 @@
 					<div>{{ 'pages.discussion.list.activity'|trans }}</div>
 				</div>
 				<ul>
+					{% set canModerate = is_granted(constant('App\\Security\\GroupVoter::EDIT'), group) %}
 					{% for discussion in group.discussions %}
-						<li>
-							{% include 'contents/discussion/discussion--teaser.html.twig' with {'discussion':discussion} %}
-						</li>
+						{# Une discussion archivée ne reste visible que pour les
+						   animateurs, qui peuvent la remettre en ligne. (#20) #}
+						{% if not discussion.archived or canModerate %}
+							<li{{ discussion.archived ? ' class="discussion__archived"' : '' }}>
+								{% include 'contents/discussion/discussion--teaser.html.twig' with {'discussion':discussion} %}
+								{% if discussion.archived %}
+									<div class="discussion--archived-notice">
+										{{ 'pages.discussion.archived.notice'|trans }}
+										<a href="{{ path('group_discussion_restore', {
+											'groupSlug': group.slug,
+											'discussionUuid': discussion.uuid
+										}) }}">{{ 'pages.discussion.archived.restore'|trans }}</a>
+									</div>
+								{% endif %}
+							</li>
+						{% endif %}
 					{% endfor %}
 				</ul>
 			</section>

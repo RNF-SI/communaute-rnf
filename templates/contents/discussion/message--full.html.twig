@@ -1,3 +1,10 @@
+{% if message.deleted %}
+	{# Le message est retiré mais sa place reste : les réponses qui lui
+	   succèdent perdraient leur sens s'il disparaissait tout à fait. (#19) #}
+	<div class="message message__deleted">
+		<span>{{ 'pages.discussion.deleted.notice'|trans }}</span>
+	</div>
+{% else %}
 {% set isDisabled = constant('App\\Entity\\User::STATUS_ACTIVE') != message.author.status %}
 {% set classes = ['message', 'message__full', message.masked ? 'message__masked', 'message_visible'] %}
 {% if (not message.masked) or (is_granted(constant('App\\Security\\GroupDiscussionVoter::EDIT'), message.discussion)) %}
@@ -56,7 +63,7 @@
 								</a>
 							</li>
 						{% endif %}
-						{% if is_granted(constant('App\\Security\\GroupDiscussionVoter::DELETE'), message.discussion) %}
+						{% if is_granted(constant('App\\Security\\GroupDiscussionVoter::DELETE_MESSAGE'), message) %}
 							<li>
 								<a class="delete_message"
 									href="{{ path('group_message_delete', {
@@ -97,4 +104,5 @@
 			</div>
 		{% endif %}
 	</div>
+{% endif %}
 {% endif %}

@@ -231,7 +231,13 @@ class GroupDiscussionsController extends AbstractController {
 			return $this->redirectToRoute( 'group_index', [ 'groupSlug' => $group->getSlug() ] );
 		}
 
-		if ( $this->isGranted( GroupDiscussionVoter::PARTICIPATE, $discussion ) ) {
+		// Une discussion archivée n'existe plus que pour les animateurs, qui
+		// sont les seuls à pouvoir la remettre en ligne. (#20)
+		if ( $discussion->isArchived() && !$this->isGranted( GroupDiscussionVoter::EDIT, $discussion ) ) {
+			throw $this->createNotFoundException( 'The discussion does not exist' );
+		}
+
+		if ( !$discussion->isArchived() && $this->isGranted( GroupDiscussionVoter::PARTICIPATE, $discussion ) ) {
 			$discussionMessage = new DiscussionMessage();
 			$form              = $this->createForm( DiscussionMessageType::class, $discussionMessage );
 
@@ -346,7 +352,7 @@ class GroupDiscussionsController extends AbstractController {
 			throw $this->createNotFoundException( 'The discussion does not exist' );
 		}
 
-		$this->denyAccessUnlessGranted( GroupDiscussionVoter::DELETE, $discussion );
+		$this->denyAccessUnlessGranted( GroupDiscussionVoter::ARCHIVE, $discussion );
 
 		// Delete confirmation form
 
@@ -357,14 +363,11 @@ class GroupDiscussionsController extends AbstractController {
 		$form->handleRequest( $request );
 
 		if ( $form->isSubmitted() && $form->isValid() ) {
-			foreach ( $discussion->getMessages() as $message ) {
-				foreach ( $message->getFiles() as $file ) {
-					$fileManager->deleteFile( $file );
-					$manager->remove( $file );
-				}
-
-				$manager->remove( $message );
-			}
+			// Rien n'est détruit : les contributions des autres participants
+			// ne sont pas à l'auteur seul, et une suppression malencontreuse
+			// doit pouvoir se rattraper. La discussion quitte simplement les
+			// listes. (#20)
+			$discussion->setArchivedAt( new DateTime() );
 
 			// Log Event
 
@@ -376,10 +379,6 @@ class GroupDiscussionsController extends AbstractController {
 			$log->setData( [ 'discussion' => $discussion->getId(), 'title' => $discussion->getTitle() ] );
 			$manager->persist( $log );
 
-			// --
-
-			$manager->remove( $discussion );
-
 			$manager->flush();
 
 			$this->addFlash( 'notice', 'messages.discussion.discussion_deleted' );
@@ -389,6 +388,54 @@ class GroupDiscussionsController extends AbstractController {
 
 		return $this->render( 'pages/confirm.html.twig', [
 				'form' => $form->createView(),
+		] );
+	}
+
+	/**
+	 * @Route("/groups/{groupSlug}/discussions/{discussionUuid}/restore", name="group_discussion_restore")
+	 * @param                                      $groupSlug
+	 * @param                                      $discussionUuid
+	 * @param \Doctrine\ORM\EntityManagerInterface $manager
+	 *
+	 * @return \Symfony\Component\HttpFoundation\RedirectResponse
+	 */
+	public function groupDiscussionRestore (
+			$groupSlug,
+			$discussionUuid,
+			EntityManagerInterface $manager
+	) {
+		/**
+		 * @var \App\Entity\Usergroup $group
+		 */
+		$group = $manager->getRepository( Usergroup::class )
+						 ->findOneBy( [ 'slug' => $groupSlug ] );
+
+		if ( !$group ) {
+			throw $this->createNotFoundException( 'The group does not exist' );
+		}
+
+		/**
+		 * @var \App\Entity\Discussion $discussion
+		 */
+		$discussion = $manager->getRepository( Discussion::class )
+							  ->findOneBy( [ 'usergroup' => $group, 'uuid' => $discussionUuid ] );
+
+		if ( !$discussion ) {
+			throw $this->createNotFoundException( 'The discussion does not exist' );
+		}
+
+		// Remettre en ligne relève de l'animation du groupe, pas de l'auteur.
+		$this->denyAccessUnlessGranted( GroupDiscussionVoter::EDIT, $discussion );
+
+		$discussion->setArchivedAt( NULL );
+
+		$manager->flush();
+
+		$this->addFlash( 'notice', 'messages.discussion.discussion_restored' );
+
+		return $this->redirectToRoute( 'group_discussion_index', [
+				'groupSlug'      => $group->getSlug(),
+				'discussionUuid' => $discussion->getUuid(),
 		] );
 	}
 
@@ -572,15 +619,22 @@ class GroupDiscussionsController extends AbstractController {
 
 		$form->handleRequest( $request );
 
+		$this->denyAccessUnlessGranted( GroupDiscussionVoter::DELETE_MESSAGE, $message );
+
 		if ( $form->isSubmitted() && $form->isValid() ) {
 			$discussion = $message->getDiscussion();
 
 			foreach ( $message->getFiles() as $file ) {
 				$fileManager->deleteFile( $file );
 				$manager->remove( $file );
+				$message->removeFile( $file );
 			}
 
-			$manager->remove( $message );
+			// Le message reste, vidé de son contenu : les réponses qui lui
+			// succèdent perdraient leur sens s'il disparaissait tout à
+			// fait. (#19)
+			$message->setBody( NULL );
+			$message->setDeletedAt( new DateTime() );
 
 			$manager->flush();
 
