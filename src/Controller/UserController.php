@@ -16,6 +16,7 @@ use App\Security\UserVoter;
 use App\Service\Community;
 use App\Service\EmailSender;
 use App\Service\FileManager;
+use App\Service\HashGenerator;
 use App\Service\UserAnonymize;
 use App\Util\Geocoder;
 use DateTime;
@@ -25,6 +26,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -258,6 +260,45 @@ class UserController extends AbstractController
 		$user = $this->getUser();
 
 		return $this->render('pages/user/my-groups.html.twig', ['user' => $user]);
+	}
+
+	/**
+	 * The address the List-Unsubscribe header of every e-mail points at.
+	 * Reachable without signing in, since a mail client follows it on its own,
+	 * and answering POST is what makes one-click unsubscribe work. (#14)
+	 *
+	 * @Route("/user/notifications/unsubscribe/{hash}", name="user_notifications_unsubscribe", methods={"GET", "POST"})
+	 *
+	 * @param                                       $hash
+	 * @param \Symfony\Component\HttpFoundation\Request $request
+	 * @param \Doctrine\ORM\EntityManagerInterface  $manager
+	 * @param \App\Service\HashGenerator            $hashGenerator
+	 *
+	 * @return \Symfony\Component\HttpFoundation\Response
+	 */
+	public function userNotificationsUnsubscribe(
+		$hash,
+		Request $request,
+		EntityManagerInterface $manager,
+		HashGenerator $hashGenerator
+	) {
+		$user = $hashGenerator->getUserFromHash($hash);
+
+		if (!$user) {
+			throw $this->createNotFoundException('Unknown recipient');
+		}
+
+		$user->setWantsEmails(false);
+		$manager->flush();
+
+		if ($request->isMethod('POST')) {
+			// One-click: the mail client expects an answer, not a page.
+			return new Response('', Response::HTTP_OK);
+		}
+
+		$this->addFlash('notice', 'messages.user.emails_stopped');
+
+		return $this->redirectToRoute('user_parameters_edit');
 	}
 
 	/**

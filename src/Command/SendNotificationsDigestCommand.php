@@ -5,6 +5,8 @@ namespace App\Command;
 use App\Entity\Notification;
 use App\Entity\User;
 use App\Service\EmailSender;
+use App\Service\HashGenerator;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
@@ -34,16 +36,24 @@ class SendNotificationsDigestCommand extends Command {
 
 	private $parameters;
 
+	private $hashGenerator;
+
+	private $router;
+
 	public function __construct (
 			EntityManagerInterface $manager,
 			EmailSender $mailer,
 			Environment $twig,
-			ParameterBagInterface $parameters
+			ParameterBagInterface $parameters,
+			HashGenerator $hashGenerator,
+			UrlGeneratorInterface $router
 	) {
-		$this->manager    = $manager;
-		$this->mailer     = $mailer;
-		$this->twig       = $twig;
-		$this->parameters = $parameters;
+		$this->manager       = $manager;
+		$this->mailer        = $mailer;
+		$this->twig          = $twig;
+		$this->parameters    = $parameters;
+		$this->hashGenerator = $hashGenerator;
+		$this->router        = $router;
 
 		parent::__construct();
 	}
@@ -132,11 +142,24 @@ class SendNotificationsDigestCommand extends Command {
 				'groups' => $this->groupByUsergroup( $notifications ),
 		] );
 
+		$unsubscribe = $this->router->generate(
+				'user_notifications_unsubscribe',
+				[ 'hash' => $this->hashGenerator->generateUserHash( $recipient ) ],
+				UrlGeneratorInterface::ABSOLUTE_URL
+		);
+
 		$this->mailer->send(
 				[ $this->parameters->get( 'plateform' )[ 'from' ] => $this->parameters->get( 'plateform' )[ 'name' ] ],
 				$recipient->getEmail(),
 				$this->mailer->getSubjectFromTitle( $message ),
-				$message
+				$message,
+				[
+						// Required of bulk senders by Gmail and Yahoo. (#14)
+						'List-Unsubscribe'      => '<' . $unsubscribe . '>',
+						'List-Unsubscribe-Post' => 'List-Unsubscribe=One-Click',
+						'Precedence'            => 'bulk',
+						'Auto-Submitted'        => 'auto-generated',
+				]
 		);
 	}
 

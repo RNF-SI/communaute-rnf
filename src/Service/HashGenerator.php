@@ -24,12 +24,26 @@ class HashGenerator {
 	 * @param \Doctrine\ORM\EntityManagerInterface                                  $manager
 	 * @param \Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface $passwordEncoder
 	 */
+	/**
+	 * @var string
+	 */
+	private $secret;
+
+	/**
+	 * HashGenerator constructor.
+	 *
+	 * @param \Doctrine\ORM\EntityManagerInterface                                  $manager
+	 * @param \Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface $passwordEncoder
+	 * @param string                                                                $secret
+	 */
 	public function __construct (
         EntityManagerInterface $manager,
-        UserPasswordEncoderInterface $passwordEncoder
+        UserPasswordEncoderInterface $passwordEncoder,
+        string $secret
 	) {
 		$this->manager         = $manager;
 		$this->passwordEncoder = $passwordEncoder;
+		$this->secret          = $secret;
 	}
 
 	/**
@@ -38,7 +52,15 @@ class HashGenerator {
 	 * @return string
 	 */
 	public function generateUserHash ( User $user ) {
-		return $user->getId() . '|' . hash( 'sha256', $user->getId() . $user->getPassword() );
+		// The application secret is part of the mix: accounts coming from the
+		// single sign-on carry no password, and the hash would otherwise be
+		// nothing but the SHA-256 of an account id — guessable for anybody,
+		// which is enough to unsubscribe somebody else. (#14)
+		return $user->getId() . '|' . hash_hmac(
+						'sha256',
+						$user->getId() . '|' . $user->getPassword(),
+						$this->secret
+				);
 	}
 
 	/**
@@ -51,7 +73,7 @@ class HashGenerator {
 
 		$user = $this->manager->getRepository( User::class )->findOneBy( [ 'id' => $u[ 0 ] ] );
 
-		if ( $user && $this->generateUserHash( $user ) === $hash ) {
+		if ( $user && hash_equals( $this->generateUserHash( $user ), $hash ) ) {
 			return $user;
 		}
 

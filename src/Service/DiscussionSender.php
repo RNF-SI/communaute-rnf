@@ -7,6 +7,7 @@ use App\Entity\UsergroupMembership;
 use App\Notification\NotificationLevel;
 use App\Notification\NotificationRhythm;
 use App\Postmark\BulkTransport;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Swift_Message;
 use Throwable;
 use Twig\Environment;
@@ -28,10 +29,50 @@ class DiscussionSender {
 	 * @param                             $params
 	 * @param \Twig\Environment           $twig
 	 */
-	public function __construct ( BulkTransport $transport, $params, Environment $twig ) {
-		$this->transport = $transport;
-		$this->params    = $params;
-		$this->twig      = $twig;
+	/**
+	 * @var \App\Service\HtmlToText
+	 */
+	private $htmlToText;
+
+	/**
+	 * @var \App\Service\HashGenerator
+	 */
+	private $hashGenerator;
+
+	/**
+	 * @var \Symfony\Component\Routing\Generator\UrlGeneratorInterface
+	 */
+	private $router;
+
+	public function __construct (
+			BulkTransport $transport,
+			$params,
+			Environment $twig,
+			HtmlToText $htmlToText,
+			HashGenerator $hashGenerator,
+			UrlGeneratorInterface $router
+	) {
+		$this->transport     = $transport;
+		$this->params        = $params;
+		$this->twig          = $twig;
+		$this->htmlToText    = $htmlToText;
+		$this->hashGenerator = $hashGenerator;
+		$this->router        = $router;
+	}
+
+	/**
+	 * @param \App\Entity\DiscussionMessage $discussionMessage
+	 * @param \App\Entity\User              $user
+	 *
+	 * @return string
+	 */
+	private function unsubscribeUrl ( DiscussionMessage $discussionMessage, $user ) {
+		return $this->router->generate( 'group_discussions_notifications', [
+				'groupSlug' => $discussionMessage->getDiscussion()->getUsergroup()->getSlug(),
+				'status'    => 'unsubscribe',
+				'redirect'  => 'group',
+				'hash'      => $this->hashGenerator->generateUserHash( $user ),
+		], UrlGeneratorInterface::ABSOLUTE_URL );
 	}
 
 	/**
@@ -111,7 +152,10 @@ class DiscussionSender {
 					->setFrom( $from )
 					->setTo( $user->getEmail() )
 					->setReplyTo( $discussionMessage->getDiscussion()->getUsergroup()->getSlug() . '+' . $discussionMessage->getDiscussion()->getUuid() . '@' . $this->params[ 'list_domain' ] )
-					->setBody( $body, 'text/html' );
+					->setBody( $body, 'text/html' )
+					// A message carrying only HTML is one of the oldest spam
+					// signals there is. (#14)
+					->addPart( $this->htmlToText->convert( $body ), 'text/plain' );
 
 				// set headers to disable auto responders
 				$headers = $message->getHeaders();
@@ -119,6 +163,11 @@ class DiscussionSender {
 				$headers->addTextHeader('List-Id', $discussionMessage->getDiscussion()->getId()); // RFC 2919
 				$headers->addTextHeader('Precedence', 'list'); // MS Outlook
 				$headers->addTextHeader('X-Auto-Response-Suppress', 'All'); // MS Outlook
+
+				// One-click unsubscribe. Required of bulk senders by Gmail and
+				// Yahoo since 2024, and a strong signal for everybody else. (#14)
+				$headers->addTextHeader( 'List-Unsubscribe', '<' . $this->unsubscribeUrl( $discussionMessage, $user ) . '>' ); // RFC 2369
+				$headers->addTextHeader( 'List-Unsubscribe-Post', 'List-Unsubscribe=One-Click' ); // RFC 8058
 
 				$messages[] = $message;
 			}

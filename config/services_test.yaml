@@ -10,3 +10,8 @@ services:
 
   App\Service\NotificationSender:
     public: true
+
+  App\Service\HashGenerator:
+    public: true
+    arguments:
+      $secret: "%kernel.secret%"

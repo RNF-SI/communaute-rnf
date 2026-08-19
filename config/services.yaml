@@ -64,7 +64,9 @@ services:
     arguments: ["%env(string:COMMUNITY_SLUG)%"]
 
   App\Service\DiscussionSender:
-    arguments: ["@postmark_bulk", "%postmark%"]
+    arguments:
+      $transport: "@postmark_bulk"
+      $params: "%postmark%"
 
   App\Service\SearchEngineManager:
     arguments:
@@ -101,6 +103,10 @@ services:
           indexPropertyList: ["id", "name", "description", "presentation"]
           index: "groups.index"
           class: "Usergroup"
+
+  App\Service\HashGenerator:
+    arguments:
+      $secret: "%kernel.secret%"
 
   App\Util\Geocoder:
     public: true

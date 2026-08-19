@@ -489,6 +489,7 @@ messages:
         password_successful: "Password updated, you can now log in."
         password_updated: "Your password has been updated."
         profile_created: "Your profile has been created."
+        emails_stopped: "You will not receive any e-mail any more. Your notifications stay visible on the platform."
         notifications_updated: "Your notification preferences have been saved"
         profile_updated: "Your profile has been updated."
         profile_required: "To get started, complete the profile below."

@@ -667,6 +667,7 @@ messages:
         password_successful: "Mot de passe mis à jour, vous pouvez désormais vous identifier."
         password_updated: "Votre mot de passe a été mis à jour."
         profile_created: "Votre profil a été créé."
+        emails_stopped: "Vous ne recevrez plus d’e-mail. Vos notifications restent visibles sur la plateforme."
         notifications_updated: "Vos préférences de notification ont été enregistrées"
         profile_updated: "Votre profil a été mis à jour."
         profile_required: "Pour commencer, complétez le profil ci-dessous."

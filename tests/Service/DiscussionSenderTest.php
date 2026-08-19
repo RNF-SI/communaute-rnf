@@ -9,6 +9,9 @@ use App\Entity\Usergroup;
 use App\Entity\UsergroupMembership;
 use App\Postmark\BulkTransport;
 use App\Service\DiscussionSender;
+use App\Service\HashGenerator;
+use App\Service\HtmlToText;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use PHPUnit\Framework\TestCase;
 use Swift_Message;
 use Twig\Environment;
@@ -96,11 +99,56 @@ class DiscussionSenderTest extends TestCase {
 					  return count( $messages );
 				  } );
 
-		$twig = $this->createMock( Environment::class );
-		$twig->method( 'render' )->willReturn( '<p>body</p>' );
-
-		$sender = new DiscussionSender( $transport, [ 'list_domain' => 'example.org' ], $twig );
+		$sender = $this->sender( $transport );
 		$sender->sendDiscussionMessage( $message );
+
+		return $sent;
+	}
+
+	/**
+	 * @param \App\Postmark\BulkTransport $transport
+	 *
+	 * @return \App\Service\DiscussionSender
+	 */
+	private function sender ( BulkTransport $transport ) {
+		$twig = $this->createMock( Environment::class );
+		$twig->method( 'render' )->willReturn( '<p>Bonjour <a href="https://example.org/x">la discussion</a></p>' );
+
+		$hashGenerator = $this->createMock( HashGenerator::class );
+		$hashGenerator->method( 'generateUserHash' )->willReturn( '1|hash' );
+
+		$router = $this->createMock( UrlGeneratorInterface::class );
+		$router->method( 'generate' )->willReturn( 'https://example.org/unsubscribe/1%7Chash' );
+
+		return new DiscussionSender(
+				$transport,
+				[ 'list_domain' => 'example.org' ],
+				$twig,
+				new HtmlToText(),
+				$hashGenerator,
+				$router
+		);
+	}
+
+	/**
+	 * Captures the messages handed to the transport.
+	 *
+	 * @param \App\Entity\DiscussionMessage $message
+	 *
+	 * @return \Swift_Message[]
+	 */
+	private function collectMessages ( DiscussionMessage $message ) {
+		$sent = [];
+
+		$transport = $this->createMock( BulkTransport::class );
+		$transport->method( 'sendMultiple' )
+				  ->willReturnCallback( function ( array $messages ) use ( &$sent ) {
+					  $sent = $messages;
+
+					  return count( $messages );
+				  } );
+
+		$this->sender( $transport )->sendDiscussionMessage( $message );
 
 		return $sent;
 	}
@@ -134,6 +182,60 @@ class DiscussionSenderTest extends TestCase {
 				[ 'other@example.org' ],
 				$recipients,
 				'Assert every other member of the group is still notified'
+		);
+	}
+
+	public function testTheMessageCarriesAPlainTextHalf () {
+		$author = $this->makeUser( 'author@example.org' );
+		$other  = $this->makeUser( 'other@example.org' );
+
+		$sent = $this->collectMessages( $this->makeMessage( $this->makeGroup( [ $author, $other ] ), $author ) );
+
+		$this->assertCount( 1, $sent );
+
+		$parts = array_map( function ( $part ) {
+			return $part->getContentType();
+		}, $sent[ 0 ]->getChildren() );
+
+		$this->assertContains(
+				'text/plain',
+				$parts,
+				'Assert an HTML-only message is never sent, it is a spam signal'
+		);
+	}
+
+	public function testThePlainTextHalfKeepsTheLinks () {
+		$author = $this->makeUser( 'author@example.org' );
+		$other  = $this->makeUser( 'other@example.org' );
+
+		$sent = $this->collectMessages( $this->makeMessage( $this->makeGroup( [ $author, $other ] ), $author ) );
+
+		$text = '';
+
+		foreach ( $sent[ 0 ]->getChildren() as $part ) {
+			if ( $part->getContentType() === 'text/plain' ) {
+				$text = $part->getBody();
+			}
+		}
+
+		$this->assertStringContainsString( 'la discussion', $text );
+		$this->assertStringContainsString( 'https://example.org/x', $text );
+	}
+
+	public function testTheMessageOffersOneClickUnsubscribe () {
+		$author = $this->makeUser( 'author@example.org' );
+		$other  = $this->makeUser( 'other@example.org' );
+
+		$sent    = $this->collectMessages( $this->makeMessage( $this->makeGroup( [ $author, $other ] ), $author ) );
+		$headers = $sent[ 0 ]->getHeaders();
+
+		$this->assertTrue(
+				$headers->has( 'List-Unsubscribe' ),
+				'Assert Gmail and Yahoo find the header they require of bulk senders'
+		);
+		$this->assertEquals(
+				'List-Unsubscribe=One-Click',
+				$headers->get( 'List-Unsubscribe-Post' )->getFieldBody()
 		);
 	}
 
