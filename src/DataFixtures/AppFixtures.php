@@ -530,6 +530,16 @@ class AppFixtures extends Fixture {
 		$empty->setCreatedAt( new \DateTime( '-2 days' ) );
 		$manager->persist( $empty );
 
+		$important = new Page();
+		$important->setTitle( 'Page importante de test' );
+		$important->setSlug( $this->slugGenerator->generateSlug( 'Page importante de test ' . $group->getSlug() ) );
+		$important->setUsergroup( $group );
+		$important->setAuthor( $referent );
+		$important->setBody( '<p>' . $faker->sentence( 12 ) . '</p>' );
+		$important->setCreatedAt( new \DateTime() );
+		$important->setIsImportant( TRUE );
+		$manager->persist( $important );
+
 		$page = new Page();
 		$page->setTitle( 'Page de test' );
 		$page->setSlug( $this->slugGenerator->generateSlug( 'Page de test ' . $group->getSlug() ) );

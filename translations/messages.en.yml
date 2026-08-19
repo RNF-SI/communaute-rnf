@@ -125,6 +125,9 @@ forms:
         body:
             label: "Page content"
             placeholder: ""
+        is_important:
+            label: "Highlight this page"
+            hint: "It will be listed first in the group, with a marker."
 
     discussion:
         title:
@@ -335,6 +338,7 @@ pages:
             title: "Activities"
 
     page:
+        is_important: "Page highlighted by the group animators"
         list:
             title: "Pages"
         page_create:

@@ -97,7 +97,9 @@ class GroupPagesController extends AbstractController {
 		$user = $this->getUser();
 
 		$page = new Page();
-		$form = $this->createForm( PageType::class, $page );
+		$form = $this->createForm( PageType::class, $page, [
+				'can_moderate' => $this->isGranted( GroupVoter::EDIT, $group ),
+		] );
 
 		$form->handleRequest( $request );
 
@@ -214,7 +216,9 @@ class GroupPagesController extends AbstractController {
 		 */
 		$user = $this->getUser();
 
-		$form = $this->createForm( PageType::class, $page );
+		$form = $this->createForm( PageType::class, $page, [
+				'can_moderate' => $this->isGranted( GroupVoter::EDIT, $group ),
+		] );
 
 		$form->handleRequest( $request );
 

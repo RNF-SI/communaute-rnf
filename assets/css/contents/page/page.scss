@@ -303,3 +303,13 @@
 		margin-top: padding_vertical();
 	}
 }
+
+/**************************************************
+* PAGE MISE EN AVANT
+**************************************************/
+
+.page-important-badge {
+	color:       $color_action;
+	font-size:   .9em;
+	margin-right: rem(4px);
+}

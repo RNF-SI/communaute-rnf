@@ -5,6 +5,7 @@ namespace App\Form;
 use App\Entity\Page;
 use App\Service\FileManager;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
@@ -50,8 +51,17 @@ class PageType extends AbstractType {
 				->add( 'title', TextType::class, [
 					'attr' => [ 'maxlength' => 100 ]
 				] )
-				->add( 'body', TextareaType::class )
-				->add( 'submit', SubmitType::class );
+				->add( 'body', TextareaType::class );
+
+		// Mettre une page en avant relève de l'animation du groupe : la case
+		// n'est proposée qu'à ceux qui en ont la charge. (#2)
+		if ( !empty( $options[ 'can_moderate' ] ) ) {
+			$builder->add( 'isImportant', CheckboxType::class, [
+					'required' => FALSE,
+			] );
+		}
+
+		$builder->add( 'submit', SubmitType::class );
 	}
 
 	/**
@@ -59,6 +69,7 @@ class PageType extends AbstractType {
 	 */
 	public function configureOptions ( OptionsResolver $resolver ) {
 		$resolver->setDefaults( [
+				'can_moderate' => FALSE,
 				'attr'       => [],
 				'data_class' => Page::class,
 		] );

@@ -25,6 +25,14 @@
 		{{ form_label(form.body, 'forms.page.body.label') }}
 		{{ form_widget(form.body, {'attr': {'placeholder': 'forms.page.body.placeholder'}}) }}
 	</div>
+
+	{% if form.isImportant is defined %}
+		<div class="form-row form-row__field">
+			{{ form_widget(form.isImportant) }}
+			{{ form_label(form.isImportant, 'forms.page.is_important.label') }}
+			<div class="hint">{{ 'forms.page.is_important.hint'|trans }}</div>
+		</div>
+	{% endif %}
 </div>
 <div class="form-row form-row__submit">
 	{{ form_widget(form.submit, {'label': form_submit}) }}

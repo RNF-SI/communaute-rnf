@@ -65,7 +65,7 @@ class Usergroup {
 
 	/**
 	 * @ORM\OneToMany(targetEntity="App\Entity\Page", mappedBy="usergroup", orphanRemoval=true)
-	 * @ORM\OrderBy({"title"="ASC"})
+	 * @ORM\OrderBy({"isImportant"="DESC", "title"="ASC"})
 	 */
 	private $pages;
 

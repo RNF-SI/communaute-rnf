@@ -74,8 +74,27 @@ class Page {
 		$this->pageRevisions = new ArrayCollection();
 	}
 
+	/**
+	 * Une page mise en avant par les animateurs du groupe. Elle passe en tête
+	 * des listes et porte un repère, pour que l'information qui compte ne se
+	 * perde pas au milieu des autres. (#2)
+	 *
+	 * @ORM\Column(type="boolean", options={"default":"0"})
+	 */
+	private $isImportant = FALSE;
+
 	public function getId (): ?int {
 		return $this->id;
+	}
+
+	public function getIsImportant (): bool {
+		return (bool) $this->isImportant;
+	}
+
+	public function setIsImportant ( ?bool $isImportant ): self {
+		$this->isImportant = $isImportant ?? FALSE;
+
+		return $this;
 	}
 
 	public function getAuthor (): ?User {

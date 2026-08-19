@@ -143,6 +143,9 @@ forms:
         body:
             label: "Contenu de la page"
             placeholder: ""
+        is_important:
+            label: "Mettre cette page en avant"
+            hint: "Elle apparaîtra en tête des listes du groupe, avec un repère."
 
     discussion:
         title:
@@ -457,6 +460,7 @@ pages:
             manage: "Gérer les sous-groupes"
 
     page:
+        is_important: "Page mise en avant par les animateurs du groupe"
         list:
             title: "Pages"
         page_create:
