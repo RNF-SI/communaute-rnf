@@ -15,3 +15,8 @@ services:
     public: true
     arguments:
       $secret: "%kernel.secret%"
+
+  # Same reason as in dev: nothing must reach the Postmark API from a test.
+  postmark_bulk:
+    class: App\Postmark\LocalBulkTransport
+    arguments: ["@mailer"]

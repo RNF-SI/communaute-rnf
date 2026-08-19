@@ -1,0 +1,8 @@
+# Outside production, discussion e-mails must be readable like the others.
+# The real bulk transport posts straight to the Postmark API and obeys neither
+# MAILER_URL nor delivery_addresses; this one hands the messages to the
+# configured mailer.
+services:
+  postmark_bulk:
+    class: App\Postmark\LocalBulkTransport
+    arguments: ["@mailer"]
