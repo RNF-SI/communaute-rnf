@@ -20,6 +20,25 @@ Toutes les adresses sont en `@example.org`, domaine réservé par la RFC 2606 :
 rien envoyé là ne peut atteindre une vraie boîte, même si une préproduction se
 met à envoyer du courrier.
 
+### Recharger
+
+```bash
+php bin/console doctrine:fixtures:load
+php bin/console search:reindex:all
+```
+
+⚠️ Si la base contient une copie de production, la purge des fixtures échoue sur
+les clés étrangères des fichiers, qu'elles ne gèrent pas. Il faut alors repartir
+d'un schéma vide :
+
+```bash
+php bin/console doctrine:database:drop --force
+php bin/console doctrine:database:create
+php bin/console doctrine:migrations:migrate --no-interaction
+php bin/console doctrine:fixtures:load --no-interaction
+php bin/console search:reindex:all
+```
+
 ### Comptes prêts à l'emploi
 
 Six comptes à l'adresse stable, tous avec le mot de passe `test`, chacun dans
