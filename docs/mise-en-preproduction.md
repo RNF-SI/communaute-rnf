@@ -38,6 +38,10 @@ SITE_HOST=preprod.communaute.rnfrance.org   # NOUVEAU — sans lui, les liens de
                                             # planifiée pointent vers localhost
 SECURE_SCHEME=https
 
+TEST_ACCOUNTS_EMAIL=recette@rnfrance.org    # NOUVEAU — sans lui, les six comptes
+                                            # de test restent en @example.org et
+                                            # ne reçoivent aucun e-mail
+
 POSTMARK_SENDER=noreply@rnfrance.org        # vide = les demandes d'adhésion
 POSTMARK_SERVER_TOKEN=…                     # échouent (cf. #4)
 POSTMARK_BULK_TOKEN=…                       # vide = aucun e-mail de discussion,
@@ -156,6 +160,12 @@ bien au-delà de la plateforme.
 - **Attention aux comptes conservés avec `--keep-email`.** Ce sont les seules
   adresses réelles d'une copie anonymisée : elles passent le garde-fou et
   recevront donc pour de bon ce que la préproduction envoie.
+- **Les six comptes de test ne reçoivent rien par défaut.** Leurs adresses en
+  `@example.org` ne mènent nulle part et sont refusées avant envoi. Pour
+  recetter les e-mails, renseigner `TEST_ACCOUNTS_EMAIL` dans le `.env.local` de
+  la préproduction puis recharger les fixtures : les comptes prennent alors une
+  adresse étiquetée sur une boîte réelle. Voir
+  [`donnees-reelles.md`](donnees-reelles.md).
 
 | Symptôme | Première chose à regarder |
 |---|---|
@@ -165,4 +175,4 @@ bien au-delà de la plateforme.
 | Les images ne s'affichent pas | permissions de `var/files`, voir `DEPLOYMENT_PERMISSIONS_FIX.md` |
 | Le build front échoue au déploiement | version de Node trop récente pour webpack 4 |
 | Les réponses par e-mail n'arrivent pas | l'URL `/ws/list/inbound/{clé}` doit être publiquement joignable |
-| Un compte de test ne reçoit rien en préproduction | son adresse est sans doute en `@example.org` : `MailGuard` la refuse, c'est voulu |
+| Un compte de test ne reçoit rien en préproduction | son adresse est en `@example.org` : `MailGuard` la refuse. Renseigner `TEST_ACCOUNTS_EMAIL` et recharger les fixtures |

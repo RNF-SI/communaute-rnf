@@ -56,6 +56,28 @@ une situation différente :
 Ces comptes ne sont **jamais tirés au sort** dans les groupes générés : chacun
 reste exactement dans l'état que son nom annonce.
 
+#### Les faire recevoir de vrais e-mails
+
+Sur un serveur, ces adresses en `@example.org` ne mènent nulle part et sont
+refusées avant envoi par `MailGuard` — c'est voulu, elles produiraient un rebond
+par message. Pour recetter les e-mails en préproduction, il faut donc leur
+donner une adresse réellement joignable.
+
+`TEST_ACCOUNTS_EMAIL` s'en charge, par étiquetage sur une boîte que vous
+possédez :
+
+```bash
+TEST_ACCOUNTS_EMAIL=recette@rnfrance.org
+```
+
+Les six comptes deviennent alors `recette+admin@rnfrance.org`,
+`recette+referent@rnfrance.org`, et ainsi de suite. Tout arrive dans la même
+boîte, chaque compte reste distinguable à l'étiquette, et **rien ne rebondit**
+puisque le domaine est réel.
+
+Laissée vide — c'est le défaut, et ce qu'il faut garder en local — les comptes
+restent en `@example.org` et n'envoient rien depuis un serveur.
+
 ### Groupes de référence
 
 Deux groupes au slug stable, `groupe-de-test` (public) et

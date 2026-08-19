@@ -47,10 +47,42 @@ class AppFixtures extends Fixture {
 
 	private $passwordEncoder;
 	private $slugGenerator;
+	private $testAccountsEmail;
 
-	public function __construct ( UserPasswordEncoderInterface $passwordEncoder, SlugGenerator $slugGenerator ) {
-		$this->passwordEncoder = $passwordEncoder;
-		$this->slugGenerator   = $slugGenerator;
+	public function __construct (
+			UserPasswordEncoderInterface $passwordEncoder,
+			SlugGenerator $slugGenerator,
+			string $testAccountsEmail = ''
+	) {
+		$this->passwordEncoder   = $passwordEncoder;
+		$this->slugGenerator     = $slugGenerator;
+		$this->testAccountsEmail = $testAccountsEmail;
+	}
+
+	/**
+	 * Where a named account actually receives its mail.
+	 *
+	 * Left alone, the addresses stay on example.org: unreachable by design,
+	 * and refused before sending by MailGuard. On a server where the e-mails
+	 * have to be read, TEST_ACCOUNTS_EMAIL turns them into tagged addresses on
+	 * a real mailbox — vous+admin@domaine.fr — which all land in the same inbox
+	 * without a single bounce. (#14)
+	 *
+	 * @param string $email the address defined by NAMED_ACCOUNTS
+	 *
+	 * @return string
+	 */
+	private function accountAddress ( $email ) {
+		if ( empty( $this->testAccountsEmail ) || ( strpos( $this->testAccountsEmail, '@' ) === FALSE ) ) {
+			return $email;
+		}
+
+		list( $local, $domain ) = explode( '@', $this->testAccountsEmail, 2 );
+
+		// "referent@example.org" becomes "vous+referent@domaine.fr"
+		$tag = strstr( $email, '@', TRUE );
+
+		return sprintf( '%s+%s@%s', $local, $tag, $domain );
 	}
 
 	public function load ( ObjectManager $manager ) {
@@ -131,7 +163,7 @@ class AppFixtures extends Fixture {
 			$user->setCreatedAt( new \DateTime() );
 			$user->setName( $account[ 'name' ] );
 			$user->setDisplayName( $account[ 'name' ] );
-			$user->setEmail( $email );
+			$user->setEmail( $this->accountAddress( $email ) );
 			$user->setPassword( $this->passwordEncoder->encodePassword( $user, 'test' ) );
 			$user->setRoles( $account[ 'siteAdmin' ] ? [ User::ROLE_USER, User::ROLE_ADMIN ] : [ User::ROLE_USER ] );
 			$user->setStatus( User::STATUS_ACTIVE );

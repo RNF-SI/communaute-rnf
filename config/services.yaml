@@ -111,6 +111,10 @@ services:
           index: "groups.index"
           class: "Usergroup"
 
+  App\DataFixtures\AppFixtures:
+    arguments:
+      $testAccountsEmail: "%env(string:TEST_ACCOUNTS_EMAIL)%"
+
   App\Service\MailGuard:
     arguments:
       $environment: "%kernel.environment%"
