@@ -120,7 +120,80 @@
 		margin: 0.5em 0;
 	}
 
+	// Indentation
+	//
+	// Quill n'imbrique pas les listes : une puce de second niveau reste un
+	// <li> de la même liste, marqué d'une classe ql-indent-N. Son propre CSS
+	// ne stylant ces classes que sous .ql-editor, l'indentation disparaissait
+	// à l'affichage et tous les niveaux se retrouvaient alignés. Les valeurs
+	// reprennent celles de l'éditeur, pour que le rendu corresponde à ce que
+	// l'auteur a vu en écrivant. (#11)
+	@for $level from 1 through 9 {
+		li.ql-indent-#{$level}:not(.ql-direction-rtl) {
+			padding-left: 1.5em + ($level * 3em);
+		}
+
+		li.ql-indent-#{$level}.ql-direction-rtl {
+			padding-right: 1.5em + ($level * 3em);
+		}
+
+		.ql-indent-#{$level}:not(.ql-direction-rtl) {
+			padding-left: $level * 3em;
+		}
+
+		.ql-indent-#{$level}.ql-direction-rtl {
+			padding-right: $level * 3em;
+		}
+	}
+
+	// Une liste indentée change de puce à chaque niveau, comme dans l'éditeur.
+	ul li.ql-indent-1,
+	ul li.ql-indent-4,
+	ul li.ql-indent-7 {
+		list-style-type: circle;
+	}
+
+	ul li.ql-indent-2,
+	ul li.ql-indent-5,
+	ul li.ql-indent-8 {
+		list-style-type: square;
+	}
+
+	// Sens d'écriture
+	.ql-direction-rtl {
+		direction:  rtl;
+		text-align: inherit;
+	}
+
+	// Tailles de texte
+	.ql-size-small {
+		font-size: .75em;
+	}
+
+	.ql-size-large {
+		font-size: 1.5em;
+	}
+
+	.ql-size-huge {
+		font-size: 2.5em;
+	}
+
+	// Exposant et indice
+	sub {
+		vertical-align: sub;
+		font-size:      smaller;
+	}
+
+	sup {
+		vertical-align: super;
+		font-size:      smaller;
+	}
+
 	// Alignement du texte
+	.ql-align-justify {
+		text-align: justify;
+	}
+
 	.ql-align-center {
 		text-align: center;
 	}
