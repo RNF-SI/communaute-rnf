@@ -1,121 +1,143 @@
 <?php
-/**
- * User: Maxime Cousinou
- * Date: 2019-03-29
- * Time: 14:05
- */
 
 namespace App\Tests\Controller;
 
+use App\Entity\User;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\BrowserKit\Cookie;
+use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 
+/**
+ * The groups, seen from outside and from inside.
+ *
+ * Relies on the accounts and reference groups built by the fixtures, see
+ * docs/donnees-reelles.md.
+ */
 class GroupControllerTest extends WebTestCase {
-	/**
-	 * Test Groups list page
-	 */
-	public function testGroupsIndexIsValid () {
-		$client = static::createClient();
+	private const FIREWALL = 'main';
 
-		$crawler = $client->request( 'GET', '/groups' );
+	/**
+	 * @var \Symfony\Bundle\FrameworkBundle\KernelBrowser
+	 */
+	private $client;
+
+	protected function setUp (): void {
+		$this->client = static::createClient();
+	}
+
+	/**
+	 * @param string $email
+	 */
+	private function logIn ( $email ) {
+		$user = self::$container->get( EntityManagerInterface::class )
+								->getRepository( User::class )
+								->findOneBy( [ 'email' => $email ] );
+
+		if ( !$user ) {
+			$this->markTestSkipped( sprintf( 'Fixtures not loaded: %s is missing', $email ) );
+		}
+
+		$session = self::$container->get( 'session' );
+		$token   = new UsernamePasswordToken( $user, NULL, self::FIREWALL, $user->getRoles() );
+
+		$session->set( '_security_' . self::FIREWALL, serialize( $token ) );
+		$session->save();
+
+		$this->client->getCookieJar()->set( new Cookie( $session->getName(), $session->getId() ) );
+	}
+
+	public function testTheGroupsAreNotReadableAnonymously () {
+		$this->client->request( 'GET', '/groups' );
 
 		$this->assertEquals(
-				200,
-				$client->getResponse()->getStatusCode(),
-				'Assert groups page is StatusCode 200'
+				302,
+				$this->client->getResponse()->getStatusCode(),
+				'Assert the platform stays private to visitors'
 		);
+	}
 
+	public function testAMemberSeesTheGroups () {
+		$this->logIn( 'membre@example.org' );
+
+		$crawler = $this->client->request( 'GET', '/groups' );
+
+		$this->assertEquals( 200, $this->client->getResponse()->getStatusCode() );
 		$this->assertGreaterThan(
 				0,
 				$crawler->filter( '.groups-list .group__teaser' )->count(),
-				'Assert groups index contains groups list with groups'
+				'Assert the list is not empty'
 		);
-
-		$publicLink = $crawler
-				->filter( '.group__public .group-name a' )
-				->eq( 0 )
-				->link()
-				->getUri();
-
-		$this->assertNotEmpty(
-				$publicLink,
-				'Assert groups index contains one public group'
+		$this->assertStringContainsString(
+				'Groupe de test',
+				$crawler->filter( '.groups-list' )->text(),
+				'Assert the reference group is listed'
 		);
+	}
 
-		$privateLink = $crawler
-				->filter( '.group__private .group-name a' )
-				->eq( 0 )
-				->link()
-				->getUri();
+	public function testAGroupPageIsReadableByItsMembers () {
+		$this->logIn( 'membre@example.org' );
 
-		$this->assertNotEmpty(
-				$privateLink,
-				'Assert groups index contains one private group'
+		$this->client->request( 'GET', '/groups/groupe-de-test' );
+
+		$this->assertEquals( 200, $this->client->getResponse()->getStatusCode() );
+	}
+
+	public function testTheDiscussionsOfAGroupAreReadableByItsMembers () {
+		$this->logIn( 'membre@example.org' );
+
+		$crawler = $this->client->request( 'GET', '/groups/groupe-de-test/discussions' );
+
+		$this->assertEquals( 200, $this->client->getResponse()->getStatusCode() );
+		$this->assertStringContainsString(
+				'Discussion de test',
+				$crawler->filter( '.discussions-list' )->text()
 		);
+	}
 
-		return [ 'public' => $publicLink, 'private' => $privateLink ];
+	public function testAPrivateGroupIsClosedToSomebodyOutside () {
+		$this->logIn( 'exterieur@example.org' );
+
+		$this->client->request( 'GET', '/groups/groupe-prive-de-test/discussions' );
+
+		$this->assertContains(
+				$this->client->getResponse()->getStatusCode(),
+				[ 302, 403 ],
+				'Assert the content of a private group is not handed to a non-member'
+		);
+	}
+
+	public function testABannedMemberIsKeptOutOfAPrivateGroup () {
+		$this->logIn( 'banni@example.org' );
+
+		$this->client->request( 'GET', '/groups/groupe-prive-de-test/discussions' );
+
+		$this->assertContains(
+				$this->client->getResponse()->getStatusCode(),
+				[ 302, 403 ],
+				'Assert an excluded member no longer reads a private group'
+		);
 	}
 
 	/**
-	 * @depends testGroupsIndexIsValid
+	 * A public group stays readable by anybody signed in, banned or not: being
+	 * banned takes away the right to take part, not the right to look.
 	 */
-	public function testPublicGroupIndexIsValid ( $urls ) {
-		$client = static::createClient();
+	public function testABannedMemberCannotPostInAPublicGroup () {
+		$this->logIn( 'banni@example.org' );
 
-		$crawler = $client->request( 'GET', $urls[ 'public' ] );
+		$crawler = $this->client->request( 'GET', '/groups/groupe-de-test/discussions' );
+
+		$this->assertEquals( 200, $this->client->getResponse()->getStatusCode() );
+
+		$link = $crawler->filter( '.discussions-list a' )->eq( 0 )->link()->getUri();
+
+		$crawler = $this->client->request( 'GET', $link );
 
 		$this->assertEquals(
-				200,
-				$client->getResponse()->getStatusCode(),
-				'Assert public group index is StatusCode 200'
-		);
-
-		$pageUrl = $crawler
-				->filter( '.group-app__pages a.page__in-items-list' )
-				->eq( 0 )
-				->link()
-				->getUri();
-
-		return [ 'page' => $pageUrl ];
-	}
-
-	/**
-	 * @depends testPublicGroupIndexIsValid
-	 */
-	public function testPublicGroupPagePageIsValid ( $urls ) {
-		$client = static::createClient();
-
-		$crawler = $client->request( 'GET', $urls[ 'page' ] );
-
-		$this->assertEquals(
-				200,
-				$client->getResponse()->getStatusCode(),
-				'Assert page is StatusCode 200'
-		);
-
-		$this->assertGreaterThan(
 				0,
-				$crawler->filter( '.page-body' )->count(),
-				'Assert page contains a body'
-		);
-	}
-
-	/**
-	 * @depends testGroupsIndexIsValid
-	 */
-	public function testPrivateGroupIndexIsValidAndRestricted ( $urls ) {
-		$client = static::createClient();
-
-		$crawler = $client->request( 'GET', $urls[ 'private' ] );
-
-		$this->assertEquals(
-				200,
-				$client->getResponse()->getStatusCode(),
-				'Assert private group index is StatusCode 200'
-		);
-
-		$this->assertEmpty(
-				$crawler->filter( '.group-app__members' )->count(),
-				'Assert private group does not show members list'
+				$crawler->filter( 'form[name="discussion_message"]' )->count(),
+				'Assert an excluded member is not offered to answer'
 		);
 	}
 }
