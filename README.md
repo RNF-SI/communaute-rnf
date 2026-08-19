@@ -312,6 +312,8 @@ Vérifiez que le `DATABASE_PREFIX` est bien défini et que l'utilisateur MySQL a
 
 ## Documentation interne
 
+- [`docs/mise-en-preproduction.md`](docs/mise-en-preproduction.md) — déployer
+  dans le bon ordre, et la liste de recette scénario par scénario.
 - [`docs/tester-les-emails.md`](docs/tester-les-emails.md) — par quel chemin part
   chaque e-mail selon l'environnement, et comment les observer en local. **Deux
   transports coexistent avec deux jetons Postmark différents** : à lire avant de
