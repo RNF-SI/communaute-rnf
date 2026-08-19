@@ -167,3 +167,16 @@
 		text-overflow: ellipsis;
 	}
 }
+
+/**************************************************
+* SOUS-DOSSIERS
+**************************************************/
+
+// Un dossier imbriqué est décalé sous son parent, avec un filet qui rend la
+// dépendance lisible. (#8)
+.documents-folder .documents-folder {
+	margin-left:  rem(18px);
+	padding-left: rem(18px);
+
+	border-left:  2px solid $color_grey_border;
+}

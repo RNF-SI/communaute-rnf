@@ -31,4 +31,22 @@ class DocumentFolderRepository extends ServiceEntityRepository {
 					->getQuery()
 					->getResult();
 	}
+
+	/**
+	 * Les dossiers de premier niveau. Les autres sont atteints par imbrication,
+	 * sans quoi un sous-dossier apparaîtrait deux fois dans la liste. (#8)
+	 *
+	 * @param \App\Entity\Usergroup $group
+	 *
+	 * @return DocumentFolder[]
+	 */
+	public function findRootsForGroup ( Usergroup $group ) {
+		return $this->createQueryBuilder( 'd' )
+					->andWhere( 'd.usergroup = :group' )
+					->andWhere( 'd.parent IS NULL' )
+					->setParameter( 'group', $group )
+					->orderBy( 'd.title', 'ASC' )
+					->getQuery()
+					->getResult();
+	}
 }

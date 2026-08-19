@@ -57,13 +57,15 @@ class DocumentType extends AbstractType {
 						],
 				] )
 				->add( 'folderTitle', TextType::class, [
-						'data'     => !empty( $document->getFolder() ) ? $document->getFolder()->getTitle() : '',
+						// Le chemin complet, pour qu'un sous-dossier soit
+						// désignable et reconnaissable. (#8)
+						'data'     => !empty( $document->getFolder() ) ? $document->getFolder()->getPath() : '',
 						'required' => FALSE,
 						'mapped'   => FALSE,
 						'attr'     => [ 'data-list' => empty( $options[ 'folders' ] )
 								? ''
 								: implode( ', ', array_map( function ( DocumentFolder $folder ) {
-									return $folder->getTitle();
+									return $folder->getPath();
 								}, $options[ 'folders' ] ) ),
 						],
 				] )

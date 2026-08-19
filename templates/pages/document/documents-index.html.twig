@@ -1,4 +1,27 @@
+{% macro folder(node, depth, group) %}
+	{% import _self as tree %}
+	<div class="documents-folder documents-folder__depth-{{ depth }}">
+		<div class="documents-folder--name">
+			<span>{{ node.folder.title }}</span>
+			<button type="button" class="list-toggle"><span>{{ 'pages.document.list.toggle'|trans }}</span></button>
+		</div>
+		{% if node.documents is not empty %}
+			<ul class="documents-list">
+				{% for document in node.documents %}
+					<li>
+						{% include 'contents/document/document--teaser.html.twig' with {'document':document, 'group':group} %}
+					</li>
+				{% endfor %}
+			</ul>
+		{% endif %}
+		{% for child in node.children %}
+			{{ tree.folder(child, depth + 1, group) }}
+		{% endfor %}
+	</div>
+{% endmacro %}
+
 {% extends 'base.html.twig' %}
+{% import _self as tree %}
 
 {% block title %}{{ 'pages.document.list.title'|trans }} - {{ group.name }} | {{ plateform.name }}{% endblock %}
 
@@ -58,20 +81,8 @@
 							{% endfor %}
 						</ul>
 					{% endif %}
-					{% for folder in folders %}
-						<div class="documents-folder">
-							<div class="documents-folder--name">
-								<span>{{ folder.title }}</span>
-								<button type="button" class="list-toggle"><span>{{ 'pages.document.list.toggle'|trans }}</span></button>
-							</div>
-							<ul class="documents-list">
-								{% for document in folder.documents %}
-									<li>
-										{% include 'contents/document/document--teaser.html.twig' with {'document':document} %}
-									</li>
-								{% endfor %}
-							</ul>
-						</div>
+					{% for node in folders %}
+						{{ tree.folder(node, 0, group) }}
 					{% endfor %}
 					{% include 'components/pager.html.twig' %}
 				</div>

@@ -10,6 +10,7 @@ use App\Entity\Usergroup;
 use App\Form\DocumentType;
 use App\Security\GroupDocumentVoter;
 use App\Security\GroupVoter;
+use App\Service\DocumentFolderResolver;
 use App\Service\FileManager;
 use App\Service\NotificationSender;
 use App\Service\FileMimeManager;
@@ -134,23 +135,10 @@ class GroupDocumentsController extends AbstractController {
 
 		// Folders
 
-		$folders = $group->getDocumentFolders();
-
-		foreach ( $folders as $folder ) {
-			$count = 0;
-			foreach ( $folder->getDocuments() as $document ) {
-				if ( !$this->match( $document, $filters ) ) {
-					$folder->removeDocument( $document );
-				}
-				else {
-					$count++;
-				}
-			}
-
-			if ( empty( $count ) ) {
-				$folders->removeElement( $folder );
-			}
-		}
+		$folders = $this->folderTree(
+				$manager->getRepository( DocumentFolder::class )->findRootsForGroup( $group ),
+				$filters
+		);
 
 		// Documents
 
@@ -166,6 +154,54 @@ class GroupDocumentsController extends AbstractController {
 				'documents' => $documents,
 				'form'      => $form->createView(),
 		] );
+	}
+
+	/**
+	 * Les dossiers d'un groupe, emboîtés, dépouillés de ce qui ne correspond
+	 * pas au filtre en cours.
+	 *
+	 * Un dossier est conservé dès qu'il contient un document retenu ou qu'un
+	 * de ses sous-dossiers en contient : sans quoi un dossier de classement,
+	 * vide par nature, emporterait tout son contenu. (#8)
+	 *
+	 * @param iterable $folders
+	 * @param array    $filters
+	 * @param array    $seen identifiants déjà traversés
+	 *
+	 * @return array liste de ['folder' => …, 'documents' => …, 'children' => …]
+	 */
+	private function folderTree ( $folders, array $filters, array $seen = [] ) {
+		$tree = [];
+
+		foreach ( $folders as $folder ) {
+			if ( isset( $seen[ $folder->getId() ] ) ) {
+				continue;
+			}
+
+			$seen[ $folder->getId() ] = TRUE;
+
+			$documents = [];
+
+			foreach ( $folder->getDocuments() as $document ) {
+				if ( $this->match( $document, $filters ) ) {
+					$documents[] = $document;
+				}
+			}
+
+			$children = $this->folderTree( $folder->getChildren(), $filters, $seen );
+
+			if ( empty( $documents ) && empty( $children ) ) {
+				continue;
+			}
+
+			$tree[] = [
+					'folder'    => $folder,
+					'documents' => $documents,
+					'children'  => $children,
+			];
+		}
+
+		return $tree;
 	}
 
 	/**************************************************
@@ -187,7 +223,8 @@ class GroupDocumentsController extends AbstractController {
 			Request $request,
             EntityManagerInterface $manager,
 			FileManager $fileManager,
-			NotificationSender $notificationSender
+			NotificationSender $notificationSender,
+			DocumentFolderResolver $folderResolver
 	) {
 		/**
 		 * @var $group \App\Entity\Usergroup
@@ -218,25 +255,11 @@ class GroupDocumentsController extends AbstractController {
 			$document->setUsergroup( $group );
 			$document->setCreatedAt( new DateTime() );
 
-			$folderTitle = trim( $form->get( 'folderTitle' )->getData() );
-
-			if ( !empty( $folderTitle ) ) {
-				$folder = $manager->getRepository( DocumentFolder::class )
-								  ->findOneBy( [ 'usergroup' => $group, 'title' => $folderTitle ] );
-
-				if ( !$folder ) {
-					$folder = new DocumentFolder();
-					$folder->setUsergroup( $group );
-					$folder->setTitle( $folderTitle );
-
-					$manager->persist( $folder );
-				}
-
-				$document->setFolder( $folder );
-			}
-			else {
-				$document->setFolder( NULL );
-			}
+			// Le champ accepte un chemin : « Comptes rendus / 2026 » range le
+			// document dans un sous-dossier, en créant ce qui manque. (#8)
+			$document->setFolder(
+					$folderResolver->resolve( $group, $form->get( 'folderTitle' )->getData() )
+			);
 
 			$manager->persist( $document );
 
@@ -305,7 +328,8 @@ class GroupDocumentsController extends AbstractController {
 			$documentId,
 			Request $request,
             EntityManagerInterface $manager,
-			FileManager $fileManager
+			FileManager $fileManager,
+			DocumentFolderResolver $folderResolver
 	) {
 		/**
 		 * @var  \App\Entity\Usergroup $group
@@ -346,29 +370,8 @@ class GroupDocumentsController extends AbstractController {
 
 		if ( $form->isSubmitted() && $form->isValid() ) {
 			$folderTitle    = trim( $form->get( 'folderTitle' )->getData() );
-			$previousFolder = $document->getFolder();
-
-			// Set Folder
-
-			if ( !empty( $folderTitle ) ) {
-				if ( ( empty( $previousFolder ) || ( $previousFolder->getTitle() !== $folderTitle ) ) ) {
-					$folder = $manager->getRepository( DocumentFolder::class )
-									  ->findOneBy( [ 'usergroup' => $group, 'title' => $folderTitle ] );
-
-					if ( !$folder ) {
-						$folder = new DocumentFolder();
-						$folder->setUsergroup( $group );
-						$folder->setTitle( $folderTitle );
-
-						$manager->persist( $folder );
-					}
-
-					$document->setFolder( $folder );
-				}
-			}
-			else {
-				$document->setFolder( NULL );
-			}
+			// Le champ accepte un chemin, comme au dépôt. (#8)
+			$document->setFolder( $folderResolver->resolve( $group, $folderTitle ) );
 
 			// File
 			$uploadFile = $form->get( 'filefile' )->getData();

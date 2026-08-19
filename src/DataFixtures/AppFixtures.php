@@ -8,6 +8,7 @@ use App\Entity\Category;
 use App\Entity\Discussion;
 use App\Entity\DiscussionMessage;
 use App\Entity\Document;
+use App\Entity\DocumentFolder;
 use App\Entity\LogEvent;
 use App\Entity\Page;
 use App\Entity\Skill;
@@ -557,6 +558,28 @@ class AppFixtures extends Fixture {
 		$article->setBody( '<p>' . implode( '</p><p>', $faker->paragraphs( 3, FALSE ) ) . '</p>' );
 		$article->setCreatedAt( new \DateTime() );
 		$manager->persist( $article );
+
+		// Une arborescence de dossiers, pour éprouver le classement. (#8)
+		$racine = new DocumentFolder();
+		$racine->setUsergroup( $group );
+		$racine->setTitle( 'Comptes rendus' );
+		$manager->persist( $racine );
+
+		$sousDossier = new DocumentFolder();
+		$sousDossier->setUsergroup( $group );
+		$sousDossier->setTitle( '2026' );
+		$sousDossier->setParent( $racine );
+		$manager->persist( $sousDossier );
+
+		$classe = new Document();
+		$classe->setTitle( 'Compte rendu de mars' );
+		$classe->setSlug( $this->slugGenerator->generateSlug( 'Compte rendu de mars ' . $group->getSlug(), Document::class, 'slug' ) );
+		$classe->setDescription( 'Rangé dans un sous-dossier, pour éprouver l’arborescence.' );
+		$classe->setUsergroup( $group );
+		$classe->setUser( $referent );
+		$classe->setFolder( $sousDossier );
+		$classe->setCreatedAt( new \DateTime() );
+		$manager->persist( $classe );
 
 		$document = new Document();
 		$document->setTitle( 'Document de test' );

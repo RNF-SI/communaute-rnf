@@ -20,3 +20,6 @@ services:
   postmark_bulk:
     class: App\Postmark\LocalBulkTransport
     arguments: ["@mailer"]
+
+  App\Service\DocumentFolderResolver:
+    public: true
