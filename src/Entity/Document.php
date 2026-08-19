@@ -41,6 +41,14 @@ class Document {
 	private $title;
 
 	/**
+	 * Quelques mots pour dire de quoi parle le document, afin de lui donner de
+	 * la visibilité dans les listes et dans la recherche.
+	 *
+	 * @ORM\Column(type="text", nullable=true)
+	 */
+	private $description;
+
+	/**
 	 * @ORM\Column(type="datetime")
 	 */
 	private $createdAt;
@@ -52,6 +60,16 @@ class Document {
 
 	public function getId (): ?int {
 		return $this->id;
+	}
+
+	public function getDescription (): ?string {
+		return $this->description;
+	}
+
+	public function setDescription ( ?string $description ): self {
+		$this->description = $description;
+
+		return $this;
 	}
 
 	public function getUser (): ?User {

@@ -139,6 +139,18 @@
 		text-overflow: ellipsis;
 
 		@include font_title_bold;
+
+		.document--description {
+			display:     block;
+
+			color:       $color_grey_neutral;
+			font-size:   rem(13px);
+			font-weight: normal;
+
+			overflow:      hidden;
+			text-overflow: ellipsis;
+			white-space:   nowrap;
+		}
 	}
 
 	.document--date {

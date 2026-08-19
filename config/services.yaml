@@ -88,8 +88,8 @@ services:
           index: "pages.index"
           class: "Page"
         "documents":
-          propertyList: ["id", "title", "usergroup"]
-          indexPropertyList: ["id", "title"]
+          propertyList: ["id", "title", "description", "usergroup"]
+          indexPropertyList: ["id", "title", "description"]
           index: "documents.index"
           class: "Document"
         "membres":

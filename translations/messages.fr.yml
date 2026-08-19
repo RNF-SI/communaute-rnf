@@ -178,6 +178,10 @@ forms:
         folder:
             label: "Dossier"
             placeholder: "(non classé)"
+        description:
+            label: "Description"
+            hint: "Quelques mots sur le contenu du document, pour aider les autres à le trouver. Facultatif."
+            placeholder: "Exemple : compte rendu de l’atelier pâturage de mars 2026…"
 
     administration:
         submit: "Sauvegarder les modifications"

@@ -11,6 +11,9 @@
 
 		<div class="document--title">
 			<span>{{ document.title }}</span>
+			{% if document.description is not empty %}
+				<span class="document--description">{{ document.description }}</span>
+			{% endif %}
 		</div>
 
 		<div class="document--date">

@@ -160,6 +160,10 @@ forms:
         folder:
             label: "Folder"
             placeholder: "(unclassified)"
+        description:
+            label: "Description"
+            hint: "A few words about what the document contains, to help others find it. Optional."
+            placeholder: "For instance: minutes of the March 2026 grazing workshop…"
 
 pages:
     user:

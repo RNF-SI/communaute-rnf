@@ -18,6 +18,12 @@
 			{{ form_widget(form.folderTitle, {'attr': {'placeholder': 'forms.document.folder.placeholder'}}) }}
 		</div>
 	</div>
+	<div class="form-row form-row__field">
+		{{ form_label(form.description, 'forms.document.description.label') }}
+		<div class="hint">{{ 'forms.document.description.hint'|trans }}</div>
+		{{ form_widget(form.description, {'attr': {'placeholder': 'forms.document.description.placeholder'}}) }}
+		<div class="form_errors">{{ form_errors(form.description) }}</div>
+	</div>
 </div>
 <div class="form-row form-row__submit">
 	{{ form_widget(form.submit, {'label': form_submit}) }}
