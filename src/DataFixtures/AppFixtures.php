@@ -57,15 +57,18 @@ class AppFixtures extends Fixture {
 	private $passwordEncoder;
 	private $slugGenerator;
 	private $testAccountsEmail;
+	private $communitySlug;
 
 	public function __construct (
 			UserPasswordEncoderInterface $passwordEncoder,
 			SlugGenerator $slugGenerator,
-			string $testAccountsEmail = ''
+			string $testAccountsEmail = '',
+			string $communitySlug = 'communaute'
 	) {
 		$this->passwordEncoder   = $passwordEncoder;
 		$this->slugGenerator     = $slugGenerator;
 		$this->testAccountsEmail = $testAccountsEmail;
+		$this->communitySlug     = $communitySlug;
 	}
 
 	/**
@@ -383,6 +386,16 @@ class AppFixtures extends Fixture {
 		}
 
 		/**
+		 * COMMUNITY GROUP
+		 *
+		 * Le groupe général désigné par COMMUNITY_SLUG. Toute personne qui
+		 * arrive sur la plateforme y est rattachée automatiquement ; sans lui,
+		 * un compte fraîchement créé n'appartient à rien et découvre une page
+		 * « mes groupes » vide.
+		 */
+		$this->buildCommunityGroup( $manager, array_merge( $users, array_values( $named ) ) );
+
+		/**
 		 * REFERENCE GROUPS
 		 *
 		 * Two groups with a stable slug, where every named account sits in a
@@ -391,6 +404,38 @@ class AppFixtures extends Fixture {
 		 * randomly generated group whose composition changes at each load.
 		 */
 		$this->buildReferenceGroups( $manager, $named, $categories );
+	}
+
+	/**
+	 * @param \Doctrine\Persistence\ObjectManager $manager
+	 * @param \App\Entity\User[]                  $members
+	 */
+	private function buildCommunityGroup ( ObjectManager $manager, array $members ) {
+		$group = new Usergroup();
+		$group->setName( 'Communauté RNF' );
+		$group->setSlug( $this->communitySlug );
+		$group->setDescription( 'Le groupe général : tout le monde en fait partie.' );
+		$group->setPresentation( '<p>Ce groupe rassemble l’ensemble du réseau. Chaque personne qui rejoint la plateforme y est rattachée automatiquement.</p>' );
+		$group->setVisibility( Usergroup::PUBLIC );
+		$group->setCreatedAt( new \DateTime() );
+		$group->setIsActive( TRUE );
+
+		$manager->persist( $group );
+		$manager->flush();
+
+		foreach ( $members as $user ) {
+			$membership = new UsergroupMembership();
+			$membership->setUsergroup( $group );
+			$membership->setUser( $user );
+			$membership->setRole( UsergroupMembership::ROLE_USER );
+			$membership->setStatus( UsergroupMembership::STATUS_MEMBER );
+			$membership->setJoinedAt( new \DateTime() );
+
+			$manager->persist( $membership );
+			$group->addMember( $membership );
+		}
+
+		$manager->flush();
 	}
 
 	/**

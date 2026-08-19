@@ -118,6 +118,7 @@ services:
   App\DataFixtures\AppFixtures:
     arguments:
       $testAccountsEmail: "%env(string:TEST_ACCOUNTS_EMAIL)%"
+      $communitySlug: "%env(string:COMMUNITY_SLUG)%"
 
   App\Service\MailGuard:
     arguments:
