@@ -219,6 +219,15 @@ pages:
             title: "My groups"
             introduction: "Quickly manage your group memberships"
             link: "My groups"
+        notifications:
+            title: "My notifications"
+            link: "My notifications"
+            empty: "You have no notification yet."
+            types:
+                discussion_message: "New message in the discussion"
+                page_create: "A new page was created:"
+                article_create: "A new article was published:"
+                document_create: "A new document was added:"
         my_discussions:
             title: "My discussions"
             introduction: "Find the discussions you started or took part in, across all your groups."

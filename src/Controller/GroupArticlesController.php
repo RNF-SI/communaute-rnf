@@ -10,6 +10,7 @@ use App\Form\ArticleType;
 use App\Security\GroupArticleVoter;
 use App\Security\GroupVoter;
 use App\Service\FileManager;
+use App\Service\NotificationSender;
 use App\Service\SlugGenerator;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
@@ -81,7 +82,8 @@ class GroupArticlesController extends AbstractController {
             EntityManagerInterface $manager,
 			FileManager $fileManager,
 			SlugGenerator $slugGenerator,
-			UrlGeneratorInterface $router
+			UrlGeneratorInterface $router,
+			NotificationSender $notificationSender
 	) {
 		/**
 		 * @var \App\Entity\Usergroup $group
@@ -140,6 +142,10 @@ class GroupArticlesController extends AbstractController {
 			$log->setData( [ 'article' => $article->getId(), 'title' => $article->getTitle() ] );
 			$manager->persist( $log );
 			$manager->flush();
+
+			// Notifications (#34)
+
+			$notificationSender->notifyNewArticle( $article );
 
 			// --
 

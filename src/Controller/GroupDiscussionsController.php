@@ -15,6 +15,7 @@ use App\Security\GroupDiscussionVoter;
 use App\Security\GroupVoter;
 use App\Service\DiscussionSender;
 use App\Service\FileManager;
+use App\Service\NotificationSender;
 use App\Service\HashGenerator;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
@@ -84,7 +85,8 @@ class GroupDiscussionsController extends AbstractController {
 			EntityManagerInterface $manager,
 			FileManager $fileManager,
 			UrlGeneratorInterface $router,
-			DiscussionSender $sender
+			DiscussionSender $sender,
+			NotificationSender $notificationSender
 	) {
 		/**
 		 * @var \App\Entity\Usergroup $group
@@ -150,6 +152,10 @@ class GroupDiscussionsController extends AbstractController {
 
 				$sender->sendDiscussionMessage( $discussionMessage, TRUE );
 
+				// Notifications in-app (#34)
+
+				$notificationSender->notifyNewDiscussionMessage( $discussionMessage );
+
 				// Log Event
 
 				$log = new LogEvent();
@@ -197,7 +203,8 @@ class GroupDiscussionsController extends AbstractController {
 			EntityManagerInterface $manager,
 			FileManager $fileManager,
 			UrlGeneratorInterface $router,
-			DiscussionSender $sender
+			DiscussionSender $sender,
+			NotificationSender $notificationSender
 	) {
 		/**
 		 * @var \App\Entity\Usergroup $group
@@ -261,6 +268,10 @@ class GroupDiscussionsController extends AbstractController {
 					// Send Notifications
 
 					$sender->sendDiscussionMessage( $discussionMessage );
+
+					// Notifications in-app (#34)
+
+					$notificationSender->notifyNewDiscussionMessage( $discussionMessage );
 
 					// Log Event
 
@@ -634,7 +645,8 @@ class GroupDiscussionsController extends AbstractController {
 			Request $request,
 			EntityManagerInterface $manager,
 			FileManager $fileManager,
-			DiscussionSender $sender
+			DiscussionSender $sender,
+			NotificationSender $notificationSender
 	) {
 		if ( $key !== $this->getParameter( 'postmark' )[ 'inbound_key' ] ) {
 			return new JsonResponse( [ 'status' => 'Invalid API key' ] );
@@ -781,6 +793,10 @@ class GroupDiscussionsController extends AbstractController {
 		// Send Notifications
 
 		$sender->sendDiscussionMessage( $discussionMessage, $createDiscussion );
+
+		// Notifications in-app (#34)
+
+		$notificationSender->notifyNewDiscussionMessage( $discussionMessage );
 
 		// Log Event
 

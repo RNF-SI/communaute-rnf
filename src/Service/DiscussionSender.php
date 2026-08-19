@@ -3,6 +3,9 @@
 namespace App\Service;
 
 use App\Entity\DiscussionMessage;
+use App\Entity\UsergroupMembership;
+use App\Notification\NotificationLevel;
+use App\Notification\NotificationRhythm;
 use App\Postmark\BulkTransport;
 use Swift_Message;
 use Throwable;
@@ -32,6 +35,39 @@ class DiscussionSender {
 	}
 
 	/**
+	 * Whether this member gets an e-mail as the message is posted.
+	 *
+	 * Three things have to line up: the level that applies to this discussion
+	 * in particular, the member wanting e-mails at all, and their chosen
+	 * rhythm. Someone on the daily summary is served later by the digest
+	 * command, not here. (#34)
+	 *
+	 * @param \App\Entity\UsergroupMembership $membership
+	 * @param \App\Entity\DiscussionMessage   $discussionMessage
+	 *
+	 * @return bool
+	 */
+	private function shouldSendNow ( UsergroupMembership $membership, DiscussionMessage $discussionMessage ) {
+		if ( $membership->getStatus() !== UsergroupMembership::STATUS_MEMBER ) {
+			return FALSE;
+		}
+
+		$user = $membership->getUser();
+
+		if ( !$user || !$user->wantsEmails() ) {
+			return FALSE;
+		}
+
+		if ( $user->getDiscussionEmailRhythm() !== NotificationRhythm::IMMEDIATE ) {
+			return FALSE;
+		}
+
+		$level = $membership->getLevelForDiscussion( $discussionMessage->getDiscussion()->getUuid() );
+
+		return NotificationLevel::sendsEmail( $level );
+	}
+
+	/**
 	 * @param \App\Entity\DiscussionMessage $discussionMessage
 	 * @param bool                          $first
 	 *
@@ -49,7 +85,7 @@ class DiscussionSender {
 		 * @var \App\Entity\UsergroupMembership $membership
 		 */
 		foreach ( $to as $membership ) {
-			if ( $membership->shouldReceiveDiscussionsEmails() ) {
+			if ( $this->shouldSendNow( $membership, $discussionMessage ) ) {
 				$user = $membership->getUser();
 
 				// don't notify the author of their own message. Compare the

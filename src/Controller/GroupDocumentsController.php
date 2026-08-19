@@ -11,6 +11,7 @@ use App\Form\DocumentType;
 use App\Security\GroupDocumentVoter;
 use App\Security\GroupVoter;
 use App\Service\FileManager;
+use App\Service\NotificationSender;
 use App\Service\FileMimeManager;
 use App\Service\SlugGenerator;
 use DateTime;
@@ -185,7 +186,8 @@ class GroupDocumentsController extends AbstractController {
 			$groupSlug,
 			Request $request,
             EntityManagerInterface $manager,
-			FileManager $fileManager
+			FileManager $fileManager,
+			NotificationSender $notificationSender
 	) {
 		/**
 		 * @var $group \App\Entity\Usergroup
@@ -269,6 +271,10 @@ class GroupDocumentsController extends AbstractController {
 			$log->setData( [ 'document' => $document->getId(), 'title' => $document->getTitle() ] );
 			$manager->persist( $log );
 			$manager->flush();
+
+			// Notifications (#34)
+
+			$notificationSender->notifyNewDocument( $document );
 
 			// --
 

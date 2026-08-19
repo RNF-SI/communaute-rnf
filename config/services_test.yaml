@@ -7,3 +7,6 @@ services:
 
   App\Service\EmailSender:
     public: true
+
+  App\Service\NotificationSender:
+    public: true

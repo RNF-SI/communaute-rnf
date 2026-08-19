@@ -11,6 +11,7 @@ use App\Form\PageType;
 use App\Security\GroupPageVoter;
 use App\Security\GroupVoter;
 use App\Service\FileManager;
+use App\Service\NotificationSender;
 use App\Service\SlugGenerator;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
@@ -75,7 +76,8 @@ class GroupPagesController extends AbstractController {
             EntityManagerInterface $manager,
 			FileManager $fileManager,
 			SlugGenerator $slugGenerator,
-			UrlGeneratorInterface $router
+			UrlGeneratorInterface $router,
+			NotificationSender $notificationSender
 	) {
 		/**
 		 * @var \App\Entity\Usergroup $group
@@ -144,6 +146,10 @@ class GroupPagesController extends AbstractController {
 			$log->setData( [ 'page' => $page->getId(), 'title' => $page->getTitle() ] );
 			$manager->persist( $log );
 			$manager->flush();
+
+			// Notifications (#34)
+
+			$notificationSender->notifyNewPage( $page );
 
 			// --
 

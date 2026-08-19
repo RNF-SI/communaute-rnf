@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Discussion;
 use App\Entity\File;
 use App\Entity\LogEvent;
+use App\Entity\Notification;
 use App\Entity\User;
 use App\Entity\UsergroupMembership;
 use App\Form\UserProfileType;
@@ -214,6 +215,36 @@ class UserController extends AbstractController
 		$user = $this->getUser();
 
 		return $this->render('pages/user/my-groups.html.twig', ['user' => $user]);
+	}
+
+	/**
+	 * @Route("/user/notifications", name="user_notifications")
+	 *
+	 * @param \Doctrine\ORM\EntityManagerInterface      $manager
+	 *
+	 * @return \Symfony\Component\HttpFoundation\Response
+	 */
+	public function userNotifications(
+		EntityManagerInterface $manager
+	) {
+		$this->denyAccessUnlessGranted(UserVoter::LOGGED);
+
+		/**
+		 * @var User $user
+		 */
+		$user = $this->getUser();
+
+		$repository    = $manager->getRepository(Notification::class);
+		$notifications = $repository->findForUser($user);
+
+		// Opening the page is what acknowledges them; the ones just listed
+		// keep their unread look for this render.
+		$repository->markAllAsRead($user, new \DateTime());
+
+		return $this->render('pages/user/notifications.html.twig', [
+				'user'          => $user,
+				'notifications' => $notifications,
+		]);
 	}
 
 	/**

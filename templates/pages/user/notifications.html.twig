@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'pages.user.notifications.title'|trans }} | {{ plateform.name }}{% endblock %}
+
+{% block main %}
+	<section class="main main__user-page main__user-page__notifications">
+		<div class="main--content content-container">
+			{% include 'components/app-flashes.html.twig' %}
+
+			<div class="panel">
+				<h1 class="h1">{{ 'pages.user.notifications.title'|trans }}</h1>
+			</div>
+
+			{% if notifications is not empty %}
+				<section class="notifications-list">
+					<ul>
+						{% for notification in notifications %}
+							<li class="notification{{ notification.read ? '' : ' notification__unread' }}">
+								<a href="{{ notification.url }}">
+									<span class="notification--label">
+										{{ ('pages.user.notifications.types.' ~ notification.type|replace({':': '_'}))|trans }}
+										{{ notification.title }}
+									</span>
+									{% if notification.usergroup %}
+										<span class="notification--group">{{ notification.usergroup.name }}</span>
+									{% endif %}
+									<span class="notification--date">{{ notification.createdAt|ago|capitalize }}</span>
+								</a>
+							</li>
+						{% endfor %}
+					</ul>
+				</section>
+			{% else %}
+				<p>{{ 'pages.user.notifications.empty'|trans }}</p>
+			{% endif %}
+		</div>
+	</section>
+{% endblock %}

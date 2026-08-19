@@ -418,3 +418,54 @@
 		}
 	}
 }
+
+/**************************************************
+* NOTIFICATIONS
+**************************************************/
+
+.notifications-count {
+	display:          inline-block;
+	min-width:        rem(18px);
+	padding:          0 rem(5px);
+	margin-left:      rem(6px);
+
+	border-radius:    rem(9px);
+	background-color: $color_action;
+
+	color:            white;
+	font-size:        rem(12px);
+	line-height:      rem(18px);
+	text-align:       center;
+}
+
+.notifications-list {
+	> ul,
+	> ul > li {
+		margin:     0;
+		padding:    0;
+		list-style: none;
+	}
+
+	.notification {
+		border-bottom: 1px solid $color_grey_border;
+
+		a {
+			display:         block;
+			padding:         rem(12px) 0;
+
+			text-decoration: none;
+		}
+	}
+
+	.notification__unread a {
+		@include font_default_bold;
+	}
+
+	.notification--group,
+	.notification--date {
+		display:   block;
+
+		color:     $color_grey_neutral;
+		font-size: rem(13px);
+	}
+}

@@ -324,6 +324,15 @@ pages:
             title: "Mes groupes"
             introduction: "Gérez rapidement vos adhésions aux groupes"
             link: "Mes groupes"
+        notifications:
+            title: "Mes notifications"
+            link: "Mes notifications"
+            empty: "Vous n’avez aucune notification pour le moment."
+            types:
+                discussion_message: "Nouveau message dans la discussion"
+                page_create: "Une nouvelle page a été créée :"
+                article_create: "Une nouvelle actualité a été publiée :"
+                document_create: "Un nouveau document a été déposé :"
         my_discussions:
             title: "Mes discussions"
             introduction: "Retrouvez les discussions que vous avez ouvertes ou auxquelles vous avez participé, tous groupes confondus."
