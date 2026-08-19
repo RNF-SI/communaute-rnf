@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use App\Notification\NotificationCategory;
+use App\Notification\NotificationLevel;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -126,5 +128,113 @@ class UsergroupMembership {
 	 */
 	public function shouldReceiveDiscussionsEmails () {
 		return ( $this->getStatus() === UsergroupMembership::STATUS_MEMBER ) && empty( $this->getNotificationsSettings()[ 'unsubscribed' ] );
+	}
+
+	/**
+	 * How far notifications of a given kind of content go, for this member in
+	 * this group.
+	 *
+	 * Settings written before #34 only knew a single `unsubscribed` flag for
+	 * the whole group. They are read as they were meant: someone who opted out
+	 * stays opted out on every category. Nobody is resubscribed by the change.
+	 *
+	 * @param string $category
+	 *
+	 * @return string one of NotificationLevel
+	 */
+	public function getNotificationLevel ( $category ) {
+		$settings = $this->getNotificationsSettings() ?: [];
+
+		if ( isset( $settings[ 'categories' ][ $category ] )
+			 && NotificationLevel::exists( $settings[ 'categories' ][ $category ] ) ) {
+			return $settings[ 'categories' ][ $category ];
+		}
+
+		if ( !empty( $settings[ 'unsubscribed' ] ) ) {
+			return NotificationLevel::NONE;
+		}
+
+		return NotificationLevel::DEFAULT_LEVEL;
+	}
+
+	/**
+	 * @param string $category
+	 * @param string $level
+	 *
+	 * @return $this
+	 */
+	public function setNotificationLevel ( $category, $level ) {
+		if ( !NotificationCategory::exists( $category ) || !NotificationLevel::exists( $level ) ) {
+			return $this;
+		}
+
+		$settings = $this->getNotificationsSettings() ?: [];
+
+		// The legacy flag has no meaning left once a category is set by hand;
+		// keeping it would silently override what the member just chose.
+		unset( $settings[ 'unsubscribed' ] );
+
+		$settings[ 'categories' ][ $category ] = $level;
+
+		return $this->setNotificationsSettings( $settings );
+	}
+
+	/**
+	 * What this member chose for one discussion in particular, if anything.
+	 *
+	 * @param string $discussionUuid
+	 *
+	 * @return string|null one of NotificationLevel, or NULL when the member
+	 *                     never said anything about this discussion
+	 */
+	public function getDiscussionOverride ( $discussionUuid ) {
+		$settings = $this->getNotificationsSettings() ?: [];
+		$override = isset( $settings[ 'discussions' ][ $discussionUuid ] )
+				? $settings[ 'discussions' ][ $discussionUuid ]
+				: NULL;
+
+		return NotificationLevel::exists( $override ) ? $override : NULL;
+	}
+
+	/**
+	 * @param string      $discussionUuid
+	 * @param string|null $level NULL goes back to following the category
+	 *
+	 * @return $this
+	 */
+	public function setDiscussionOverride ( $discussionUuid, $level ) {
+		$settings = $this->getNotificationsSettings() ?: [];
+
+		if ( $level === NULL ) {
+			unset( $settings[ 'discussions' ][ $discussionUuid ] );
+
+			return $this->setNotificationsSettings( $settings );
+		}
+
+		if ( !NotificationLevel::exists( $level ) ) {
+			return $this;
+		}
+
+		$settings[ 'discussions' ][ $discussionUuid ] = $level;
+
+		return $this->setNotificationsSettings( $settings );
+	}
+
+	/**
+	 * The level that actually applies to one discussion. A choice made on a
+	 * single discussion wins over the category setting, in both directions:
+	 * following a discussion in a muted category works, and muting a
+	 * discussion in a followed category works too. (#34)
+	 *
+	 * @param string $discussionUuid
+	 *
+	 * @return string one of NotificationLevel
+	 */
+	public function getLevelForDiscussion ( $discussionUuid ) {
+		$override = $this->getDiscussionOverride( $discussionUuid );
+
+		return $override !== NULL
+				? $override
+				: $this->getNotificationLevel( NotificationCategory::DISCUSSIONS );
 	}
 }

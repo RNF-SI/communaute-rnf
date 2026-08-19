@@ -5,6 +5,7 @@ namespace App\Entity;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use App\Notification\NotificationRhythm;
 use Doctrine\ORM\Mapping as ORM;
 use JsonSerializable;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -209,6 +210,14 @@ class User implements UserInterface, JsonSerializable {
 	 * @ORM\Column(type="datetime", nullable=true)
 	 */
 	private $profileUpdatedAt;
+
+	/**
+	 * Choices that apply to every group at once: whether e-mails go out at
+	 * all, and at what rhythm discussion e-mails leave. (#34)
+	 *
+	 * @ORM\Column(type="json", nullable=true)
+	 */
+	private $notificationsSettings = [];
 
 	public function __construct () {
 		$this->usergroupMemberships = new ArrayCollection();
@@ -653,6 +662,50 @@ class User implements UserInterface, JsonSerializable {
 	public function getProfileUpdatedAt(): ?\DateTimeInterface
 	{
 		return $this->profileUpdatedAt;
+	}
+
+	/**
+	 * Whether this member wants e-mails at all. Switching it off keeps the
+	 * notifications visible on the platform. (#34)
+	 *
+	 * @return bool
+	 */
+	public function wantsEmails (): bool {
+		$settings = $this->notificationsSettings ?: [];
+
+		return !isset( $settings[ 'emails' ] ) || (bool) $settings[ 'emails' ];
+	}
+
+	public function setWantsEmails ( bool $wantsEmails ): self {
+		$settings             = $this->notificationsSettings ?: [];
+		$settings[ 'emails' ] = $wantsEmails;
+
+		$this->notificationsSettings = $settings;
+
+		return $this;
+	}
+
+	/**
+	 * @return string one of NotificationRhythm
+	 */
+	public function getDiscussionEmailRhythm (): string {
+		$settings = $this->notificationsSettings ?: [];
+		$rhythm   = isset( $settings[ 'discussionRhythm' ] ) ? $settings[ 'discussionRhythm' ] : NULL;
+
+		return NotificationRhythm::exists( $rhythm ) ? $rhythm : NotificationRhythm::DEFAULT_RHYTHM;
+	}
+
+	public function setDiscussionEmailRhythm ( string $rhythm ): self {
+		if ( !NotificationRhythm::exists( $rhythm ) ) {
+			return $this;
+		}
+
+		$settings                       = $this->notificationsSettings ?: [];
+		$settings[ 'discussionRhythm' ] = $rhythm;
+
+		$this->notificationsSettings = $settings;
+
+		return $this;
 	}
 
 	public function setProfileUpdatedAt(?\DateTimeInterface $profileUpdatedAt): self
