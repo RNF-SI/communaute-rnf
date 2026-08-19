@@ -115,8 +115,11 @@ rm -rf public/media/cache/thumbnail public/media/cache/avatar
 ### 4. Vérifier
 
 ```bash
-php bin/console app:db:anonymize --dry-run   # doit annoncer 0 compte à traiter
+php bin/console app:db:anonymize --dry-run
 ```
+
+Le compte rendu doit annoncer **0 compte à anonymiser** : la commande reconnaît
+les comptes déjà traités à leur adresse.
 
 Et en SQL, aucun résultat attendu :
 

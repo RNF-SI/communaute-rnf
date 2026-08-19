@@ -178,6 +178,35 @@ class AnonymizeDatabaseCommandTest extends KernelTestCase {
 		);
 	}
 
+	public function testAnAlreadyAnonymisedAccountIsLeftAlone () {
+		$user = $this->realUser( 'jeanne@rnfrance.org' );
+		$id   = $user->getId();
+
+		$this->anonymize();
+		$first = $this->reload( $id );
+		$name  = $first->getName();
+		$email = $first->getEmail();
+
+		$this->anonymize();
+		$second = $this->reload( $id );
+
+		$this->assertEquals( $email, $second->getEmail() );
+		$this->assertEquals( $name, $second->getName() );
+	}
+
+	public function testDryRunReportsACleanCopy () {
+		$this->realUser( 'jeanne@rnfrance.org' );
+
+		$this->anonymize();
+		$this->command->execute( [ '--dry-run' => TRUE ] );
+
+		$this->assertStringContainsString(
+				'0 accounts would be anonymised',
+				$this->command->getDisplay(),
+				'Assert --dry-run can be used to check that a copy carries nothing personal'
+		);
+	}
+
 	public function testRunningTwiceGivesTheSameResult () {
 		$id = $this->realUser( 'jeanne@rnfrance.org' )->getId();
 

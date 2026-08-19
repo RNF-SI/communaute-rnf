@@ -3,6 +3,7 @@
 namespace App\Command;
 
 use App\Entity\User;
+use App\EventSubscriber\SearchEngineIndexSubscriber;
 use Doctrine\ORM\EntityManagerInterface;
 use Faker;
 use Symfony\Component\Console\Command\Command;
@@ -32,9 +33,21 @@ class AnonymizeDatabaseCommand extends Command {
 
 	private $environment;
 
-	public function __construct ( EntityManagerInterface $manager, ParameterBagInterface $parameters ) {
-		$this->manager     = $manager;
-		$this->environment = $parameters->get( 'kernel.environment' );
+	/**
+	 * @var \Faker\Generator
+	 */
+	private $faker;
+
+	private $searchIndexSubscriber;
+
+	public function __construct (
+			EntityManagerInterface $manager,
+			ParameterBagInterface $parameters,
+			SearchEngineIndexSubscriber $searchIndexSubscriber
+	) {
+		$this->manager              = $manager;
+		$this->environment          = $parameters->get( 'kernel.environment' );
+		$this->searchIndexSubscriber = $searchIndexSubscriber;
 
 		parent::__construct();
 	}
@@ -67,17 +80,38 @@ class AnonymizeDatabaseCommand extends Command {
 		$keep   = array_map( 'mb_strtolower', $input->getOption( 'keep-email' ) );
 		$dryRun = $input->getOption( 'dry-run' );
 
+		// Built once and reseeded per account: building a generator is costly,
+		// and there can be thousands of accounts.
+		$this->faker = Faker\Factory::create( 'fr_FR' );
+
+		// Every account rewritten would otherwise rewrite the search index one
+		// account at a time. The whole index is rebuilt afterwards anyway, see
+		// bin/import-production-data.sh.
+		$this->manager->getEventManager()->removeEventSubscriber( $this->searchIndexSubscriber );
+
 		$users = $this->manager->getRepository( User::class )->findAll();
 
 		$io->title( sprintf( '%d accounts found', count( $users ) ) );
 
 		$anonymised = 0;
 		$kept       = 0;
+		$already    = 0;
 
 		foreach ( $users as $user ) {
-			if ( in_array( mb_strtolower( (string) $user->getEmail() ), $keep, TRUE ) ) {
+			$email = mb_strtolower( (string) $user->getEmail() );
+
+			if ( in_array( $email, $keep, TRUE ) ) {
 				$io->text( sprintf( 'keeping account #%d', $user->getId() ) );
 				$kept++;
+
+				continue;
+			}
+
+			// Already carrying a made-up address: nothing personal is left to
+			// replace. Reporting it apart is what makes --dry-run usable as a
+			// check that a copy is clean.
+			if ( $this->isAnonymised( $email ) ) {
+				$already++;
 
 				continue;
 			}
@@ -94,17 +128,28 @@ class AnonymizeDatabaseCommand extends Command {
 		}
 
 		$io->success( sprintf(
-				'%d accounts %s, %d left untouched',
+				'%d accounts %s, %d already anonymised, %d left untouched',
 				$anonymised,
 				$dryRun ? 'would be anonymised' : 'anonymised',
+				$already,
 				$kept
 		) );
 
 		if ( !$dryRun ) {
 			$io->note( 'Free-text content — discussions, pages, articles, document names — is left as it is and may still name people.' );
+			$io->note( 'The search index was not updated along the way: run search:reindex:all.' );
 		}
 
 		return 0;
+	}
+
+	/**
+	 * @param string $email
+	 *
+	 * @return bool
+	 */
+	private function isAnonymised ( $email ) {
+		return substr( $email, -strlen( '@' . self::MAIL_DOMAIN ) ) === '@' . self::MAIL_DOMAIN;
 	}
 
 	/**
@@ -116,7 +161,7 @@ class AnonymizeDatabaseCommand extends Command {
 	private function anonymise ( User $user ) {
 		$id = $user->getId();
 
-		$faker = Faker\Factory::create( 'fr_FR' );
+		$faker = $this->faker;
 		$faker->seed( $id );
 
 		$firstName = $faker->firstName();
