@@ -21,6 +21,10 @@ parameters:
   router.request_context.scheme: "%env(string:SECURE_SCHEME)%"
   router.request_context.base_url: ""
 
+  # Répertoire des index de recherche, exposé pour que le contrôle
+  # d'environnement puisse vérifier qu'il est accessible en écriture. (#14)
+  search_index_dir: "%env(string:INDEX_DIR)%"
+
   google_recaptcha_site_key: "%env(GOOGLE_RECAPTCHA_SITE_KEY)%"
   google_recaptcha_secret_key: "%env(GOOGLE_RECAPTCHA_SECRET_KEY)%"
 

@@ -182,6 +182,25 @@ class PreflightCommand extends Command {
 			];
 		}
 
+		// TNTSearch écrit ses index dans des fichiers SQLite. Une commande
+		// console lancée par un autre utilisateur qu'Apache les rend
+		// inaccessibles en écriture, et la création d'un compte échoue sur
+		// « attempt to write a readonly database » — au moment précis où
+		// quelqu'un se connecte pour la première fois.
+		$indexDir = rtrim( $this->parameters->get( 'kernel.project_dir' ), '/' )
+					. '/' . trim( (string) $this->parameters->get( 'search_index_dir' ), '/' );
+
+		$indexWritable = is_dir( $indexDir ) && is_writable( $indexDir ) && $this->indexFilesWritable( $indexDir );
+
+		$checks[] = [
+				'Écriture des index de recherche',
+				$indexWritable,
+				$indexWritable
+						? 'accessible en écriture'
+						: sprintf( '%s non inscriptible — la création de compte échouera', $indexDir ),
+				TRUE,
+		];
+
 		$checks[] = [
 				'Assets compilés',
 				file_exists( $this->parameters->get( 'kernel.project_dir' ) . '/public/build/entrypoints.json' ),
@@ -192,6 +211,23 @@ class PreflightCommand extends Command {
 		];
 
 		return $checks;
+	}
+
+	/**
+	 * Le répertoire ne suffit pas : SQLite doit pouvoir réécrire chaque index.
+	 *
+	 * @param string $directory
+	 *
+	 * @return bool
+	 */
+	private function indexFilesWritable ( $directory ) {
+		foreach ( (array) glob( $directory . '/*.index' ) as $index ) {
+			if ( !is_writable( $index ) ) {
+				return FALSE;
+			}
+		}
+
+		return TRUE;
 	}
 
 	/**

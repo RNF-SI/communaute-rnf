@@ -21,6 +21,21 @@ plateforme envoie est mis en quarantaine**.
 
 ### L'environnement
 
+- [ ] **Droits des index de recherche.** TNTSearch écrit dans des fichiers
+      SQLite sous `public/media/cache/indexes/`. Toute commande console lancée
+      à la main les recrée avec les droits de celui qui la lance ; si ce n'est
+      pas l'utilisateur du serveur web, **la première connexion d'un membre
+      échoue** sur « attempt to write a readonly database », car créer un
+      compte déclenche l'indexation. À poser une fois pour toutes :
+
+      ```bash
+      sudo chown -R DEPLOYEUR:UTILISATEUR_WEB public/media/cache var/
+      chmod -R g+w public/media/cache var/
+      find public/media/cache var/ -type d -exec chmod g+s {} \;
+      ```
+
+      Le `g+s` fait hériter le groupe aux fichiers créés ensuite, sans quoi le
+      problème revient à chaque réindexation.
 - [ ] **`imagick`** installé — LiipImagine est configuré dessus, l'application
       ne démarre pas sans
 - [ ] **version de Node** vérifiée : `npm run build` casse sur Node ≥ 17
@@ -190,6 +205,7 @@ bien au-delà de la plateforme.
 | Aucune demande d'adhésion, aucune erreur | `POSTMARK_SENDER` et `POSTMARK_SERVER_TOKEN` — autre transport, autre jeton |
 | Liens des e-mails vers `localhost` | `SITE_HOST` absent du `.env.local` |
 | Les images ne s'affichent pas | permissions de `var/files`, voir `DEPLOYMENT_PERMISSIONS_FIX.md` |
+| « attempt to write a readonly database » à la connexion | index de recherche non inscriptibles par le serveur web. Voir ci-dessous |
 | Le build front échoue au déploiement | version de Node trop récente pour webpack 4 |
 | Les réponses par e-mail n'arrivent pas | l'URL `/ws/list/inbound/{clé}` doit être publiquement joignable |
 | Un compte de test ne reçoit rien en préproduction | son adresse est en `@example.org` : `MailGuard` la refuse. Renseigner `TEST_ACCOUNTS_EMAIL` et recharger les fixtures |
