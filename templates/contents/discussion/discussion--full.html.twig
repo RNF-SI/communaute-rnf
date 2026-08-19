@@ -5,6 +5,25 @@
 
 		<div class="panel">
 			<h1 class="h1">{{ discussion.title }}</h1>
+
+			{% if membership is defined and membership %}
+				{% set level = membership.getLevelForDiscussion(discussion.uuid) %}
+				<div class="panel--edit discussion-follow">
+					{% if level == 'none' %}
+						<a class="cta__inverted" href="{{ path('group_discussion_follow', {
+							'groupSlug': group.slug,
+							'discussionUuid': discussion.uuid,
+							'level': 'email'
+						}) }}">{{ 'pages.discussion.follow.follow'|trans }}</a>
+					{% else %}
+						<a class="cta__inverted" href="{{ path('group_discussion_follow', {
+							'groupSlug': group.slug,
+							'discussionUuid': discussion.uuid,
+							'level': 'none'
+						}) }}">{{ 'pages.discussion.follow.mute'|trans }}</a>
+					{% endif %}
+				</div>
+			{% endif %}
 		</div>
 
 		{% include 'components/breadcrumb.html.twig' with {'items':[

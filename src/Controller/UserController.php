@@ -8,6 +8,9 @@ use App\Entity\LogEvent;
 use App\Entity\Notification;
 use App\Entity\User;
 use App\Entity\UsergroupMembership;
+use App\Notification\NotificationCategory;
+use App\Notification\NotificationLevel;
+use App\Notification\NotificationRhythm;
 use App\Form\UserProfileType;
 use App\Security\UserVoter;
 use App\Service\Community;
@@ -155,15 +158,55 @@ class UserController extends AbstractController
 	}
 
 	/**
-	 * @Route("/user/parameters/edit", name="user_parameters_edit")
+	 * @Route("/user/parameters/edit", name="user_parameters_edit", methods={"GET", "POST"})
 	 *
 	 * @return \Symfony\Component\HttpFoundation\Response
 	 */
-	public function parametersEdit()
-	{
+	public function parametersEdit(
+		Request $request,
+		EntityManagerInterface $manager
+	) {
 		$this->denyAccessUnlessGranted(UserVoter::LOGGED);
 
-		return $this->render('pages/user/parameters-edit.html.twig');
+		/**
+		 * @var User $user
+		 */
+		$user = $this->getUser();
+
+		if ($request->isMethod('POST') && $this->isCsrfTokenValid('notifications', $request->request->get('_token'))) {
+			$settings = $request->request->get('notifications', []);
+
+			$user->setWantsEmails(!empty($settings['emails']));
+
+			if (!empty($settings['discussionRhythm'])) {
+				$user->setDiscussionEmailRhythm($settings['discussionRhythm']);
+			}
+
+			foreach ($user->getUsergroupMemberships() as $membership) {
+				$groupId = $membership->getUsergroup() ? $membership->getUsergroup()->getId() : NULL;
+
+				if (!$groupId || empty($settings['groups'][$groupId])) {
+					continue;
+				}
+
+				foreach ($settings['groups'][$groupId] as $category => $level) {
+					$membership->setNotificationLevel($category, $level);
+				}
+			}
+
+			$manager->flush();
+
+			$this->addFlash('notice', 'messages.user.notifications_updated');
+
+			return $this->redirectToRoute('user_parameters_edit');
+		}
+
+		return $this->render('pages/user/parameters-edit.html.twig', [
+				'user'       => $user,
+				'categories' => NotificationCategory::all(),
+				'levels'     => NotificationLevel::all(),
+				'rhythms'    => NotificationRhythm::all(),
+		]);
 	}
 
 	/**

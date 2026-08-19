@@ -324,6 +324,27 @@ pages:
             title: "Mes groupes"
             introduction: "Gérez rapidement vos adhésions aux groupes"
             link: "Mes groupes"
+        notifications_settings:
+            title: "Notifications"
+            introduction: "Choisissez ce dont vous voulez être prévenu·e, groupe par groupe."
+            emails: "Recevoir des e-mails"
+            emails_hint: "Décoché, vous gardez vos notifications sur la plateforme mais ne recevez plus aucun e-mail."
+            rhythm: "E-mails des discussions"
+            rhythm_hint: "Le résumé quotidien regroupe tout en un seul e-mail par jour, mais ne permet plus de répondre depuis votre boîte mail."
+            rhythms:
+                immediate: "Un e-mail à chaque message"
+                digest: "Dans le résumé quotidien"
+            groups: "Par groupe"
+            categories:
+                discussions: "Discussions"
+                pages: "Pages"
+                articles: "Actualités"
+                documents: "Documents"
+            levels:
+                none: "Aucune notification"
+                app: "Sur la plateforme seulement"
+                email: "Sur la plateforme et par e-mail"
+            submit: "Enregistrer mes préférences"
         notifications:
             title: "Mes notifications"
             link: "Mes notifications"
@@ -466,6 +487,9 @@ pages:
             title: "Édition de la discussion"
             link: "Modifier la discussion"
             button: "Enregistrer les modifications"
+        follow:
+            follow: "Suivre cette discussion"
+            mute: "Ne plus suivre cette discussion"
         message_edit:
             title: "Modifier votre message"
             link: "Modifier le message"
@@ -643,6 +667,7 @@ messages:
         password_successful: "Mot de passe mis à jour, vous pouvez désormais vous identifier."
         password_updated: "Votre mot de passe a été mis à jour."
         profile_created: "Votre profil a été créé."
+        notifications_updated: "Vos préférences de notification ont été enregistrées"
         profile_updated: "Votre profil a été mis à jour."
         profile_required: "Pour commencer, complétez le profil ci-dessous."
         login_requested: "Vous devez vous inscrire ou vous connecter pour voir cette page."
@@ -680,6 +705,7 @@ messages:
         notifications:
             subscribe: "Vous recevrez les notifications par e-mail pour ce groupe"
             unsubscribe: "Vous ne recevrez plus les notifications par e-mail pour ce groupe"
+            updated: "Vos préférences pour cette discussion ont été enregistrées"
 
         discussion_created: "La discussion a été créée"
         message_created: "Le message a été posté sur la liste"

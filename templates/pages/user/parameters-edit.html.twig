@@ -14,6 +14,68 @@
                     </div>
                 </section>
 
+                <section class="profile-form notifications-settings">
+                    <h2 class="h2">{{ 'pages.user.notifications_settings.title'|trans }}</h2>
+                    <p>{{ 'pages.user.notifications_settings.introduction'|trans }}</p>
+
+                    <form method="post">
+                        <input type="hidden" name="_token" value="{{ csrf_token('notifications') }}">
+
+                        <div class="form-row form-row__field">
+                            <label>
+                                <input type="checkbox" name="notifications[emails]" value="1"
+                                       {{ user.wantsEmails ? 'checked' : '' }}>
+                                {{ 'pages.user.notifications_settings.emails'|trans }}
+                            </label>
+                            <div class="hint">{{ 'pages.user.notifications_settings.emails_hint'|trans }}</div>
+                        </div>
+
+                        <div class="form-row form-row__field">
+                            <label for="discussion-rhythm">{{ 'pages.user.notifications_settings.rhythm'|trans }}</label>
+                            <select id="discussion-rhythm" name="notifications[discussionRhythm]">
+                                {% for rhythm in rhythms %}
+                                    <option value="{{ rhythm }}"
+                                            {{ user.discussionEmailRhythm == rhythm ? 'selected' : '' }}>
+                                        {{ ('pages.user.notifications_settings.rhythms.' ~ rhythm)|trans }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <div class="hint">{{ 'pages.user.notifications_settings.rhythm_hint'|trans }}</div>
+                        </div>
+
+                        <h3 class="h3">{{ 'pages.user.notifications_settings.groups'|trans }}</h3>
+
+                        {% for membership in user.usergroupMemberships %}
+                            {% if membership.usergroup and membership.usergroup.isActive %}
+                                <fieldset class="notifications-settings--group">
+                                    <legend>{{ membership.usergroup.name }}</legend>
+
+                                    {% for category in categories %}
+                                        <div class="form-row form-row__field">
+                                            <label for="notif-{{ membership.usergroup.id }}-{{ category }}">
+                                                {{ ('pages.user.notifications_settings.categories.' ~ category)|trans }}
+                                            </label>
+                                            <select id="notif-{{ membership.usergroup.id }}-{{ category }}"
+                                                    name="notifications[groups][{{ membership.usergroup.id }}][{{ category }}]">
+                                                {% for level in levels %}
+                                                    <option value="{{ level }}"
+                                                            {{ membership.getNotificationLevel(category) == level ? 'selected' : '' }}>
+                                                        {{ ('pages.user.notifications_settings.levels.' ~ level)|trans }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    {% endfor %}
+                                </fieldset>
+                            {% endif %}
+                        {% endfor %}
+
+                        <div class="form-row form-row__submit">
+                            <button type="submit" class="cta">{{ 'pages.user.notifications_settings.submit'|trans }}</button>
+                        </div>
+                    </form>
+                </section>
+
                 <section class="profile-form">
                     {% include 'forms/user/delete-user-form.html.twig' %}
                 </section>

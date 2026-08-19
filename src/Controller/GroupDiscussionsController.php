@@ -13,6 +13,7 @@ use App\Form\DiscussionMessageType;
 use App\Form\DiscussionType;
 use App\Security\GroupDiscussionVoter;
 use App\Security\GroupVoter;
+use App\Security\UserVoter;
 use App\Service\DiscussionSender;
 use App\Service\FileManager;
 use App\Service\NotificationSender;
@@ -300,6 +301,8 @@ class GroupDiscussionsController extends AbstractController {
 		return $this->render( 'pages/discussion/discussion-index.html.twig', [
 				'group'      => $group,
 				'discussion' => $discussion,
+				'membership' => $manager->getRepository( UsergroupMembership::class )
+										->getMembership( $this->getUser(), $group ),
 				'form'       => $form ? $form->createView() : FALSE,
 				'upload'     => $router->generate( 'file_upload', [ 'groupId' => $group->getId() ] ),
 		] );
@@ -386,6 +389,66 @@ class GroupDiscussionsController extends AbstractController {
 
 		return $this->render( 'pages/confirm.html.twig', [
 				'form' => $form->createView(),
+		] );
+	}
+
+	/**
+	 * @Route("/groups/{groupSlug}/discussions/{discussionUuid}/follow/{level}", name="group_discussion_follow")
+	 * @param                                      $groupSlug
+	 * @param                                      $discussionUuid
+	 * @param                                      $level
+	 * @param \Doctrine\ORM\EntityManagerInterface $manager
+	 *
+	 * @return \Symfony\Component\HttpFoundation\RedirectResponse
+	 */
+	public function groupDiscussionFollow (
+			$groupSlug,
+			$discussionUuid,
+			$level,
+			EntityManagerInterface $manager
+	) {
+		$this->denyAccessUnlessGranted( UserVoter::LOGGED );
+
+		/**
+		 * @var \App\Entity\Usergroup $group
+		 */
+		$group = $manager->getRepository( Usergroup::class )
+						 ->findOneBy( [ 'slug' => $groupSlug ] );
+
+		if ( !$group ) {
+			throw $this->createNotFoundException( 'The group does not exist' );
+		}
+
+		/**
+		 * @var \App\Entity\Discussion $discussion
+		 */
+		$discussion = $manager->getRepository( Discussion::class )
+							  ->findOneBy( [ 'uuid' => $discussionUuid ] );
+
+		if ( !$discussion || ( $discussion->getUsergroup() !== $group ) ) {
+			throw $this->createNotFoundException( 'The discussion does not exist' );
+		}
+
+		$membership = $manager->getRepository( UsergroupMembership::class )
+							  ->getMembership( $this->getUser(), $group );
+
+		if ( !$membership ) {
+			throw $this->createAccessDeniedException( 'Not a member of this group' );
+		}
+
+		// "default" hands the discussion back to the setting of the category.
+		$membership->setDiscussionOverride(
+				$discussionUuid,
+				$level === 'default' ? NULL : $level
+		);
+
+		$manager->flush();
+
+		$this->addFlash( 'notice', 'messages.discussion.notifications.updated' );
+
+		return $this->redirectToRoute( 'group_discussion_index', [
+				'groupSlug'      => $groupSlug,
+				'discussionUuid' => $discussionUuid,
 		] );
 	}
 

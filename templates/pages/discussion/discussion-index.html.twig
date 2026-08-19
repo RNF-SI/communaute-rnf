@@ -4,7 +4,7 @@
 
 {% block main %}
 	<section class="main main__discussion-index">
-		{% include 'contents/discussion/discussion--full.html.twig' with {'group':group, 'discussion':discussion} %}
+		{% include 'contents/discussion/discussion--full.html.twig' with {'group':group, 'discussion':discussion, 'membership':membership} %}
 	</section>
 
 	{% if form %}

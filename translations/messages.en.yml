@@ -219,6 +219,27 @@ pages:
             title: "My groups"
             introduction: "Quickly manage your group memberships"
             link: "My groups"
+        notifications_settings:
+            title: "Notifications"
+            introduction: "Choose what you want to hear about, group by group."
+            emails: "Receive e-mails"
+            emails_hint: "Unchecked, you keep your notifications on the platform but receive no e-mail at all."
+            rhythm: "Discussion e-mails"
+            rhythm_hint: "The daily summary gathers everything into a single e-mail a day, but no longer lets you answer from your mailbox."
+            rhythms:
+                immediate: "One e-mail per message"
+                digest: "In the daily summary"
+            groups: "Per group"
+            categories:
+                discussions: "Discussions"
+                pages: "Pages"
+                articles: "Articles"
+                documents: "Documents"
+            levels:
+                none: "No notification"
+                app: "On the platform only"
+                email: "On the platform and by e-mail"
+            submit: "Save my preferences"
         notifications:
             title: "My notifications"
             link: "My notifications"
@@ -344,6 +365,9 @@ pages:
             title: "Editing discussion"
             link: "Edit discussion"
             button: "Save changes"
+        follow:
+            follow: "Follow this discussion"
+            mute: "Stop following this discussion"
         message_edit:
             title: "Edit your message"
             link: "Edit message"
@@ -465,6 +489,7 @@ messages:
         password_successful: "Password updated, you can now log in."
         password_updated: "Your password has been updated."
         profile_created: "Your profile has been created."
+        notifications_updated: "Your notification preferences have been saved"
         profile_updated: "Your profile has been updated."
         profile_required: "To get started, complete the profile below."
         login_requested: "You must sign up or log in to view this page."
@@ -500,6 +525,7 @@ messages:
         notifications:
             subscribe: "You will now receive email notifications for this group"
             unsubscribe: "You will no longer receive email notifications for this group"
+            updated: "Your preferences for this discussion have been saved"
 
         discussion_created: "The discussion has been created"
         message_created: "The message has been posted to the discussion"
