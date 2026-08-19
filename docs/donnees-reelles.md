@@ -16,8 +16,38 @@ centaine de comptes avec compétences et biographies, 20 groupes publics et
 privés avec leurs adhésions, et pour chaque groupe des pages, des discussions
 avec leurs messages, des actualités et des documents — dont une partie décrits.
 
-Un compte administrateur connu est créé : **admin@example.org**, mot de passe
-`test`.
+Toutes les adresses sont en `@example.org`, domaine réservé par la RFC 2606 :
+rien envoyé là ne peut atteindre une vraie boîte, même si une préproduction se
+met à envoyer du courrier.
+
+### Comptes prêts à l'emploi
+
+Six comptes à l'adresse stable, tous avec le mot de passe `test`, chacun dans
+une situation différente :
+
+| Adresse | Rôle sur le site | Dans `groupe-de-test` | Dans `groupe-prive-de-test` |
+|---|---|---|---|
+| `admin@example.org` | administrateur | animateur | animateur |
+| `referent@example.org` | — | animateur | animateur |
+| `membre@example.org` | — | membre | membre |
+| `candidat@example.org` | — | — | **demande en attente** |
+| `banni@example.org` | — | banni | banni |
+| `exterieur@example.org` | — | — | — |
+
+Ces comptes ne sont **jamais tirés au sort** dans les groupes générés : chacun
+reste exactement dans l'état que son nom annonce.
+
+### Groupes de référence
+
+Deux groupes au slug stable, `groupe-de-test` (public) et
+`groupe-prive-de-test` (privé). Chacun contient une discussion avec trois
+messages — signés alternativement par le référent et par un membre, de quoi
+éprouver « je modifie mon propre message » et « je modère celui des autres » —,
+**une discussion sans aucun message**, une page, une actualité et un document
+décrit.
+
+Leur composition ne change pas d'un chargement à l'autre : c'est là qu'il faut
+faire les essais à la main, plutôt que dans un groupe généré au hasard.
 
 Les documents n'ont pas de fichier attaché : en écrire passerait par le stockage
 Gaufrette, ce qui n'est pas le rôle de fixtures. Titres et descriptions

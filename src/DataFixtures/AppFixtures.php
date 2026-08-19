@@ -22,6 +22,29 @@ use Faker;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 class AppFixtures extends Fixture {
+	/**
+	 * Accounts with a stable address, all with the password "test". Each one
+	 * stands for a situation the platform has to handle.
+	 */
+	private const NAMED_ACCOUNTS = [
+			'admin@example.org'      => [ 'name' => 'Alice Admin', 'siteAdmin' => TRUE, 'role' => 'admin' ],
+			'referent@example.org'   => [ 'name' => 'Rémi Référent', 'siteAdmin' => FALSE, 'role' => 'admin' ],
+			'membre@example.org'     => [ 'name' => 'Manon Membre', 'siteAdmin' => FALSE, 'role' => 'user' ],
+			'candidat@example.org'   => [ 'name' => 'Camille Candidate', 'siteAdmin' => FALSE, 'role' => 'pending' ],
+			'banni@example.org'      => [ 'name' => 'Bruno Banni', 'siteAdmin' => FALSE, 'role' => 'banned' ],
+			'exterieur@example.org'  => [ 'name' => 'Éric Extérieur', 'siteAdmin' => FALSE, 'role' => 'none' ],
+	];
+
+	/**
+	 * Slug of the group the named accounts belong to.
+	 */
+	private const REFERENCE_GROUP = 'groupe-de-test';
+
+	/**
+	 * Slug of a private group, to try out membership requests.
+	 */
+	private const PRIVATE_GROUP = 'groupe-prive-de-test';
+
 	private $passwordEncoder;
 	private $slugGenerator;
 
@@ -64,7 +87,9 @@ class AppFixtures extends Fixture {
 			$user->setName( $name );
 			$user->setDisplayName( $name );
 
-			$user->setEmail( sprintf( 'test-%d@test.com', $i ) );
+			// example.org est réservé par la RFC 2606 : rien envoyé là ne peut
+			// atteindre une vraie boîte. test.com, lui, appartient à quelqu'un.
+			$user->setEmail( sprintf( 'test-%d@example.org', $i ) );
 			$user->setPassword( $this->passwordEncoder->encodePassword(
 				$user,
 				'test'
@@ -93,25 +118,36 @@ class AppFixtures extends Fixture {
 		}
 
 		/**
-		 * A known account to sign in with locally. The form login is not wired
-		 * into the firewall today, but the account is needed as soon as it is,
-		 * and it makes the administration reachable in a test environment.
+		 * NAMED ACCOUNTS
+		 *
+		 * One account per situation worth trying out, with a stable address and
+		 * the password "test". Without them, exercising a scenario means
+		 * hunting for a random account that happens to be in the right state.
 		 */
-		$admin = new User();
-		$admin->setCreatedAt( new \DateTime() );
-		$admin->setName( 'Admin Test' );
-		$admin->setDisplayName( 'Admin Test' );
-		$admin->setEmail( 'admin@example.org' );
-		$admin->setPassword( $this->passwordEncoder->encodePassword( $admin, 'test' ) );
-		$admin->setRoles( [ User::ROLE_USER, User::ROLE_ADMIN ] );
-		$admin->setStatus( User::STATUS_ACTIVE );
-		$admin->setCountry( 'FR' );
-		$admin->setHasAgreedTermsOfUse( TRUE );
+		$named = [];
 
-		$manager->persist( $admin );
+		foreach ( self::NAMED_ACCOUNTS as $email => $account ) {
+			$user = new User();
+			$user->setCreatedAt( new \DateTime() );
+			$user->setName( $account[ 'name' ] );
+			$user->setDisplayName( $account[ 'name' ] );
+			$user->setEmail( $email );
+			$user->setPassword( $this->passwordEncoder->encodePassword( $user, 'test' ) );
+			$user->setRoles( $account[ 'siteAdmin' ] ? [ User::ROLE_USER, User::ROLE_ADMIN ] : [ User::ROLE_USER ] );
+			$user->setStatus( User::STATUS_ACTIVE );
+			$user->setCountry( 'FR' );
+			$user->setHasAgreedTermsOfUse( TRUE );
+
+			$manager->persist( $user );
+
+			$named[ $email ] = $user;
+
+			// Deliberately left out of $users: the random groups draw from
+			// that list, and a named account has to stay in the state its
+			// name promises. "exterieur" is a member of nothing.
+		}
+
 		$manager->flush();
-
-		$users[] = $admin;
 
 		$faker = Faker\Factory::create( 'fr_FR' );
 
@@ -304,5 +340,168 @@ class AppFixtures extends Fixture {
 
 			$groups[] = $group;
 		}
+
+		/**
+		 * REFERENCE GROUPS
+		 *
+		 * Two groups with a stable slug, where every named account sits in a
+		 * known state. Everything that has to be tried by hand — moderation,
+		 * membership requests, notifications — happens here rather than in a
+		 * randomly generated group whose composition changes at each load.
+		 */
+		$this->buildReferenceGroups( $manager, $named, $categories );
+	}
+
+	/**
+	 * @param \Doctrine\Persistence\ObjectManager $manager
+	 * @param \App\Entity\User[]                  $named
+	 * @param \App\Entity\Category[]              $categories
+	 */
+	private function buildReferenceGroups ( ObjectManager $manager, array $named, array $categories ) {
+		$faker = Faker\Factory::create( 'fr_FR' );
+
+		$groups = [
+				self::REFERENCE_GROUP => [
+						'name'       => 'Groupe de test',
+						'visibility' => Usergroup::PUBLIC,
+				],
+				self::PRIVATE_GROUP   => [
+						'name'       => 'Groupe privé de test',
+						'visibility' => Usergroup::PRIVATE,
+				],
+		];
+
+		foreach ( $groups as $slug => $definition ) {
+			$group = new Usergroup();
+			$group->setName( $definition[ 'name' ] );
+			$group->setSlug( $slug );
+			$group->setDescription( 'Groupe stable, créé par les fixtures pour les essais.' );
+			$group->setPresentation( '<p>Ce groupe existe pour éprouver la plateforme à la main. Sa composition ne change pas d’un chargement à l’autre.</p>' );
+			$group->setVisibility( $definition[ 'visibility' ] );
+			$group->setCreatedAt( new \DateTime() );
+			$group->setIsActive( TRUE );
+
+			$manager->persist( $group );
+			$manager->flush();
+
+			$group->addCategory( $categories[ 0 ] );
+
+			foreach ( self::NAMED_ACCOUNTS as $email => $account ) {
+				if ( $account[ 'role' ] === 'none' ) {
+					continue;
+				}
+
+				// The candidate only waits at the door of the private group;
+				// joining a public one needs no approval.
+				if ( ( $account[ 'role' ] === 'pending' ) && ( $slug !== self::PRIVATE_GROUP ) ) {
+					continue;
+				}
+
+				$membership = new UsergroupMembership();
+				$membership->setUsergroup( $group );
+				$membership->setUser( $named[ $email ] );
+				$membership->setJoinedAt( new \DateTime() );
+
+				switch ( $account[ 'role' ] ) {
+					case 'admin':
+						$membership->setRole( UsergroupMembership::ROLE_ADMIN );
+						$membership->setStatus( UsergroupMembership::STATUS_MEMBER );
+						break;
+
+					case 'pending':
+						$membership->setRole( UsergroupMembership::ROLE_USER );
+						$membership->setStatus( UsergroupMembership::STATUS_PENDING );
+						break;
+
+					case 'banned':
+						$membership->setRole( UsergroupMembership::ROLE_USER );
+						$membership->setStatus( UsergroupMembership::STATUS_BANNED );
+						break;
+
+					default:
+						$membership->setRole( UsergroupMembership::ROLE_USER );
+						$membership->setStatus( UsergroupMembership::STATUS_MEMBER );
+				}
+
+				$manager->persist( $membership );
+				$group->addMember( $membership );
+			}
+
+			$manager->flush();
+
+			$this->fillReferenceGroup( $manager, $group, $named, $faker );
+		}
+	}
+
+	/**
+	 * Content authored by the référent and by a plain member, so that both
+	 * "I may edit my own message" and "I may moderate anybody" can be tried.
+	 *
+	 * @param \Doctrine\Persistence\ObjectManager $manager
+	 * @param \App\Entity\Usergroup               $group
+	 * @param \App\Entity\User[]                  $named
+	 * @param \Faker\Generator                     $faker
+	 */
+	private function fillReferenceGroup ( ObjectManager $manager, Usergroup $group, array $named, $faker ) {
+		$referent = $named[ 'referent@example.org' ];
+		$member   = $named[ 'membre@example.org' ];
+
+		$discussion = new Discussion();
+		$discussion->setUuid( Uuid::uuid4() );
+		$discussion->setTitle( 'Discussion de test' );
+		$discussion->setUsergroup( $group );
+		$discussion->setAuthor( $referent );
+		$discussion->setCreatedAt( new \DateTime( '-3 days' ) );
+		$discussion->setActiveAt( new \DateTime( '-1 hour' ) );
+		$manager->persist( $discussion );
+
+		foreach ( [ $referent, $member, $referent ] as $index => $author ) {
+			$message = new DiscussionMessage();
+			$message->setDiscussion( $discussion );
+			$message->setAuthor( $author );
+			$message->setBody( '<p>' . $faker->sentence( 12 ) . '</p>' );
+			$message->setCreatedAt( new \DateTime( sprintf( '-%d hours', 72 - ( $index * 24 ) ) ) );
+			$manager->persist( $message );
+			$discussion->addMessage( $message );
+		}
+
+		// A discussion without any message: the case that used to break the
+		// listings. (#3)
+		$empty = new Discussion();
+		$empty->setUuid( Uuid::uuid4() );
+		$empty->setTitle( 'Discussion sans message' );
+		$empty->setUsergroup( $group );
+		$empty->setAuthor( $referent );
+		$empty->setCreatedAt( new \DateTime( '-2 days' ) );
+		$manager->persist( $empty );
+
+		$page = new Page();
+		$page->setTitle( 'Page de test' );
+		$page->setSlug( $this->slugGenerator->generateSlug( 'Page de test ' . $group->getSlug() ) );
+		$page->setUsergroup( $group );
+		$page->setAuthor( $referent );
+		$page->setBody( '<p>' . implode( '</p><p>', $faker->paragraphs( 3, FALSE ) ) . '</p>' );
+		$page->setCreatedAt( new \DateTime() );
+		$manager->persist( $page );
+
+		$article = new Article();
+		$article->setTitle( 'Actualité de test' );
+		$article->setSlug( $this->slugGenerator->generateSlug( 'Actualite de test ' . $group->getSlug(), Article::class, 'slug' ) );
+		$article->setUsergroup( $group );
+		$article->setAuthor( $referent );
+		$article->setBody( '<p>' . implode( '</p><p>', $faker->paragraphs( 3, FALSE ) ) . '</p>' );
+		$article->setCreatedAt( new \DateTime() );
+		$manager->persist( $article );
+
+		$document = new Document();
+		$document->setTitle( 'Document de test' );
+		$document->setSlug( $this->slugGenerator->generateSlug( 'Document de test ' . $group->getSlug(), Document::class, 'slug' ) );
+		$document->setDescription( 'Un document décrit, pour éprouver l’affichage et la recherche.' );
+		$document->setUsergroup( $group );
+		$document->setUser( $referent );
+		$document->setCreatedAt( new \DateTime() );
+		$manager->persist( $document );
+
+		$manager->flush();
 	}
 }
