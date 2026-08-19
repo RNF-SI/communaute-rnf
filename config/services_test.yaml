@@ -1,0 +1,9 @@
+# Services the test suite needs to replace by a double. Making them public is
+# the only way for a functional test to swap them in the container.
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
+  App\Service\EmailSender:
+    public: true

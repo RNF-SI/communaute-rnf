@@ -12,6 +12,8 @@ use App\Service\EmailSender;
 use App\Service\UsergroupMembersManager;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
+use Throwable;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\HttpFoundation\Request;
@@ -112,7 +114,8 @@ class GroupMembersController extends AbstractController {
 	public function groupMemberNew (
 			$groupSlug,
 			EntityManagerInterface $manager,
-			EmailSender $mailer
+			EmailSender $mailer,
+			LoggerInterface $logger
 	) {
 		if ( !$this->isGranted( UserVoter::LOGGED ) ) {
 			$this->addFlash( 'notice', 'messages.user.login_requested' );
@@ -164,19 +167,66 @@ class GroupMembersController extends AbstractController {
 		else {
 			$membership->setStatus( UsergroupMembership::STATUS_PENDING );
 
-			$admins   = $group->getMembersByRole( UsergroupMembership::ROLE_ADMIN );
-			$multiple = count( $admins ) > 1;
+			$this->addFlash( 'notice', 'messages.group.candidature_sent' );
+		}
 
-			foreach ( $admins as $adminMembership ) {
-				$admin = $adminMembership->getUser();
+		// The request is recorded before anything is sent. A misconfigured or
+		// unreachable mail service must not make the membership disappear. (#4)
+		$manager->persist( $membership );
+		$manager->flush();
 
+		if ( $membership->getStatus() === UsergroupMembership::STATUS_PENDING ) {
+			$this->notifyPendingRequest( $manager, $mailer, $logger, $group, $user );
+		}
+
+		return $this->redirectToRoute( 'group_index', [ 'groupSlug' => $groupSlug ] );
+	}
+
+	/**
+	 * Warns whoever can approve a pending request. Failing to send must never
+	 * break the request itself, so any error is logged and swallowed.
+	 *
+	 * @param \Doctrine\ORM\EntityManagerInterface $manager
+	 * @param \App\Service\EmailSender             $mailer
+	 * @param \Psr\Log\LoggerInterface             $logger
+	 * @param \App\Entity\Usergroup                $group
+	 * @param \App\Entity\User                     $user
+	 */
+	private function notifyPendingRequest (
+			EntityManagerInterface $manager,
+			EmailSender $mailer,
+			LoggerInterface $logger,
+			Usergroup $group,
+			User $user
+	) {
+		$recipients = [];
+
+		foreach ( $group->getMembersByRole( UsergroupMembership::ROLE_ADMIN ) as $adminMembership ) {
+			if ( $adminMembership->getStatus() === UsergroupMembership::STATUS_MEMBER ) {
+				$recipients[] = $adminMembership->getUser();
+			}
+		}
+
+		// Nobody administers this group: the request would sit unseen forever.
+		if ( empty( $recipients ) ) {
+			$recipients = $manager->getRepository( User::class )->findSiteAdmins();
+
+			$logger->warning( 'Group {group} has no administrator, falling back on the site administrators', [
+					'group' => $group->getSlug(),
+			] );
+		}
+
+		$multiple = count( $recipients ) > 1;
+
+		foreach ( $recipients as $admin ) {
+			try {
 				$message = $this->renderView(
 						'emails/group-join-request.html.twig',
 						[
 								'admin'     => $admin,
 								'user'      => $user,
 								'usergroup' => $group,
-								'url'       => $this->generateUrl( 'group_members_index', array( 'groupSlug' => $groupSlug ), UrlGeneratorInterface::ABSOLUTE_URL ),
+								'url'       => $this->generateUrl( 'group_members_index', [ 'groupSlug' => $group->getSlug() ], UrlGeneratorInterface::ABSOLUTE_URL ),
 								'multiple'  => $multiple,
 						]
 				);
@@ -188,14 +238,14 @@ class GroupMembersController extends AbstractController {
 						$message
 				);
 			}
-
-			$this->addFlash( 'notice', 'messages.group.candidature_sent' );
+			catch ( Throwable $e ) {
+				$logger->error( 'Could not warn {admin} of a request to join {group}: {error}', [
+						'admin' => $admin->getId(),
+						'group' => $group->getSlug(),
+						'error' => $e->getMessage(),
+				] );
+			}
 		}
-
-		$manager->persist( $membership );
-		$manager->flush();
-
-		return $this->redirectToRoute( 'group_index', [ 'groupSlug' => $groupSlug ] );
 	}
 
 	/**

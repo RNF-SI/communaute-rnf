@@ -23,6 +23,23 @@ class UserRepository extends ServiceEntityRepository {
 		parent::__construct( $registry, User::class );
 	}
 
+	/**
+	 * Active accounts holding ROLE_ADMIN. Used as a last resort recipient when
+	 * a group has nobody able to approve a request.
+	 *
+	 * @return User[]
+	 */
+	public function findSiteAdmins () {
+		return $this->createQueryBuilder( 'u' )
+					->andWhere( 'u.roles LIKE :role' )
+					->andWhere( 'u.status = :status' )
+					->setParameter( 'role', '%ROLE_ADMIN%' )
+					->setParameter( 'status', User::STATUS_ACTIVE )
+					->orderBy( 'u.id', 'ASC' )
+					->getQuery()
+					->getResult();
+	}
+
 	public function getCountries ( $filters = [] ) {
 		$qb = $this->createQueryBuilder( 'u' );
 
