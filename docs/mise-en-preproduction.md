@@ -30,12 +30,21 @@ plateforme envoie est mis en quarantaine**.
 
       ```bash
       sudo chown -R DEPLOYEUR:UTILISATEUR_WEB public/media/cache var/
-      chmod -R g+w public/media/cache var/
-      find public/media/cache var/ -type d -exec chmod g+s {} \;
+      sudo apt-get install -y acl
+      sudo setfacl -R -m g:UTILISATEUR_WEB:rwX -m d:g:UTILISATEUR_WEB:rwX public/media/cache var/
       ```
 
-      Le `g+s` fait hériter le groupe aux fichiers créés ensuite, sans quoi le
-      problème revient à chaque réindexation.
+      **Le `d:` est le point important** : il pose une règle par défaut, si bien
+      que tout fichier créé ensuite dans ces répertoires est inscriptible par le
+      serveur web, quel que soit l'utilisateur qui l'a créé et quel que soit son
+      umask.
+
+      ⚠️ Un `chmod g+w` ne suffit pas : il ne vaut que pour les fichiers
+      existants, et la réindexation suivante recrée les index en `644`. Le bit
+      `setgid` ne suffit pas non plus — il fait hériter le groupe, pas le droit
+      d'écriture. Sans ACL par défaut, **la panne revient après chaque
+      `search:reindex:all`**, et se manifeste au pire endroit : la première
+      connexion d'un membre.
 - [ ] **`imagick`** installé — LiipImagine est configuré dessus, l'application
       ne démarre pas sans
 - [ ] **version de Node** vérifiée : `npm run build` casse sur Node ≥ 17
