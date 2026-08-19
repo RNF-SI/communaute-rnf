@@ -41,6 +41,16 @@ class NotificationDigestTest extends KernelTestCase {
 				( new Application( self::$kernel ) )->find( 'app:notifications:digest' )
 		);
 
+		// Les notifications déjà en attente dans la base ne regardent pas ce
+		// test : on les marque comme parties, à l'intérieur de la transaction.
+		$this->manager->createQueryBuilder()
+					  ->update( Notification::class, 'n' )
+					  ->set( 'n.emailedAt', ':now' )
+					  ->where( 'n.emailedAt IS NULL' )
+					  ->setParameter( 'now', new DateTime() )
+					  ->getQuery()
+					  ->execute();
+
 		$this->group = new Usergroup();
 		$this->group->setSlug( 'digest-group-' . uniqid() );
 		$this->group->setName( 'Commission montagne' );

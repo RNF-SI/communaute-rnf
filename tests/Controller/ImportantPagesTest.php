@@ -34,6 +34,21 @@ class ImportantPagesTest extends WebTestCase {
 		$this->client->disableReboot();
 
 		$this->manager = self::$container->get( EntityManagerInterface::class );
+
+		// Ce test crée des pages, ce qui produit des notifications. Sans
+		// transaction, elles survivraient au test et fausseraient ceux du
+		// résumé quotidien.
+		$this->manager->getConnection()->beginTransaction();
+	}
+
+	protected function tearDown (): void {
+		$connection = $this->manager->getConnection();
+
+		if ( $connection->isTransactionActive() ) {
+			$connection->rollBack();
+		}
+
+		parent::tearDown();
 	}
 
 	/**
