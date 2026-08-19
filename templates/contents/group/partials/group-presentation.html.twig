@@ -1,0 +1,14 @@
+{# La description et la présentation d'un groupe, visibles de tous : membres
+   comme non-membres. Elles n'étaient jusqu'ici montrées qu'à ceux qui
+   n'appartenaient pas au groupe, si bien qu'y entrer faisait disparaître ce
+   qui l'expliquait. (#5) #}
+<div class="group-description-text">
+	{% if group.description is not empty %}
+		<p>{{ group.description }}</p>
+	{% endif %}
+
+	{% if group.presentation is not empty %}
+		<button class="cta__inverted" type="button" data-see-more>{{ 'ui.see_more'|trans }}</button>
+		<div class="wysiwyg-content" aria-hidden="true">{{ group.presentation|raw }}</div>
+	{% endif %}
+</div>

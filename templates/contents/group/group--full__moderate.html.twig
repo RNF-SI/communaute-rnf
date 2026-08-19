@@ -14,14 +14,7 @@
 			</div>
 		</div>
 		<div class="group-description">
-			<div class="group-description-text">
-				<p>{{ group.description }}</p>
-
-				{% if group.presentation is not empty %}
-					<button class="cta__inverted" type="button" data-see-more>{{ 'ui.see_more'|trans }}</button>
-					<div class="wysiwyg-content" aria-hidden="true">{{ group.presentation|raw }}</div>
-				{% endif %}
-			</div>
+			{% include 'contents/group/partials/group-presentation.html.twig' with {'group':group} %}
 		</div>
 	</div>
 </div>

@@ -12,6 +12,12 @@
 			</div>
 		</div>
 
+		{% if (group.description is not empty) or (group.presentation is not empty) %}
+			<div class="group-description">
+				{% include 'contents/group/partials/group-presentation.html.twig' with {'group':group} %}
+			</div>
+		{% endif %}
+
 		{% include 'contents/group/partials/group-tabs.html.twig' with {'group':group, 'logEvents':logEvents} %}
 
 		{% if (logEvents is defined) and logEvents %}

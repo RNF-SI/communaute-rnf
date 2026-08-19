@@ -422,7 +422,7 @@ class AppFixtures extends Fixture {
 			$group = new Usergroup();
 			$group->setName( $definition[ 'name' ] );
 			$group->setSlug( $slug );
-			$group->setDescription( 'Groupe stable, créé par les fixtures pour les essais.' );
+			$group->setDescription( 'Groupe stable, créé par les fixtures pour les essais. Cette description doit être visible des membres comme des non-membres.' );
 			$group->setPresentation( '<p>Ce groupe existe pour éprouver la plateforme à la main. Sa composition ne change pas d’un chargement à l’autre.</p>' );
 			$group->setVisibility( $definition[ 'visibility' ] );
 			$group->setCreatedAt( new \DateTime() );
