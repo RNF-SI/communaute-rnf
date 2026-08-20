@@ -352,6 +352,12 @@ class GroupDiscussionsController extends AbstractController {
 			throw $this->createNotFoundException( 'The discussion does not exist' );
 		}
 
+		// Une discussion archivée n'existe plus que pour les animateurs : la
+		// renommer suit la même règle que la lire. (#20)
+		if ( $discussion->isArchived() && !$this->isGranted( GroupDiscussionVoter::EDIT, $discussion ) ) {
+			throw $this->createNotFoundException( 'The discussion does not exist' );
+		}
+
 		$this->denyAccessUnlessGranted( GroupDiscussionVoter::RENAME, $discussion );
 
 		$form = $this->createForm( DiscussionTitleType::class );
@@ -366,17 +372,23 @@ class GroupDiscussionsController extends AbstractController {
 				$this->addFlash( 'warning', 'messages.discussion.title_error' );
 			}
 			else {
+				$renamed = ( $title !== $discussion->getTitle() );
+
 				$discussion->setTitle( $title );
 
 				// Log Event
 
-				$log = new LogEvent();
-				$log->setType( LogEvent::DISCUSSION_EDIT );
-				$log->setUser( $this->getUser() );
-				$log->setUsergroup( $group );
-				$log->setCreatedAt( new DateTime() );
-				$log->setData( [ 'discussion' => $discussion->getId(), 'title' => $discussion->getTitle() ] );
-				$manager->persist( $log );
+				// Rien à signaler au groupe si le titre n'a pas bougé : le
+				// fil d'activité raconte ce qui a changé.
+				if ( $renamed ) {
+					$log = new LogEvent();
+					$log->setType( LogEvent::DISCUSSION_EDIT );
+					$log->setUser( $this->getUser() );
+					$log->setUsergroup( $group );
+					$log->setCreatedAt( new DateTime() );
+					$log->setData( [ 'discussion' => $discussion->getId(), 'title' => $discussion->getTitle() ] );
+					$manager->persist( $log );
+				}
 
 				$manager->flush();
 
