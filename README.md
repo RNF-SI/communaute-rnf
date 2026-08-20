@@ -204,18 +204,20 @@ php bin/console doctrine:fixtures:load
 ### Gestion des utilisateurs
 
 ```bash
-# Activer un utilisateur
-php bin/console user:activate <user-email>
-
-# Désactiver un utilisateur
-php bin/console user:deactivate <user-email>
-
 # Donner les droits administrateur plateforme (ROLE_ADMIN)
 php bin/console user:set-admin <user-email>
 
 # Retirer les droits administrateur plateforme
 php bin/console user:unset-admin <user-email>
 ```
+
+> Il n'existe **pas** de commande d'activation ou de désactivation de compte.
+> Ce README en a longtemps documenté deux qui n'ont jamais existé ; un test le
+> surveille désormais.
+
+**Toutes les commandes du projet sont listées dans
+[`docs/commandes.md`](docs/commandes.md)** : contrôle d'environnement, contrôle
+des e-mails, résumé des notifications, reprise GeoNature, anonymisation.
 
 ### Différences entre les rôles d'administration
 

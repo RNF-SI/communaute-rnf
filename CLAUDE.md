@@ -37,12 +37,24 @@ npm run test  # migrates + loads fixtures in test env, then runs ./bin/phpunit
 CI runs on **CircleCI** (`.circleci/config.yml`) against PHP 7.3 + MySQL 5.7, env `APP_ENV=test`.
 
 ### Console Commands
+**Every project command is documented in `docs/commandes.md`** — what it does,
+what it writes, and when to run it. `tests/Command/CommandsDocumentedTest.php`
+fails if a command is added without a section there, and if the README points
+at one that no longer exists (it did, for two).
+
 ```bash
 php bin/console cache:clear
-
-# Schema changes
 php bin/console doctrine:migrations:diff
 php bin/console doctrine:migrations:migrate
+
+# Checks — write nothing
+php bin/console app:preflight            # what fails silently in this environment
+php bin/console app:mail:check           # DNS of the sending domain + both mail paths
+php bin/console app:rnf:inspect --email= # what GeoNature says about one account
+
+# Scheduled
+php bin/console app:notifications:digest # once a day, every day (weekly readers on Monday)
+php bin/console app:rnf:sync-reserves    # nightly, fills the reserves from GeoNature
 
 # Admin management (no activate/deactivate commands exist)
 php bin/console user:set-admin <email>
@@ -52,7 +64,9 @@ php bin/console user:unset-admin <email>
 php bin/console search:reindex:all
 php bin/console search:reindex <entity>
 
-# Geographic data
+# Data
+php bin/console import:skills
+php bin/console app:db:anonymize --force # irreversible, on a copy only
 php bin/console app:update-coordinates
 php bin/console app:update-nuts-id
 ```
