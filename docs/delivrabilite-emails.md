@@ -37,6 +37,11 @@ plutôt que de s'envoyer un message et d'attendre.
 
 ## Ce qu'il faut ajouter au DNS
 
+> **Pour la marche à suivre pas à pas, à transmettre à qui administre le
+> domaine, voir [`dns-a-faire.md`](dns-a-faire.md).** La présente section
+> explique le pourquoi ; celle-là dit qui fait quoi, où, et dans quel ordre.
+
+
 Les valeurs exactes sont fournies par le tableau de bord Postmark, onglet
 **Sender Signatures → Domains**. L'ordre compte peu, mais les trois sont à faire.
 

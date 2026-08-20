@@ -8,6 +8,9 @@ vérifier ce qui ne peut l'être qu'en ligne.
 
 ### Le DNS, d'abord
 
+> Marche à suivre détaillée : [`dns-a-faire.md`](dns-a-faire.md).
+
+
 Voir [`delivrabilite-emails.md`](delivrabilite-emails.md). Trois enregistrements
 sur `rnfrance.org`, valeurs fournies par Postmark :
 
