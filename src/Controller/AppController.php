@@ -85,12 +85,18 @@ class AppController extends AbstractController {
 
 		if ( !empty( $fileId ) ) {
 			$file = $appFileManager->getFileById( $fileId );
-			return $fileManager->getFile( $file );
-		} else {
-			return new BinaryFileResponse($appFileManager->getDefaultFile($tab, $image_type));
+
+			if ( $file ) {
+				return $fileManager->getFile( $file );
+			}
+
+			// L'identifiant survit dans la configuration à la ligne qu'il
+			// désigne : rechargement des données de test, suppression à la
+			// main. Une illustration manquante retombe sur celle livrée avec
+			// l'application — elle ne fait pas tomber la page qui l'affiche.
 		}
 
-		throw $this->createNotFoundException( 'There is no '. $image_type . ' image.' );
+		return new BinaryFileResponse( $appFileManager->getDefaultFile( $tab, $image_type ) );
 	}
 
 	/**

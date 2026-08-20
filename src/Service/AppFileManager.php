@@ -174,14 +174,28 @@ class AppFileManager
         file_put_contents($this->projectDir.'/config/platform/config.yaml', $adminYaml);
     }
 
+    /**
+     * L'identifiant configuré pour une illustration, ou NULL s'il n'y en a
+     * pas. Une configuration incomplète est un cas ordinaire — le fichier
+     * n'est pas versionné et se recopie à la main — pas une erreur fatale.
+     */
     public function getAppImageId(string $tab, string $imageType)
     {
         $adminYaml = Yaml::parse(file_get_contents($this->projectDir.'/config/platform/config.yaml'));
 
-        return $adminYaml[$tab][$imageType]['fileId'];
+        return $adminYaml[$tab][$imageType]['fileId'] ?? null;
     }
 
-    public function getFileById(int $fileId): File
+    /**
+     * Le fichier d'illustration de la plateforme, s'il existe encore.
+     *
+     * Le dépôt renvoie NULL quand la ligne a disparu — ce qui arrive dès qu'on
+     * recharge les données de test, la purge vidant la table des fichiers
+     * alors que `config/platform/config.yaml` garde l'ancien identifiant.
+     * Promettre un File ici transformait cette situation ordinaire en erreur
+     * fatale, sur **chaque page affichant le logo**.
+     */
+    public function getFileById(int $fileId): ?File
     {
         $fileManager = $this->manager->getRepository(File::class);
 
