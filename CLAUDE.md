@@ -4,127 +4,121 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Communauté RNF is a Symfony 4.4 LTS collaborative platform dedicated to the French Natural Reserves network (Réserves Naturelles de France - RNF). It enables users to create groups, share articles, discussions, documents, and collaborate around natural reserve management and commission activities.
+Communauté RNF is a Symfony 4.4 LTS collaborative platform for the French Natural Reserves network (Réserves Naturelles de France - RNF). Users create groups and share articles, discussions, documents, and pages around natural reserve management and commission activities. The codebase is derived from the Naturadapt platform (vendor `telabotanica/communaute-rnf`); PHP 7.3.
 
 ## Essential Commands
 
 ### Development Setup
 ```bash
-# Backend setup
+# Backend
 composer install
-cp .env .env.local  # Configure database credentials
+cp .env .env.local                      # then set DATABASE_URL, DATABASE_PREFIX, COMMUNITY_SLUG, APP_SECRET
+cp config/platform/default.config.yaml config/platform/config.yaml  # required, not committed
 php bin/console doctrine:database:create
 php bin/console doctrine:migrations:migrate
-php bin/console doctrine:fixtures:load  # Load test data
-php bin/console import:skills  # Import default skills
+php bin/console doctrine:fixtures:load   # load test data
+php bin/console import:skills            # import default skills
 
-# Frontend setup
+# Frontend
 npm install
-npm run watch  # Development build with watch
-npm run build  # Production build
+npm run watch    # dev build, watch mode
+npm run dev      # one-off dev build
+npm run build    # production build
 ```
 
 ### Testing
 ```bash
-npm run test  # Runs database setup and PHPUnit tests
-```
+npm run test  # migrates + loads fixtures in test env, then runs ./bin/phpunit
 
-### Common Development Tasks
+# Run a single test
+./bin/phpunit tests/Path/To/SomeTest.php
+./bin/phpunit --filter testMethodName
+```
+CI runs on **CircleCI** (`.circleci/config.yml`) against PHP 7.3 + MySQL 5.7, env `APP_ENV=test`.
+
+### Console Commands
 ```bash
-# Clear Symfony cache
 php bin/console cache:clear
 
-# Update database schema
+# Schema changes
 php bin/console doctrine:migrations:diff
 php bin/console doctrine:migrations:migrate
 
-# User management
-php bin/console user:activate <email>
-php bin/console user:deactivate <email>
+# Admin management (no activate/deactivate commands exist)
 php bin/console user:set-admin <email>
 php bin/console user:unset-admin <email>
 
-# Search index management
+# Search index (TNTSearch)
 php bin/console search:reindex:all
 php bin/console search:reindex <entity>
 
-# Update geographic data
+# Geographic data
 php bin/console app:update-coordinates
 php bin/console app:update-nuts-id
 ```
 
 ## Architecture Overview
 
-### Core Entities and Relationships
-- **User**: Central entity with profiles, skills, and geographic data
-- **Usergroup**: Groups with different access levels (public, open, moderate, restricted)
-- **UsergroupMembership**: Links users to groups with roles (member, admin)
-- **Content Types**: Article, Discussion, Document, Page - all linked to groups
-- **File/Upload**: Managed file uploads with security constraints
+### Core Entities (`src/Entity/`)
+- **User** — central entity with profile, skills, and geographic data
+- **Usergroup** + **UsergroupMembership** — groups and member/admin links
+- **Content**: Article, Discussion (+ DiscussionMessage), Document (+ DocumentFolder), Page (+ PageRevision), Category
+- **File / Upload** — managed uploads
+- **LogEvent**, **AppLink / AppLinkGroup**, **Skill**
 
-### Security Model
-- **Authentication**: Form-based login with email/password
-- **Authorization**: Voter-based system for fine-grained permissions
-- **Group Access Levels**:
-  - PUBLIC: Anyone can view and join
-  - OPEN: Authenticated users can view and join
-  - MODERATE: Join requests require approval
-  - RESTRICTED: Invisible to non-members
+### Authentication (`src/Security/`)
+Two parallel mechanisms:
+- **Form login** — email/password via `LoginFormAuthenticator`, `UserChecker`.
+- **RNF external auth** — single sign-on against the GeoNature API (`RnfAuthService`, `RnfAuthenticatorGuard`, `RnfUserProvider`, `RnfAuthController`), configured via `RNF_AUTH_*` env vars.
 
-### Service Layer Architecture
-Key services handle business logic:
-- `FileManager`: Central file handling with security checks
-- `UserGroupRelation`: Manages user-group relationships
-- `EmailSender`: Handles all email notifications via Postmark
-- `SearchEngineManager`: TNTSearch integration for full-text search
-- `Community`: Manages the general community group
+### Authorization
+Voter-based, per resource type: `GroupVoter`, `GroupArticleVoter`, `GroupDiscussionVoter`, `GroupDocumentVoter`, `GroupFileVoter`, `GroupPageVoter`, `UserVoter`. Group access levels:
+- PUBLIC — anyone can view and join
+- OPEN — authenticated users can view and join
+- MODERATE — join requests require approval
+- RESTRICTED — invisible to non-members
 
-### Frontend Architecture
-- **Asset Management**: Webpack Encore with SCSS and ES6
-- **JavaScript Organization**: Feature-based modules in `assets/js/`
-- **Map Integration**: Leaflet for geographic visualization
-- **WYSIWYG**: CKEditor 5 for rich text editing
+### Service Layer (`src/Service/`)
+Business logic lives in services, e.g.:
+- File handling: `FileManager`, `UserFileManager`, `UsergroupFileManager`, `AppFileManager`, `FileMimeManager`
+- Groups/members: `UserGroupRelation`, `UserGroupsManager`, `UsergroupMembersManager`, `Community` (the general community group)
+- Email: `EmailSender`, `DiscussionSender`
+- Search: `SearchEngineManager` (TNTSearch)
+- Other: `MapManager`, `AdminManager`, `UserAnonymize`, `SlugGenerator`, `HashGenerator`, `UrlManager`, `AppTextManager`
+
+### File Storage (Gaufrette)
+Uploads are NOT in `var/uploads`. KnpGaufrette adapters (`config/packages/knp_gaufrette.yaml`) map to:
+- `userfiles` → `var/files/users`
+- `usergroupfiles` → `var/files/groups`
+- `appfiles` → `var/files`
+
+Image variants are generated by LiipImagineBundle. Always go through the `*FileManager` services for upload handling and security checks.
+
+### Search (TNTSearch)
+Full-text search via `SearchEngineManager`. Indexes are stored under `public/media/cache/indexes/` (`INDEX_DIR` env var). Reindexing is triggered automatically via event subscribers in `src/EventSubscriber/`; rebuild manually with the `search:reindex*` commands.
+
+### Email
+Swiftmailer with the Postmark transport (`MAILER_URL=postmark+api://KEY@default`, plus `POSTMARK_*` vars). Templates in `templates/emails/`.
+
+### Frontend (`assets/`)
+- Webpack Encore, SCSS (`assets/css/`), ES6 modules (`assets/js/`).
+- WYSIWYG is **Quill** (`assets/js/ui/wysiwyg.js`, `_quill-editor.scss`) — not CKEditor.
+- Maps via **Leaflet** + markercluster; data viz via **D3** (`GroupVisualizationController`, `MapManager`).
 
 ## Key Configuration
 
-### Environment Variables (.env.local)
+### Environment Variables (`.env.local`)
 ```bash
-DATABASE_URL=mysql://user:pass@127.0.0.1:3306/naturadapt
-MAILER_URL=postmark+api://API_KEY@default
-COMMUNITY_SLUG=communaute-fr  # General community identifier
-SECURE_SCHEME=https  # Force HTTPS
-TRUSTED_PROXIES=127.0.0.1  # For proxy setups
+APP_ENV=dev
+APP_SECRET=<32-char-secret>
+DATABASE_URL=mysql://user:pass@127.0.0.1:3306/communaute_rnf
+DATABASE_PREFIX=communaute_rnf_     # table name prefix
+COMMUNITY_SLUG=communaute           # REQUIRED — slug of the main community group
+INDEX_DIR='public/media/cache/indexes/'
+
+# Optional: MAILER_URL/POSTMARK_*, SECURE_SCHEME=https, TRUSTED_PROXIES,
+# RNF_AUTH_* (external SSO), ANALYTICS_ENABLED, and PLATFORM_*/TERMS_OF_USE_* page slugs
 ```
 
-### Platform Configuration
-Platform settings are stored in the database and managed via admin interface:
-- Site name, description, contact
-- Menu configuration
-- Homepage content
-- Links and resources
-
-## Development Guidelines
-
-### File Upload Handling
-- All uploads go through `FileManager` service
-- Files are stored in `var/uploads/` with UUID-based paths
-- Security checks prevent directory traversal
-- Automatic image optimization via LiipImagineBundle
-
-### Search Implementation
-- Uses TNTSearch for full-text search
-- Indexes stored in `var/indexes/`
-- Automatic reindexing on entity changes via event subscribers
-- Searchable entities implement specific repository traits
-
-### Email Notifications
-- All emails use Postmark transport
-- Templates in `templates/emails/`
-- Key notifications: registration, group requests, discussions
-- Bulk sending supported for group notifications
-
-### Frontend Development
-- SCSS files in `assets/css/` follow component structure
-- JavaScript modules use ES6 syntax
-- Map components require Leaflet initialization
-- Form enhancements via Symfony UX components
+### Platform Config
+`config/platform/config.yaml` (copied from `default.config.yaml`, not committed) plus database-stored settings managed via the admin interface (site name, menus, homepage, links). See `README.md` for the full env reference.
