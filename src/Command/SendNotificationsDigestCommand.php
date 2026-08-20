@@ -5,6 +5,7 @@ namespace App\Command;
 use App\Entity\Notification;
 use App\Entity\User;
 use App\Service\EmailSender;
+use App\Notification\NotificationRhythm;
 use App\Service\HashGenerator;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use DateTime;
@@ -19,11 +20,15 @@ use Throwable;
 use Twig\Environment;
 
 /**
- * Issue #34 — one e-mail a day per member, summarising everything they asked
- * to hear about, instead of one e-mail per event.
+ * Issue #34 — one e-mail per member summarising everything they asked to hear
+ * about, instead of one e-mail per event.
  *
- * Meant to be run once a day. Nothing is sent to somebody who has nothing
- * waiting, so a quiet day sends no e-mail at all.
+ * Meant to be run **once a day, every day**. Members on the weekly rhythm are
+ * passed over six days out of seven; their notifications wait rather than
+ * being lost, and Monday carries them all. (#38)
+ *
+ * Nothing is sent to somebody who has nothing waiting, so a quiet day sends
+ * no e-mail at all.
  */
 class SendNotificationsDigestCommand extends Command {
 	protected static $defaultName = 'app:notifications:digest';
@@ -60,25 +65,58 @@ class SendNotificationsDigestCommand extends Command {
 
 	protected function configure () {
 		$this
-				->setDescription( 'Send the daily summary of notifications' )
-				->setHelp( "Run once a day. Members with nothing waiting are not written to." )
-				->addOption( 'dry-run', NULL, InputOption::VALUE_NONE, 'Report what would be sent without sending' );
+				->setDescription( 'Send the summary of notifications due today' )
+				->setHelp(
+						"Run once a day, every day. Members who asked for a weekly summary are\n"
+						. "only written to on Monday; the others every day. Members with nothing\n"
+						. "waiting are never written to."
+				)
+				->addOption( 'dry-run', NULL, InputOption::VALUE_NONE, 'Report what would be sent without sending' )
+				->addOption(
+						'day',
+						NULL,
+						InputOption::VALUE_REQUIRED,
+						'The day to send for, YYYY-MM-DD. Defaults to today; useful to check what a Monday would send.'
+				);
 	}
 
 	protected function execute ( InputInterface $input, OutputInterface $output ) {
 		$io     = new SymfonyStyle( $input, $output );
 		$dryRun = $input->getOption( 'dry-run' );
+		$day    = $input->getOption( 'day' );
+
+		try {
+			$day = $day ? new DateTime( $day ) : new DateTime();
+		}
+		catch ( \Exception $exception ) {
+			$io->error( sprintf( 'Unreadable day: %s', $input->getOption( 'day' ) ) );
+
+			return 1;
+		}
 
 		$repository = $this->manager->getRepository( Notification::class );
 		$recipients = $repository->findRecipientsAwaitingDigest();
 
-		$io->title( sprintf( '%d members have notifications waiting', count( $recipients ) ) );
+		$io->title( sprintf(
+				'%s — %d members have notifications waiting',
+				$day->format( 'l j F Y' ),
+				count( $recipients )
+		) );
 
 		$sent    = 0;
 		$skipped = 0;
+		$waiting = 0;
 		$failed  = 0;
 
 		foreach ( $recipients as $recipient ) {
+			// Le rythme hebdomadaire se joue ici : rien n'est marqué comme
+			// envoyé, les notifications restent en attente jusqu'à lundi. (#38)
+			if ( !NotificationRhythm::sendsOn( $recipient->getDiscussionEmailRhythm(), $day ) ) {
+				$waiting++;
+
+				continue;
+			}
+
 			$notifications = $repository->findAwaitingDigestFor( $recipient );
 
 			if ( empty( $notifications ) ) {
@@ -121,9 +159,10 @@ class SendNotificationsDigestCommand extends Command {
 		}
 
 		$io->success( sprintf(
-				'%d summaries %s, %d dropped for members who refuse e-mails, %d failed',
+				'%d summaries %s, %d held until their weekly day, %d dropped for members who refuse e-mails, %d failed',
 				$sent,
 				$dryRun ? 'would be sent' : 'sent',
+				$waiting,
 				$skipped,
 				$failed
 		) );

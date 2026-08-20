@@ -246,10 +246,11 @@ pages:
             emails: "Receive e-mails"
             emails_hint: "Unchecked, you keep your notifications on the platform but receive no e-mail at all."
             rhythm: "Discussion e-mails"
-            rhythm_hint: "The daily summary gathers everything into a single e-mail a day, but no longer lets you answer from your mailbox."
+            rhythm_hint: "The summary gathers everything into a single e-mail, but no longer lets you answer from your mailbox. The weekly summary goes out on Monday morning."
             rhythms:
                 immediate: "One e-mail per message"
                 digest: "In the daily summary"
+                weekly: "In the weekly summary, on Monday"
             groups: "Per group"
             categories:
                 discussions: "Discussions"

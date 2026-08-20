@@ -359,10 +359,11 @@ pages:
             emails: "Recevoir des e-mails"
             emails_hint: "Décoché, vous gardez vos notifications sur la plateforme mais ne recevez plus aucun e-mail."
             rhythm: "E-mails des discussions"
-            rhythm_hint: "Le résumé quotidien regroupe tout en un seul e-mail par jour, mais ne permet plus de répondre depuis votre boîte mail."
+            rhythm_hint: "Le résumé regroupe tout en un seul e-mail, mais ne permet plus de répondre depuis votre boîte mail. Le résumé hebdomadaire part le lundi matin."
             rhythms:
                 immediate: "Un e-mail à chaque message"
                 digest: "Dans le résumé quotidien"
+                weekly: "Dans le résumé hebdomadaire, le lundi"
             groups: "Par groupe"
             categories:
                 discussions: "Discussions"

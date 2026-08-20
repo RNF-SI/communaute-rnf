@@ -72,18 +72,18 @@ Two parallel mechanisms:
 - **RNF external auth** — single sign-on against the GeoNature API (`RnfAuthService`, `RnfAuthenticatorGuard`, `RnfUserProvider`, `RnfAuthController`), configured via `RNF_AUTH_*` env vars.
 
 ### Authorization
-Voter-based, per resource type: `GroupVoter`, `GroupArticleVoter`, `GroupDiscussionVoter`, `GroupDocumentVoter`, `GroupFileVoter`, `GroupPageVoter`, `UserVoter`. Group access levels:
-- PUBLIC — anyone can view and join
-- OPEN — authenticated users can view and join
-- MODERATE — join requests require approval
-- RESTRICTED — invisible to non-members
+Voter-based, per resource type: `GroupVoter`, `GroupArticleVoter`, `GroupDiscussionVoter`, `GroupDocumentVoter`, `GroupFileVoter`, `GroupPageVoter`, `UserVoter`.
+
+A group has exactly **two** visibilities, `Usergroup::PUBLIC` and `Usergroup::PRIVATE` — the four-level scale (OPEN / MODERATE / RESTRICTED) belongs to upstream Naturadapt and has never existed here:
+- **public** — readable by anyone, *including anonymous visitors*, and joinable without approval. Its documents download without a session, so treat a public group as published to the web.
+- **private** — readable by its members only; joining goes through a request an animator approves.
 
 **Two ways to hold full rights over a group.** `UsergroupMembership::ROLE_ADMIN`
 makes a member an *animateur* of that group only — a commission referent who is
 not RNF staff can hold it. On top of that, `GroupVoter` short-circuits for
 `User::ROLE_ADMIN` (platform administrator, set with `user:set-admin`) **and for
 anyone who is an animateur of the community group** (`UserGroupRelation::isCommunityAdmin`):
-both are granted everything in *every* group, including RESTRICTED ones they are
+both are granted everything in *every* group, including private ones they are
 not a member of. That is deliberate — the RNF team must be able to moderate
 anywhere — but it is easy to miss when reading a single voter.
 

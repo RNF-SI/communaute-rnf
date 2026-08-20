@@ -187,6 +187,19 @@ Puis, quand le résultat est satisfaisant, planifier :
 30 7 * * * cd /chemin/vers/communaute-rnf && php bin/console app:notifications:digest
 ```
 
+**Une seule ligne, tous les jours** — y compris pour le résumé hebdomadaire
+(#38). La commande sait qui est abonné à quoi : elle sert les abonnés au
+quotidien chaque matin, et passe les abonnés hebdomadaires six jours sur sept
+pour ne les servir que le lundi. Leurs notifications attendent, elles ne sont
+pas perdues. Ne pas ajouter de seconde ligne hebdomadaire : elle enverrait le
+résumé deux fois.
+
+Pour voir ce que le lundi emporterait, sans attendre lundi :
+
+```bash
+php bin/console app:notifications:digest --day=2026-08-24 --dry-run
+```
+
 ⚠️ **C'est le seul geste irréversible du lot.** Un envoi groupé avec DMARC en
 échec, ou vers des adresses anonymisées, abîme la réputation de `rnfrance.org`
 bien au-delà de la plateforme.

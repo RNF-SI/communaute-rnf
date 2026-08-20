@@ -302,8 +302,10 @@ class NotificationSender {
 	}
 
 	/**
-	 * Discussion messages only join the summary for members who asked for that
-	 * rhythm; the others already got an e-mail as the message was posted.
+	 * Discussion messages only join the summary for members who did not ask
+	 * for the immediate e-mail; the others already got one as the message was
+	 * posted. Quotidien ou hebdomadaire, c'est le même résumé — seul le jour
+	 * de départ change, et c'est la commande qui en décide. (#38)
 	 *
 	 * @param \App\Entity\User $recipient
 	 * @param string           $level
@@ -317,7 +319,7 @@ class NotificationSender {
 		}
 
 		if ( $type === Notification::DISCUSSION_MESSAGE ) {
-			return $recipient->getDiscussionEmailRhythm() === NotificationRhythm::DIGEST;
+			return $recipient->getDiscussionEmailRhythm() !== NotificationRhythm::IMMEDIATE;
 		}
 
 		return TRUE;
