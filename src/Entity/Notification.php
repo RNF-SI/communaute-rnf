@@ -22,6 +22,7 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Notification {
 	const DISCUSSION_MESSAGE = 'discussion:message';
+	const DISCUSSION_MENTION = 'discussion:mention';
 	const PAGE_CREATE        = 'page:create';
 	const ARTICLE_CREATE     = 'article:create';
 	const DOCUMENT_CREATE    = 'document:create';

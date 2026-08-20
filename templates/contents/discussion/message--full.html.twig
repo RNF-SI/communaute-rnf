@@ -79,7 +79,9 @@
 			{% endif %}
 		</div>
 		<div class="message--body wysiwyg-content">
-			{{ message.body|raw }}
+			{# Les « @Prénom Nom » deviennent des liens vers l'annuaire ; le
+			   texte reste ce qui a été écrit. (#37) #}
+			{{ message.body|mentions(message.discussion.usergroup) }}
 		</div>
 		{% if message.files is not empty %}
 			<div class="message--attachments">

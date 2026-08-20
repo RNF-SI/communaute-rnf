@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\User;
+use App\Entity\Usergroup;
 use App\Entity\UsergroupMembership;
 use App\Traits\SearchableRepositoryTrait;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -35,6 +36,38 @@ class UserRepository extends ServiceEntityRepository {
 					->andWhere( 'u.status = :status' )
 					->setParameter( 'role', '%ROLE_ADMIN%' )
 					->setParameter( 'status', User::STATUS_ACTIVE )
+					->orderBy( 'u.id', 'ASC' )
+					->getQuery()
+					->getResult();
+	}
+
+	/**
+	 * The members of a group answering to one of the given names. Used to turn
+	 * a « @Prénom Nom » into somebody, without loading the whole group. (#37)
+	 *
+	 * Comparison is left to the database, whose collation ignores case and
+	 * accents — the same forgiveness the reader expects when typing a name.
+	 *
+	 * @param \App\Entity\Usergroup $group
+	 * @param string[]              $names
+	 *
+	 * @return User[]
+	 */
+	public function findMentionable ( Usergroup $group, array $names ) {
+		if ( empty( $names ) ) {
+			return [];
+		}
+
+		return $this->createQueryBuilder( 'u' )
+					->innerJoin( 'u.usergroupMemberships', 'm' )
+					->andWhere( 'm.usergroup = :group' )
+					->andWhere( 'm.status = :membership' )
+					->andWhere( 'u.status = :status' )
+					->andWhere( 'u.name IN (:names) OR u.displayName IN (:names)' )
+					->setParameter( 'group', $group )
+					->setParameter( 'membership', UsergroupMembership::STATUS_MEMBER )
+					->setParameter( 'status', User::STATUS_ACTIVE )
+					->setParameter( 'names', $names )
 					->orderBy( 'u.id', 'ASC' )
 					->getQuery()
 					->getResult();

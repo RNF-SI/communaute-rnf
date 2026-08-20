@@ -363,6 +363,7 @@ pages:
             empty: "Vous n’avez aucune notification pour le moment."
             types:
                 discussion_message: "Nouveau message dans la discussion"
+                discussion_mention: "Votre nom a été cité dans la discussion"
                 page_create: "Une nouvelle page a été créée :"
                 article_create: "Une nouvelle actualité a été publiée :"
                 document_create: "Un nouveau document a été déposé :"

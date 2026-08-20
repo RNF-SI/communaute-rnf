@@ -1,0 +1,63 @@
+/**************************************************
+* MENTIONS
+**************************************************/
+
+/**
+ * Un « @Prénom Nom » reconnu dans un message, et la liste que l'éditeur
+ * propose quand on commence à en écrire un. (#37)
+ */
+
+.wysiwyg-content a.mention,
+a.mention {
+	color:           $color_action;
+	font-weight:     600;
+	text-decoration: none;
+	white-space:     nowrap;
+
+	&:hover,
+	&:focus {
+		text-decoration: underline;
+	}
+}
+
+.quill-container {
+	// Repère des coordonnées que Quill donne pour placer la liste.
+	position: relative;
+}
+
+.mentions-suggestions {
+	position:      absolute;
+	z-index:       20;
+	margin:        0;
+	padding:       rem(4px) 0;
+	max-height:    rem(220px);
+	min-width:     rem(180px);
+	max-width:     rem(320px);
+	overflow-y:    auto;
+
+	list-style:    none;
+	background:    #fff;
+	border:        1px solid $color_grey_light;
+	border-radius: rem(4px);
+	box-shadow:    0 rem(2px) rem(8px) rgba(0, 0, 0, .15);
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+.mentions-suggestions--item {
+	padding:       rem(6px) rem(12px);
+
+	font-size:     rem(15px);
+	white-space:   nowrap;
+	overflow:      hidden;
+	text-overflow: ellipsis;
+	cursor:        pointer;
+
+	&.is-active,
+	&:hover {
+		background: $color_grey_lighter;
+		color:      $color_action;
+	}
+}

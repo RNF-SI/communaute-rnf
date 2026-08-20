@@ -30,9 +30,16 @@ class NotificationSender {
 
 	private $router;
 
-	public function __construct ( EntityManagerInterface $manager, UrlGeneratorInterface $router ) {
-		$this->manager = $manager;
-		$this->router  = $router;
+	private $mentions;
+
+	public function __construct (
+			EntityManagerInterface $manager,
+			UrlGeneratorInterface $router,
+			MentionParser $mentions
+	) {
+		$this->manager  = $manager;
+		$this->router   = $router;
+		$this->mentions = $mentions;
 	}
 
 	/**
@@ -105,6 +112,11 @@ class NotificationSender {
 		 */
 		$discussion = $message->getDiscussion();
 
+		// Being named comes first, and replaces the plain warning: one message
+		// is worth one notification, and « on vous a nommé » says more than
+		// « nouveau message ». (#37)
+		$mentioned = $this->notifyMentions( $message );
+
 		return $this->notify(
 				$discussion->getUsergroup(),
 				NotificationCategory::DISCUSSIONS,
@@ -115,8 +127,99 @@ class NotificationSender {
 						'discussionUuid' => $discussion->getUuid(),
 				] ),
 				$message->getAuthor(),
-				$discussion
-		);
+				$discussion,
+				array_keys( $mentioned )
+		) + count( $mentioned );
+	}
+
+	/**
+	 * Warns the members named in a message.
+	 *
+	 * A mention is addressed to someone in particular, so it reaches them even
+	 * when they muted the discussion: what they turned off is the group
+	 * talking, not somebody calling them. Only the « I want no e-mail at all »
+	 * setting still holds. (#37)
+	 *
+	 * @param \App\Entity\DiscussionMessage $message
+	 *
+	 * @return \App\Entity\User[] indexed by user id
+	 */
+	private function notifyMentions ( DiscussionMessage $message ) {
+		/**
+		 * @var \App\Entity\Discussion $discussion
+		 */
+		$discussion = $message->getDiscussion();
+		$group      = $discussion->getUsergroup();
+
+		if ( !$group ) {
+			return [];
+		}
+
+		$mentioned = $this->mentions->find( $message->getBody(), $group, $message->getAuthor() );
+
+		if ( empty( $mentioned ) ) {
+			return [];
+		}
+
+		$url = $this->router->generate( 'group_discussion_index', [
+				'groupSlug'      => $group->getSlug(),
+				'discussionUuid' => $discussion->getUuid(),
+		] );
+
+		$notified = [];
+
+		foreach ( $mentioned as $recipient ) {
+			$notification = new Notification();
+			$notification->setRecipient( $recipient );
+			$notification->setAuthor( $message->getAuthor() );
+			$notification->setUsergroup( $group );
+			$notification->setType( Notification::DISCUSSION_MENTION );
+			$notification->setTitle( (string) $discussion->getTitle() );
+			$notification->setUrl( $url );
+			$notification->setCreatedAt( new DateTime() );
+
+			// The summary is the only way a mention reaches a muted member by
+			// e-mail; those who already get the message as it is posted do not
+			// need to read about it twice.
+			$notification->setByEmail(
+					$recipient->wantsEmails() && !$this->alreadyEmailed( $recipient, $group, $discussion )
+			);
+
+			$this->manager->persist( $notification );
+
+			$notified[ $recipient->getId() ] = $recipient;
+		}
+
+		$this->manager->flush();
+
+		return $notified;
+	}
+
+	/**
+	 * Whether the message itself is already on its way to this member.
+	 *
+	 * @param \App\Entity\User      $recipient
+	 * @param \App\Entity\Usergroup $group
+	 * @param \App\Entity\Discussion $discussion
+	 *
+	 * @return bool
+	 */
+	private function alreadyEmailed ( User $recipient, Usergroup $group, Discussion $discussion ) {
+		if ( $recipient->getDiscussionEmailRhythm() !== NotificationRhythm::IMMEDIATE ) {
+			return FALSE;
+		}
+
+		foreach ( $group->getMembers() as $membership ) {
+			$member = $membership->getUser();
+
+			if ( !$member || ( $member->getId() !== $recipient->getId() ) ) {
+				continue;
+			}
+
+			return NotificationLevel::sendsEmail( $membership->getLevelForDiscussion( $discussion->getUuid() ) );
+		}
+
+		return FALSE;
 	}
 
 	/**
@@ -127,6 +230,7 @@ class NotificationSender {
 	 * @param string                      $url
 	 * @param \App\Entity\User|null       $author
 	 * @param \App\Entity\Discussion|null $discussion
+	 * @param int[]                       $except ids of members already warned otherwise
 	 *
 	 * @return int
 	 */
@@ -137,7 +241,8 @@ class NotificationSender {
 			$title,
 			$url,
 			User $author = NULL,
-			Discussion $discussion = NULL
+			Discussion $discussion = NULL,
+			array $except = []
 	) {
 		if ( !$group ) {
 			return 0;
@@ -161,6 +266,10 @@ class NotificationSender {
 
 			// Nobody is told about what they just did themselves. (#15)
 			if ( $author && ( $author->getId() !== NULL ) && ( $author->getId() === $recipient->getId() ) ) {
+				continue;
+			}
+
+			if ( in_array( $recipient->getId(), $except, TRUE ) ) {
 				continue;
 			}
 

@@ -1,10 +1,13 @@
+{# L'éditeur ne propose des noms que là où l'on sait de quel groupe il
+   s'agit : la page de création d'un sujet comme celle d'un message. (#37) #}
+{% set mentions = (group is defined and group) ? path('group_mentions', {'groupSlug': group.slug}) : '' %}
 {{ form_start(form) }}
 <div class="form-rows">
 	<div class="form-row form-row__field">
 		{{ form_label(form.title, 'forms.discussion.title.label', {'label_attr': {'class': 'h2'}}) }}
 		{{ form_widget(form.title, {'attr': {'placeholder': 'forms.discussion.title.placeholder'}}) }}
 	</div>
-	<div class="form-row form-row__field wysiwyg-editor" data-upload="{{ upload }}">
+	<div class="form-row form-row__field wysiwyg-editor" data-upload="{{ upload }}"{% if mentions %} data-mentions="{{ mentions }}"{% endif %}>
 		{{ form_label(form.body, 'forms.discussion.body.label', {'label_attr': {'class': 'h2'}}) }}
 		{{ form_widget(form.body, {'attr': {'placeholder': 'forms.discussion.body.placeholder'}}) }}
 	</div>

@@ -258,6 +258,7 @@ pages:
             empty: "You have no notification yet."
             types:
                 discussion_message: "New message in the discussion"
+                discussion_mention: "You were named in the discussion"
                 page_create: "A new page was created:"
                 article_create: "A new article was published:"
                 document_create: "A new document was added:"

@@ -22,6 +22,71 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class GroupMembersController extends AbstractController {
 	/**
+	 * The names that can be mentioned in a message of this group, for the
+	 * editor to propose after an « @ ». (#37)
+	 *
+	 * Reserved to those who may write in the group: the mention must not turn
+	 * into a way of finding out who is a member of a group one cannot read.
+	 *
+	 * @Route("/groups/{groupSlug}/mentions", name="group_mentions", methods={"GET"})
+	 *
+	 * @param                                      $groupSlug
+	 * @param \Doctrine\ORM\EntityManagerInterface $manager
+	 *
+	 * @return \Symfony\Component\HttpFoundation\JsonResponse
+	 */
+	public function groupMentions ( $groupSlug, EntityManagerInterface $manager ) {
+		$this->denyAccessUnlessGranted( UserVoter::LOGGED );
+
+		/**
+		 * @var \App\Entity\Usergroup $group
+		 */
+		$group = $manager->getRepository( Usergroup::class )
+						 ->findOneBy( [ 'slug' => $groupSlug ] );
+
+		if ( !$group ) {
+			throw $this->createNotFoundException( 'The group does not exist' );
+		}
+
+		$this->denyAccessUnlessGranted( GroupVoter::PARTICIPATE, $group );
+
+		$names = [];
+
+		/**
+		 * @var \App\Entity\UsergroupMembership $membership
+		 */
+		foreach ( $group->getMembers() as $membership ) {
+			if ( $membership->getStatus() !== UsergroupMembership::STATUS_MEMBER ) {
+				continue;
+			}
+
+			$member = $membership->getUser();
+
+			if ( !$member || ( $member->getStatus() !== User::STATUS_ACTIVE ) ) {
+				continue;
+			}
+
+			$name = trim( (string) $member->getName() );
+
+			// A nameless account cannot be named. Nothing to propose.
+			if ( $name === '' ) {
+				continue;
+			}
+
+			$names[ $member->getId() ] = [
+					'id'   => $member->getId(),
+					'name' => $name,
+			];
+		}
+
+		usort( $names, function ( $left, $right ) {
+			return strcmp( mb_strtolower( $left[ 'name' ] ), mb_strtolower( $right[ 'name' ] ) );
+		} );
+
+		return $this->json( $names );
+	}
+
+	/**
 	 * @Route("/groups/{groupSlug}/members", name="group_members_index")
 	 * @param                                            $groupSlug
 	 * @param \Symfony\Component\HttpFoundation\Request  $request

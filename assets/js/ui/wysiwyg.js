@@ -1,5 +1,6 @@
 // Import Quill avec ES6
 import Quill from 'quill';
+import attachMentions from './mentions';
 
 // WYSIWYG Module
 document.addEventListener('DOMContentLoaded', function() {
@@ -58,6 +59,10 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Ajouter fonctionnalité de redimensionnement d'images custom
             addImageResizing(quill);
+
+            // Proposer les membres du groupe après un « @ », là où l'éditeur
+            // sait à quel groupe il appartient. (#37)
+            attachMentions(quill, wysiwyg);
 
             // Synchroniser le contenu du textarea avec Quill
             if (textarea.value) {
