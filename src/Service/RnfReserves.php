@@ -26,10 +26,10 @@ class RnfReserves {
 	/**
 	 * Les noms de colonne sous lesquels le libellé d'une réserve peut arriver.
 	 *
-	 * L'export est une vue SQL dont le schéma n'est pas publié : le swagger
-	 * n'annonce que les filtres. `rn_nom` en est un, c'est donc le nom le plus
-	 * probable — les autres sont là pour qu'un renommage côté GeoNature ne
-	 * vide pas silencieusement les fiches.
+	 * L'export renvoie `area_x`, `area_y`, `rn_id`, `rn_nom` et `role_id` —
+	 * constaté contre le serveur, le schéma n'étant publié nulle part. Les
+	 * autres noms sont là pour qu'un renommage côté GeoNature ne vide pas
+	 * silencieusement les fiches.
 	 */
 	private const NAME_COLUMNS = [ 'rn_nom', 'nom_rn', 'nom', 'libelle', 'rn_libelle' ];
 
@@ -130,11 +130,15 @@ class RnfReserves {
 				'GET',
 				sprintf( '%s/api/exports/api/%d', $this->endpoint, $this->exportId ),
 				[
-						'query'   => [ 'role_id' => (int) $roleId, 'limit' => 100 ],
-						'headers' => [
-								'Accept'        => 'application/json',
-								'Authorization' => $this->token,
+						// Le jeton passe en paramètre, pas en en-tête : le
+						// swagger propose les deux, l'API refuse le second
+						// (403), constaté contre le serveur réel.
+						'query'   => [
+								'token'   => $this->token,
+								'role_id' => (int) $roleId,
+								'limit'   => 100,
 						],
+						'headers' => [ 'Accept' => 'application/json' ],
 				]
 		);
 
@@ -224,11 +228,42 @@ class RnfReserves {
 	private function nameOf ( array $item ) {
 		foreach ( array_merge( self::NAME_COLUMNS, self::ID_COLUMNS ) as $column ) {
 			if ( isset( $item[ $column ] ) && ( trim( (string) $item[ $column ] ) !== '' ) ) {
-				return trim( (string) $item[ $column ] );
+				return $this->withoutCode( trim( (string) $item[ $column ] ), $item );
 			}
 		}
 
 		return NULL;
+	}
+
+	/**
+	 * GeoNature écrit le libellé « Tourbière de Mathon (RNN8) », code compris.
+	 * Dans un annuaire, le code n'apprend rien à un collègue et allonge une
+	 * liste déjà longue — cinq réserves dépassent la place disponible.
+	 *
+	 * Retiré seulement quand la parenthèse finale **est** l'identifiant de la
+	 * réserve : un nom qui contient de vraies parenthèses garde les siennes.
+	 *
+	 * @param string $name
+	 * @param array  $item
+	 *
+	 * @return string
+	 */
+	private function withoutCode ( $name, array $item ) {
+		foreach ( self::ID_COLUMNS as $column ) {
+			$code = isset( $item[ $column ] ) ? trim( (string) $item[ $column ] ) : '';
+
+			if ( $code === '' ) {
+				continue;
+			}
+
+			$suffix = sprintf( ' (%s)', $code );
+
+			if ( ( $name !== $suffix ) && ( mb_substr( $name, -mb_strlen( $suffix ) ) === $suffix ) ) {
+				return trim( mb_substr( $name, 0, -mb_strlen( $suffix ) ) );
+			}
+		}
+
+		return $name;
 	}
 
 	/**

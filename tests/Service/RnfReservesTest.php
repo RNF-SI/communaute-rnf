@@ -110,12 +110,59 @@ class RnfReservesTest extends TestCase {
 	 **************************************************/
 
 	public function testTheReservesAreRead () {
+		// La forme réelle de l'export, constatée contre le serveur :
+		// area_x, area_y, rn_id, rn_nom, role_id.
 		$service = $this->service( $this->payload( [
-				[ 'role_id' => 4242, 'rn_id' => 'FR001', 'rn_nom' => 'RN du Marais' ],
-				[ 'role_id' => 4242, 'rn_id' => 'FR002', 'rn_nom' => 'RN de la Bassée' ],
+				[ 'area_x' => 7.81, 'area_y' => 48.62, 'rn_id' => 'RNN8', 'rn_nom' => 'Tourbière de Mathon (RNN8)', 'role_id' => 4242 ],
+				[ 'area_x' => 5.55, 'area_y' => 43.53, 'rn_id' => 'RNN117', 'rn_nom' => 'Sainte-Victoire (RNN117)', 'role_id' => 4242 ],
 		] ) );
 
-		$this->assertEquals( 'RN de la Bassée, RN du Marais', $service->forUser( $this->user() ) );
+		$this->assertEquals( 'Sainte-Victoire, Tourbière de Mathon', $service->forUser( $this->user() ) );
+	}
+
+	public function testTheTokenTravelsAsAQueryParameter () {
+		$seen = NULL;
+
+		$client = new MockHttpClient( function ( $method, $url ) use ( &$seen ) {
+			$seen = $url;
+
+			return new MockResponse(
+					json_encode( $this->payload( [ [ 'rn_nom' => 'RN du Marais' ] ] ) ),
+					[ 'response_headers' => [ 'content-type' => 'application/json' ] ]
+			);
+		} );
+
+		$service = new RnfReserves( $client, new NullLogger(), 'https://geonature.example.org', 'jeton', 3 );
+		$service->fetch( 4242 );
+
+		// L'API refuse l'en-tête Authorization (403) et n'accepte que le
+		// paramètre, constaté contre le serveur réel.
+		$this->assertStringContainsString( 'token=jeton', (string) $seen );
+		$this->assertStringContainsString( 'role_id=4242', (string) $seen );
+	}
+
+	public function testTheCodeAlreadyCarriedByTheIdentifierIsDropped () {
+		$service = $this->service( $this->payload( [
+				[ 'rn_id' => 'RNN325', 'rn_nom' => 'Massif forestier de la Robertsau (RNN325)' ],
+		] ) );
+
+		$this->assertEquals(
+				'Massif forestier de la Robertsau',
+				$service->forUser( $this->user() ),
+				'Assert the code does not eat the room five reserve names need'
+		);
+	}
+
+	public function testRealParenthesesAreKept () {
+		$service = $this->service( $this->payload( [
+				[ 'rn_id' => 'RNN8', 'rn_nom' => 'Tourbière (haute) de Mathon' ],
+		] ) );
+
+		$this->assertEquals(
+				'Tourbière (haute) de Mathon',
+				$service->forUser( $this->user() ),
+				'Assert only the parentheses that repeat the identifier are dropped'
+		);
 	}
 
 	public function testTheSameReserveIsReadOnce () {
