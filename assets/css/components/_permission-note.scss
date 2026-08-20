@@ -1,0 +1,21 @@
+/**************************************************
+* PERMISSION NOTE
+**************************************************/
+
+/**
+ * Qui peut modifier quoi, dit à l'endroit où la question se pose. (#33)
+ *
+ * Discret par construction : c'est un repère pour qui se le demande, pas un
+ * avertissement à lire avant d'agir.
+ */
+
+.permission-note {
+	margin:        0 0 column_gap();
+	padding-left:  rem(12px);
+
+	border-left:   rem(3px) solid $color_grey_lighter;
+
+	font-size:     rem(14px);
+	line-height:   1.5;
+	color:         $color_grey_neutral;
+}

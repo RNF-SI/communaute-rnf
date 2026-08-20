@@ -73,15 +73,14 @@ class GroupPageVoter extends Voter {
 				 */
 				$page = $subject;
 
-				if ( $page->getEditionRestricted() ) {
-					if ( $user === $page->getAuthor() ) {
-						return $this->security->isGranted( GroupVoter::PARTICIPATE, $page->getUsergroup() );
-					}
-
-					return $this->security->isGranted( GroupVoter::EDIT, $page->getUsergroup() );
+				// Une page s'adresse au groupe au nom de son animation : elle
+				// se corrige par qui l'a écrite, ou par un animateur. C'est la
+				// règle des actualités, et déjà celle de la suppression. (#33)
+				if ( $user === $page->getAuthor() ) {
+					return $this->security->isGranted( GroupVoter::PARTICIPATE, $page->getUsergroup() );
 				}
 
-				return $this->security->isGranted( GroupVoter::PARTICIPATE, $page->getUsergroup() );
+				return $this->security->isGranted( GroupVoter::EDIT, $page->getUsergroup() );
 
 			case self::DELETE:
 				/**

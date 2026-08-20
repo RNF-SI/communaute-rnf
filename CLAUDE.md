@@ -78,6 +78,22 @@ Voter-based, per resource type: `GroupVoter`, `GroupArticleVoter`, `GroupDiscuss
 - MODERATE — join requests require approval
 - RESTRICTED — invisible to non-members
 
+**Two ways to hold full rights over a group.** `UsergroupMembership::ROLE_ADMIN`
+makes a member an *animateur* of that group only — a commission referent who is
+not RNF staff can hold it. On top of that, `GroupVoter` short-circuits for
+`User::ROLE_ADMIN` (platform administrator, set with `user:set-admin`) **and for
+anyone who is an animateur of the community group** (`UserGroupRelation::isCommunityAdmin`):
+both are granted everything in *every* group, including RESTRICTED ones they are
+not a member of. That is deliberate — the RNF team must be able to moderate
+anywhere — but it is easy to miss when reading a single voter.
+
+**Who may edit what inside a group** (#33). Any member may *create* a page, an
+article, a document or a discussion. Editing and deleting a page, an article or
+a document is then reserved to its author and to the group animators.
+Discussions stay open: everyone edits or removes their own messages, animators
+may remove any message or topic. The rule is spelled out to members on each tab
+through `templates/components/permission-note.html.twig`.
+
 ### Service Layer (`src/Service/`)
 Business logic lives in services, e.g.:
 - File handling: `FileManager`, `UserFileManager`, `UsergroupFileManager`, `AppFileManager`, `FileMimeManager`

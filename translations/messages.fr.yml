@@ -473,6 +473,7 @@ pages:
         is_important: "Page mise en avant par les animateurs du groupe"
         list:
             title: "Pages"
+            rights: "Tout membre du groupe peut créer une page. Chacune se modifie ensuite par la personne qui l’a écrite, ou par un animateur du groupe."
         page_create:
             title: "Ajouter une page"
             link: "Ajouter une page"
@@ -490,6 +491,7 @@ pages:
     discussion:
         list:
             title: "Listes de discussion"
+            rights: "Les discussions sont ouvertes à tous les membres du groupe. Chacun modifie ou retire ses propres messages ; les animateurs peuvent retirer un message ou un sujet entier."
             subjects: "Sujets"
             messages_count: "Nb messages"
             activity: "Dernière activité"
@@ -532,6 +534,7 @@ pages:
     article:
         list:
             title: "Actualités"
+            rights: "Tout membre du groupe peut publier une actualité. Chacune se modifie ensuite par la personne qui l’a écrite, ou par un animateur du groupe."
         article_create:
             title: "Ajouter un article"
             link: "Ajouter un article"
@@ -546,6 +549,7 @@ pages:
     document:
         list:
             title: "Documents"
+            rights: "Tout membre du groupe peut déposer un document. Sa fiche se modifie ensuite par la personne qui l’a déposé, ou par un animateur du groupe."
             filters:
                 title: "Filtres"
                 filetype:
@@ -573,6 +577,7 @@ pages:
     member:
         list:
             title: "Annuaire des membres"
+            rights: "Les animateurs du groupe, signalés dans cette liste, acceptent les demandes d’adhésion et peuvent modifier ou retirer n’importe quel contenu du groupe."
             filters:
                 title: "Filtres"
                 country:

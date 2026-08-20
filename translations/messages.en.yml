@@ -351,6 +351,7 @@ pages:
         is_important: "Page highlighted by the group animators"
         list:
             title: "Pages"
+            rights: "Any member of the group may create a page. Each one can then be edited by whoever wrote it, or by a group animator."
         page_create:
             title: "Add a page"
             link: "Add a page"
@@ -368,6 +369,7 @@ pages:
     discussion:
         list:
             title: "Discussions"
+            rights: "Discussions are open to every member of the group. Everyone edits or removes their own messages; animators may remove a message or a whole topic."
             subjects: "Topics"
             messages_count: "Messages #"
             activity: "Latest activity"
@@ -409,6 +411,7 @@ pages:
     article:
         list:
             title: "News articles"
+            rights: "Any member of the group may publish an article. Each one can then be edited by whoever wrote it, or by a group animator."
         article_create:
             title: "Add a news article"
             link: "Add a news article"
@@ -423,6 +426,7 @@ pages:
     document:
         list:
             title: "Documents"
+            rights: "Any member of the group may add a document. Its description can then be edited by whoever added it, or by a group animator."
             filters:
                 title: "Filters"
                 filetype:
@@ -450,6 +454,7 @@ pages:
     member:
         list:
             title: "Members directory"
+            rights: "The group animators, flagged in this list, accept join requests and may edit or remove any content of the group."
             filters:
                 title: "Filters"
                 country:

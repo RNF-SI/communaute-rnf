@@ -1,0 +1,9 @@
+{# Dire qui peut modifier quoi, là où la question se pose — plutôt que dans
+   une page d'aide que personne n'ouvre. (#33)
+
+   Réservé aux membres : quelqu'un qui n'a pas encore rejoint le groupe n'a
+   pas besoin de savoir qui y corrige les pages, il a besoin de savoir
+   comment le rejoindre. #}
+{% if group is defined and group and is_granted(constant('App\\Security\\GroupVoter::PARTICIPATE'), group) %}
+	<p class="permission-note">{{ label|trans }}</p>
+{% endif %}

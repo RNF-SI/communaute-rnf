@@ -73,7 +73,15 @@ class GroupDocumentVoter extends Voter {
 				 */
 				$document = $subject;
 
-				return $this->security->isGranted( GroupVoter::PARTICIPATE, $document->getUsergroup() );
+				// La fiche d'un document appartient à qui l'a déposé : lui
+				// seul sait ce qu'il a mis dedans. Un animateur passe derrière
+				// si le classement dérive. C'est déjà la règle pour le
+				// supprimer. (#33)
+				if ( $user === $document->getUser() ) {
+					return $this->security->isGranted( GroupVoter::PARTICIPATE, $document->getUsergroup() );
+				}
+
+				return $this->security->isGranted( GroupVoter::EDIT, $document->getUsergroup() );
 
 			case self::DELETE:
 				/**

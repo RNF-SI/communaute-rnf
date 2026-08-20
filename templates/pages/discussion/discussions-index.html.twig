@@ -17,6 +17,8 @@
 				{% endif %}
 			</div>
 
+			{% include 'components/permission-note.html.twig' with {'group': group, 'label': 'pages.discussion.list.rights'} %}
+
 			{% include 'components/breadcrumb.html.twig' with {'items':[
 				{
 					label: 'pages.group.groups.title'|trans,

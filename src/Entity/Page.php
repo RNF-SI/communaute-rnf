@@ -56,11 +56,6 @@ class Page {
 	private $editedAt;
 
 	/**
-	 * @ORM\Column(type="boolean", nullable=true)
-	 */
-	private $editionRestricted;
-
-	/**
 	 * @ORM\OneToOne(targetEntity="App\Entity\File", cascade={"persist", "remove"})
 	 */
 	private $cover;
@@ -163,16 +158,6 @@ class Page {
 
 	public function setEditedAt ( ?\DateTimeInterface $editedAt ): self {
 		$this->editedAt = $editedAt;
-
-		return $this;
-	}
-
-	public function getEditionRestricted (): ?bool {
-		return !empty( $this->editionRestricted );
-	}
-
-	public function setEditionRestricted ( ?bool $editionRestricted ): self {
-		$this->editionRestricted = $editionRestricted;
 
 		return $this;
 	}
