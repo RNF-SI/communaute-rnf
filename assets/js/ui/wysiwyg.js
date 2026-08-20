@@ -1,6 +1,7 @@
 // Import Quill avec ES6
 import Quill from 'quill';
 import attachMentions from './mentions';
+import { TOOLBAR, FORMATS } from './wysiwyg-config';
 
 // WYSIWYG Module
 document.addEventListener('DOMContentLoaded', function() {
@@ -19,39 +20,20 @@ document.addEventListener('DOMContentLoaded', function() {
             // Cacher le textarea original
             textarea.style.display = 'none';
 
-            // Configuration de base de Quill
-            const toolbarOptions = [
-                [{ 'header': [1, 2, 3, false] }],
-                ['bold', 'italic', 'underline', 'strike'],
-                ['blockquote', 'code-block'],
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                [{ 'script': 'sub'}, { 'script': 'super' }],
-                [{ 'indent': '-1'}, { 'indent': '+1' }],
-                [{ 'direction': 'rtl' }],
-                [{ 'size': ['small', false, 'large', 'huge'] }],
-                [{ 'color': [] }, { 'background': [] }],
-                [{ 'align': [] }],
-                ['link', 'image', 'video'],
-                ['clean']
-            ];
-
+            // Configuration de base de Quill. La barre d'outils et la liste
+            // des formats vivent dans wysiwyg-config.js, où elles se lisent
+            // et se vérifient sans démarrer un éditeur. (#32)
             const quillOptions = {
                 theme: 'snow',
                 modules: {
-                    toolbar: toolbarOptions,
+                    toolbar: TOOLBAR,
                     history: {
                         delay: 1000,
                         maxStack: 50,
                         userOnly: false
                     }
                 },
-                formats: [
-                    'header', 'bold', 'italic', 'underline', 'strike',
-                    'blockquote', 'code-block', 'list', 'bullet',
-                    'script', 'indent', 'direction', 'size',
-                    'color', 'background', 'align',
-                    'link', 'image', 'video'
-                ]
+                formats: FORMATS
             };
 
             // Initialiser Quill
