@@ -25,6 +25,16 @@ quarantaine de mon gestionnaire de mails ».
 Ce n'est pas un problème de contenu ni de réputation : c'est une autorisation
 manquante.
 
+## Vérifier où on en est, sans attendre une boîte de réception
+
+```bash
+php bin/console app:mail:check
+```
+
+Lit les quatre enregistrements ci-dessous depuis la machine qui envoie, et dit
+lequel manque. C'est la commande à relancer après chaque modification du DNS,
+plutôt que de s'envoyer un message et d'attendre.
+
 ## Ce qu'il faut ajouter au DNS
 
 Les valeurs exactes sont fournies par le tableau de bord Postmark, onglet

@@ -162,6 +162,16 @@ Full-text search via `SearchEngineManager`. Indexes are stored under `public/med
 ### Email
 Swiftmailer with the Postmark transport (`MAILER_URL=postmark+api://KEY@default`, plus `POSTMARK_*` vars). Templates in `templates/emails/`.
 
+**Two sending paths, two Postmark tokens.** Transactional mail (digest, join
+requests, password reset) goes through `EmailSender` → Swiftmailer →
+`POSTMARK_SERVER_TOKEN`; discussion messages go through `DiscussionSender` →
+`BulkTransport` → the Postmark API directly with `POSTMARK_BULK_TOKEN`. One can
+work while the other is silent — an empty bulk token sends nothing and raises
+nothing. `app:mail:check` exercises both, and reads the DNS of the sending
+domain (SPF / DKIM / Return-Path / DMARC, see `MailDeliverability`): a token
+being present says nothing about whether the domain lets Postmark send in its
+name. See `docs/delivrabilite-emails.md`.
+
 ### Frontend (`assets/`)
 - Webpack Encore, SCSS (`assets/css/`), ES6 modules (`assets/js/`).
 - WYSIWYG is **Quill** (`assets/js/ui/wysiwyg.js`, `_quill-editor.scss`) — not CKEditor.

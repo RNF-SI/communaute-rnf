@@ -178,8 +178,13 @@ conservés avec `--keep-email`.
 ### En dernier, et seulement une fois le DNS vérifié
 
 ```bash
+php bin/console app:mail:check                       # le DNS autorise-t-il l'envoi ?
 php bin/console app:notifications:digest --dry-run   # ce qui partirait
 ```
+
+La première doit être verte **avant** la seconde : un résumé envoyé alors que
+SPF et DKIM échouent abîme la réputation du domaine bien au-delà de la
+plateforme.
 
 Puis, quand le résultat est satisfaisant, planifier :
 

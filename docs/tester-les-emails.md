@@ -1,5 +1,33 @@
 # Tester les e-mails
 
+## Le plus court chemin : une commande
+
+Sur n'importe quel environnement, préproduction comprise :
+
+```bash
+php bin/console app:mail:check
+```
+
+Elle ne lit que le DNS et la configuration, n'envoie rien, et répond à la
+question qu'on se pose vraiment : **est-ce qu'un e-mail partirait, et
+arriverait-il ?** Ce sont deux choses différentes — `app:preflight` dit si les
+jetons sont renseignés, celle-ci dit si le domaine autorise Postmark à envoyer
+en son nom.
+
+Pour éprouver les deux chemins d'envoi pour de vrai :
+
+```bash
+php bin/console app:mail:check --to=vous@rnfrance.org
+```
+
+Deux messages partent, un par chemin, et le compte rendu dit lequel a abouti.
+**Les deux chemins portent deux jetons Postmark différents** : l'un peut
+fonctionner pendant que l'autre est muet, ce qui s'était produit en #4.
+
+⚠️ En production, le garde de #14 refuse les adresses en `@example.org` : un
+`--to` vers une adresse de test y sera rejeté, et le compte rendu le dira.
+
+
 ## Le chemin d'un e-mail selon l'environnement
 
 C'est la chose à retenir : **la plateforme n'envoie pas ses e-mails par un seul

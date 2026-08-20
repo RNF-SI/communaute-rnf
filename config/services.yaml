@@ -87,6 +87,12 @@ services:
       $transport: "@postmark_bulk"
       $params: "%postmark%"
 
+  # Le transport des discussions porte le second jeton Postmark : la commande
+  # de contrôle doit l'éprouver lui, pas le mailer par défaut. (#14)
+  App\Command\MailCheckCommand:
+    arguments:
+      $bulk: "@postmark_bulk"
+
   App\Service\SearchEngineManager:
     arguments:
       $projectDir: "%kernel.project_dir%"
