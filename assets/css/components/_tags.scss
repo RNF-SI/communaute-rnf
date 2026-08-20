@@ -55,3 +55,50 @@ ul.tags {
 	@include clearulli(true);
 	@include clearfloat;
 }
+
+/**************************************************
+* DOCUMENT TAGS
+**************************************************/
+
+/**
+ * Les étiquettes portées par un document dans les listes, et le vocabulaire
+ * tenu dans l'administration. (#26)
+ */
+
+.document--tags {
+	margin-top: rem(4px);
+}
+
+.document-tags-list {
+	margin:     0 0 column_gap();
+	padding:    0;
+	list-style: none;
+}
+
+.document-tags-list--item {
+	display:       flex;
+	align-items:   center;
+	gap:           rem(12px);
+	padding:       rem(6px) 0;
+
+	border-bottom: 1px solid $color_grey_lighter;
+}
+
+.document-tags-list--count {
+	margin-right: auto;
+
+	font-size:    rem(14px);
+	color:        $color_grey_neutral;
+}
+
+.document-tags-list--delete {
+	padding:         0;
+
+	border:          none;
+	background:      none;
+
+	font-size:       rem(14px);
+	color:           $color_action;
+	text-decoration: underline;
+	cursor:          pointer;
+}

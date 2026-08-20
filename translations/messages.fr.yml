@@ -199,9 +199,20 @@ forms:
             label: "Description"
             hint: "Quelques mots sur le contenu du document, pour aider les autres à le trouver. Facultatif."
             placeholder: "Exemple : compte rendu de l’atelier pâturage de mars 2026…"
+        tags:
+            label: "Étiquettes"
+            hint: "Choisissez dans la liste tenue par les administrateurs. Un document peut en porter plusieurs."
 
     administration:
         submit: "Sauvegarder les modifications"
+        document_tags:
+            name: "Étiquettes des documents"
+            introduction: "Ces étiquettes servent à classer et à filtrer les documents dans tous les groupes. La liste est volontairement fermée : chacun y choisit, personne n’y ajoute au passage, pour qu’une même notion ne finisse pas écrite de trois façons."
+            label: "Nouvelle étiquette"
+            placeholder: "Exemple : Grand public"
+            button: "Ajouter l’étiquette"
+            empty: "Aucune étiquette pour l’instant. Tant que la liste est vide, aucun filtre n’est proposé sur les documents."
+            used: "%count% document(s)"
         platform:
             name: "Plateforme"
             introduction: "Ici vous pouvez modifier les paramètres principaux de la plateforme"
@@ -561,6 +572,8 @@ pages:
                 title: "Filtres"
                 filetype:
                     label: "Type de document"
+                tags:
+                    label: "Étiquette"
             query:
                 placeholder: "Chercher un document par nom…"
             search: "Filtrer"
@@ -641,6 +654,10 @@ pages:
                 title: "Menus"
                 name: "Menus"
                 introduction: "Modifiez la barre de navigation et le footer"
+            document_tags:
+                title: "Étiquettes"
+                name: "Étiquettes"
+                introduction: "Tenez la liste des étiquettes qui classent les documents"
             admin:
                 title: "Administrateurs"
                 name: "Administrateurs"
@@ -766,6 +783,10 @@ messages:
         document_created: "Le document a été ajouté"
         document_updated: "Le document a été mis à jour"
         document_deleted: "Le document a été supprimé"
+        tag_created: "L’étiquette a été ajoutée"
+        tag_deleted: "L’étiquette a été retirée, et avec elle le classement des documents qui la portaient"
+        tag_exists: "Cette étiquette existe déjà"
+        tag_empty: "Le nom de l’étiquette ne peut pas être vide"
 
 logevents:
     user_register: "%1$s s’est inscrit·e"

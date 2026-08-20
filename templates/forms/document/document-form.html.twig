@@ -24,6 +24,18 @@
 		{{ form_widget(form.description, {'attr': {'placeholder': 'forms.document.description.placeholder'}}) }}
 		<div class="form_errors">{{ form_errors(form.description) }}</div>
 	</div>
+	{# Le vocabulaire est tenu par les administrateurs : tant qu'il est vide,
+	   il n'y a rien à proposer ici. (#26) #}
+	{% if form.tags|length > 0 %}
+		<div class="form-row form-row__field">
+			{{ form_label(form.tags, 'forms.document.tags.label') }}
+			<div class="hint">{{ 'forms.document.tags.hint'|trans }}</div>
+			<div class="form-row__checkboxes checkboxes-autocomplete">
+				{{ form_widget(form.tags) }}
+			</div>
+			<div class="form_errors">{{ form_errors(form.tags) }}</div>
+		</div>
+	{% endif %}
 </div>
 <div class="form-row form-row__submit">
 	{{ form_widget(form.submit, {'label': form_submit}) }}

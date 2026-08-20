@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -57,6 +59,60 @@ class Document {
 	 * @ORM\ManyToOne(targetEntity="App\Entity\DocumentFolder", inversedBy="documents")
 	 */
 	private $folder;
+
+	/**
+	 * Le classement transversal : un document peut relever de plusieurs
+	 * étiquettes, et une étiquette traverse les dossiers et les groupes. Le
+	 * dossier dit où il est rangé, l'étiquette dit ce qu'il est. (#26)
+	 *
+	 * @ORM\ManyToMany(targetEntity="App\Entity\DocumentTag", inversedBy="documents")
+	 * @ORM\JoinTable(name="documents_tags")
+	 * @ORM\OrderBy({"name": "ASC"})
+	 */
+	private $tags;
+
+	public function __construct () {
+		$this->tags = new ArrayCollection();
+	}
+
+	/**
+	 * @return Collection|DocumentTag[]
+	 */
+	public function getTags (): Collection {
+		return $this->tags;
+	}
+
+	public function addTag ( DocumentTag $tag ): self {
+		if ( !$this->tags->contains( $tag ) ) {
+			$this->tags[] = $tag;
+		}
+
+		return $this;
+	}
+
+	public function removeTag ( DocumentTag $tag ): self {
+		if ( $this->tags->contains( $tag ) ) {
+			$this->tags->removeElement( $tag );
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Les identifiants des étiquettes portées, pour comparer un document au
+	 * filtre en cours sans repasser par la base.
+	 *
+	 * @return int[]
+	 */
+	public function getTagIds () {
+		$ids = [];
+
+		foreach ( $this->tags as $tag ) {
+			$ids[] = $tag->getId();
+		}
+
+		return $ids;
+	}
 
 	public function getId (): ?int {
 		return $this->id;

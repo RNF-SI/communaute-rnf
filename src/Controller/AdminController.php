@@ -2,7 +2,9 @@
 
 namespace App\Controller;
 
+use App\Entity\DocumentTag;
 use App\Form\AdminPlatformType;
+use App\Form\DocumentTagType;
 use App\Form\AdminHomeType;
 use App\Form\AdminGroupsType;
 use App\Form\AdminMenusType;
@@ -11,6 +13,7 @@ use App\Entity\AppLinkGroup;
 use App\Entity\Usergroup;
 
 use App\Service\AdminManager;
+use App\Service\SlugGenerator;
 use App\Security\GroupVoter;
 
 use Symfony\Component\HttpFoundation\Request;
@@ -263,6 +266,111 @@ class AdminController extends AbstractController {
 	 *
 	 * @return \Symfony\Component\HttpFoundation\Response
 	 */
+	/**
+	 * Le vocabulaire d'étiquettes des documents : le créer, le renommer, en
+	 * retirer une entrée. (#26)
+	 *
+	 * Fermé et tenu ici plutôt que saisi librement au dépôt d'un document :
+	 * des étiquettes libres se dédoublent en synonymes, et le filtre ne veut
+	 * plus rien dire au bout de quelques mois.
+	 *
+	 * @Route("/administration/document-tags", name="administration_document_tags")
+	 *
+	 * @param \Symfony\Component\HttpFoundation\Request $request
+	 * @param \Doctrine\ORM\EntityManagerInterface      $manager
+	 * @param \App\Service\SlugGenerator               $slugGenerator
+	 *
+	 * @return \Symfony\Component\HttpFoundation\Response
+	 */
+	public function adminDocumentTags (
+			Request $request,
+			EntityManagerInterface $manager,
+			SlugGenerator $slugGenerator
+	) {
+		$communauteGroup = $manager->getRepository( Usergroup::class )
+								   ->findOneBy( [ 'slug' => 'communaute' ] );
+
+		$this->denyAccessUnlessGranted( GroupVoter::ADMIN, $communauteGroup );
+
+		$repository = $manager->getRepository( DocumentTag::class );
+
+		$form = $this->createForm( DocumentTagType::class );
+		$form->handleRequest( $request );
+
+		if ( $form->isSubmitted() && $form->isValid() ) {
+			$name = trim( (string) $form->get( 'name' )->getData() );
+			$slug = SlugGenerator::slugify( $name );
+
+			if ( $name === '' ) {
+				$this->addFlash( 'warning', 'messages.document.tag_empty' );
+			}
+			elseif ( $repository->findOneBy( [ 'slug' => $slug ] ) ) {
+				// Deux fois la même étiquette sous deux orthographes, c'est
+				// exactement ce qu'une liste fermée doit empêcher.
+				$this->addFlash( 'warning', 'messages.document.tag_exists' );
+			}
+			else {
+				$tag = new DocumentTag();
+				$tag->setName( $name );
+				$tag->setSlug( $slugGenerator->generateSlug( $name, DocumentTag::class ) );
+
+				$manager->persist( $tag );
+				$manager->flush();
+
+				$this->addFlash( 'notice', 'messages.document.tag_created' );
+			}
+
+			return $this->redirectToRoute( 'administration_document_tags' );
+		}
+
+		return $this->render( 'pages/user/admin-edit.html.twig', [
+				'tab'  => 'document-tags',
+				'form' => $form->createView(),
+				'tags' => $repository->findAll(),
+		] );
+	}
+
+	/**
+	 * Retirer une étiquette du vocabulaire. Les documents qui la portaient la
+	 * perdent — c'est le sens d'un vocabulaire tenu : ce qui n'y est plus ne
+	 * classe plus rien. (#26)
+	 *
+	 * @Route("/administration/document-tags/{tagId}/delete", name="administration_document_tag_delete", methods={"POST"})
+	 *
+	 * @param                                            $tagId
+	 * @param \Symfony\Component\HttpFoundation\Request $request
+	 * @param \Doctrine\ORM\EntityManagerInterface      $manager
+	 *
+	 * @return \Symfony\Component\HttpFoundation\Response
+	 */
+	public function adminDocumentTagDelete (
+			$tagId,
+			Request $request,
+			EntityManagerInterface $manager
+	) {
+		$communauteGroup = $manager->getRepository( Usergroup::class )
+								   ->findOneBy( [ 'slug' => 'communaute' ] );
+
+		$this->denyAccessUnlessGranted( GroupVoter::ADMIN, $communauteGroup );
+
+		if ( !$this->isCsrfTokenValid( 'delete-document-tag', $request->request->get( '_token' ) ) ) {
+			throw $this->createAccessDeniedException( 'Invalid token' );
+		}
+
+		$tag = $manager->getRepository( DocumentTag::class )->find( $tagId );
+
+		if ( !$tag ) {
+			throw $this->createNotFoundException( 'The tag does not exist' );
+		}
+
+		$manager->remove( $tag );
+		$manager->flush();
+
+		$this->addFlash( 'notice', 'messages.document.tag_deleted' );
+
+		return $this->redirectToRoute( 'administration_document_tags' );
+	}
+
 	public function adminAdministratorsEdit (
 		EntityManagerInterface $manager,
 		AdminManager $adminManager

@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Document;
 use App\Entity\DocumentFolder;
+use App\Entity\DocumentTag;
 use App\Entity\File;
 use App\Entity\LogEvent;
 use App\Entity\Usergroup;
@@ -18,6 +19,8 @@ use App\Service\SlugGenerator;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use App\Repository\DocumentTagRepository;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\SearchType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
@@ -68,9 +71,19 @@ class GroupDocumentsController extends AbstractController {
 			return FALSE;
 		}
 
-		//
+		// Étiquettes : un document répond dès qu'il en porte une de celles
+		// demandées. Exiger toutes les étiquettes cochées ne ramènerait
+		// presque jamais rien. (#26)
 
-		return $matchFiletype && $matchKeywords;
+		if ( !empty( $filters[ 'tags' ] ) ) {
+			$wanted = array_map( 'intval', (array) $filters[ 'tags' ] );
+
+			if ( empty( array_intersect( $wanted, $document->getTagIds() ) ) ) {
+				return FALSE;
+			}
+		}
+
+		return TRUE;
 	}
 
 	/**************************************************
@@ -124,6 +137,20 @@ class GroupDocumentsController extends AbstractController {
 									 'pages.document.list.types.' . FileMimeManager::IMAGES    => FileMimeManager::IMAGES,
 									 'pages.document.list.types.' . FileMimeManager::ARCHIVES  => FileMimeManager::ARCHIVES,
 							 ],
+					 ] )
+					 ->add( 'tags', EntityType::class, [
+							 // Le vocabulaire complet, même les étiquettes que
+							 // ce groupe n'emploie pas : il classe comme les
+							 // autres, avec les mêmes mots. (#26)
+							 'class'         => DocumentTag::class,
+							 'required'      => FALSE,
+							 'expanded'      => TRUE,
+							 'multiple'      => TRUE,
+							 'choice_label'  => 'name',
+							 'query_builder' => function ( DocumentTagRepository $repository ) {
+								 return $repository->createQueryBuilder( 't' )
+												   ->orderBy( 't.name', 'ASC' );
+							 },
 					 ] )
 					 ->add( 'query', SearchType::class, [
 							 'required' => FALSE,

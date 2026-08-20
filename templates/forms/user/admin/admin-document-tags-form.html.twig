@@ -1,0 +1,33 @@
+<div class="form-rows">
+	<h2 class="h2">{{ 'forms.administration.document_tags.name'|trans }}</h2>
+	<p class="hint">{{ 'forms.administration.document_tags.introduction'|trans }}</p>
+
+	{% if tags is not empty %}
+		<ul class="document-tags-list">
+			{% for tag in tags %}
+				<li class="document-tags-list--item">
+					<span class="tag">{{ tag.name }}</span>
+					<span class="document-tags-list--count">{{ 'forms.administration.document_tags.used'|trans({'%count%': tag.documents|length}) }}</span>
+
+					<form method="post" action="{{ path('administration_document_tag_delete', {'tagId': tag.id}) }}">
+						<input type="hidden" name="_token" value="{{ csrf_token('delete-document-tag') }}">
+						<button type="submit" class="document-tags-list--delete">{{ 'ui.delete'|trans }}</button>
+					</form>
+				</li>
+			{% endfor %}
+		</ul>
+	{% else %}
+		<p>{{ 'forms.administration.document_tags.empty'|trans }}</p>
+	{% endif %}
+
+	{{ form_start(form) }}
+	<div class="form-row form-row__field">
+		{{ form_label(form.name, 'forms.administration.document_tags.label') }}
+		{{ form_widget(form.name, {'attr': {'placeholder': 'forms.administration.document_tags.placeholder'}}) }}
+		<div class="form_errors">{{ form_errors(form.name) }}</div>
+	</div>
+	<div class="form-row form-row__submit">
+		{{ form_widget(form.submit, {'label': 'forms.administration.document_tags.button'|trans}) }}
+	</div>
+	{{ form_end(form) }}
+</div>

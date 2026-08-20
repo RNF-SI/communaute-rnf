@@ -66,6 +66,14 @@
 							{{ form_widget(form.filetype) }}
 						</div>
 					</div>
+					{% if form.tags|length > 0 %}
+						<div class="form-row form-row__filter">
+							{{ form_label(form.tags, 'pages.document.list.filters.tags.label') }}
+							<div class="form-row__checkboxes">
+								{{ form_widget(form.tags) }}
+							</div>
+						</div>
+					{% endif %}
 					<div class="form-row form-row__submit">
 						{{ form_widget(form.submit, {'label': 'pages.document.list.search'}) }}
 					</div>

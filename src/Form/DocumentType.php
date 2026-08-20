@@ -4,8 +4,11 @@ namespace App\Form;
 
 use App\Entity\Document;
 use App\Entity\DocumentFolder;
+use App\Entity\DocumentTag;
+use App\Repository\DocumentTagRepository;
 use App\Service\FileManager;
 use App\Service\FileMimeManager;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
@@ -76,6 +79,19 @@ class DocumentType extends AbstractType {
 				->add( 'description', TextareaType::class, [
 						'required' => FALSE,
 						'attr'     => [ 'maxlength' => 500, 'rows' => 3 ],
+				] )
+				->add( 'tags', EntityType::class, [
+						// Une liste fermée, tenue par les administrateurs : on
+						// choisit dedans, on n'y ajoute pas au passage. (#26)
+						'class'         => DocumentTag::class,
+						'required'      => FALSE,
+						'expanded'      => TRUE,
+						'multiple'      => TRUE,
+						'choice_label'  => 'name',
+						'query_builder' => function ( DocumentTagRepository $repository ) {
+							return $repository->createQueryBuilder( 't' )
+											  ->orderBy( 't.name', 'ASC' );
+						},
 				] )
 				->add( 'submit', SubmitType::class );
 	}

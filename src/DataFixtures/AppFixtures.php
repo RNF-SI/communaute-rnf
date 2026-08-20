@@ -9,6 +9,7 @@ use App\Entity\Discussion;
 use App\Entity\DiscussionMessage;
 use App\Entity\Document;
 use App\Entity\DocumentFolder;
+use App\Entity\DocumentTag;
 use App\Entity\LogEvent;
 use App\Entity\Page;
 use App\Entity\Skill;
@@ -145,6 +146,26 @@ class AppFixtures extends Fixture {
 			$manager->persist( $skill );
 
 			$skills[] = $skill;
+		}
+		$manager->flush();
+
+		/**
+		 * ÉTIQUETTES DES DOCUMENTS
+		 *
+		 * Le vocabulaire est tenu par les administrateurs et vide au départ :
+		 * sans quelques entrées, ni le filtre ni l'écran d'administration ne
+		 * montrent quoi que ce soit. Ceux-là reprennent la demande d'origine.
+		 * (#26)
+		 */
+		$documentTags = [];
+		foreach ( [ 'Grand public', 'Cycle 1', 'Cycle 2', 'Cycle 3', 'Cycle 4', 'Retour d’expérience' ] as $name ) {
+			$tag = new DocumentTag();
+			$tag->setName( $name );
+			$tag->setSlug( $this->slugGenerator->generateSlug( $name, DocumentTag::class, 'slug' ) );
+
+			$manager->persist( $tag );
+
+			$documentTags[] = $tag;
 		}
 		$manager->flush();
 
@@ -413,6 +434,15 @@ class AppFixtures extends Fixture {
 			for ( $j = 0, $n = rand( 3, 10 ); $j < $n; $j++ ) {
 				$document = new Document();
 				$document->setTitle( mb_substr( $faker->sentence( rand( 2, 6 ) ), 0, 100 ) );
+
+				// Une partie des documents est étiquetée : un filtre dont tout
+				// répond ne se voit pas plus qu'un filtre dont rien ne répond.
+				// (#26)
+				shuffle( $documentTags );
+				for ( $k = 0, $t = rand( 0, 2 ); $k < $t; $k++ ) {
+					$document->addTag( $documentTags[ $k ] );
+				}
+
 				$document->setSlug( $this->slugGenerator->generateSlug( $document->getTitle(), Document::class, 'slug' ) );
 				$document->setUsergroup( $group );
 				$document->setUser( $members[ array_rand( $members ) ] );

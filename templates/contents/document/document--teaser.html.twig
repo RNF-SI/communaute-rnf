@@ -16,6 +16,14 @@
 			{% endif %}
 		</div>
 
+		{% if document.tags is not empty %}
+			<ul class="tags document--tags">
+				{% for tag in document.tags %}
+					<li class="tag">{{ tag.name }}</li>
+				{% endfor %}
+			</ul>
+		{% endif %}
+
 		<div class="document--date">
 			<span>{{ 'pages.document.view.date'|trans|format(document.createdAt|localizeddate('short', 'none', app.request.locale)) }}</span>
 		</div>

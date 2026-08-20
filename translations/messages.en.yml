@@ -181,6 +181,9 @@ forms:
             label: "Description"
             hint: "A few words about what the document contains, to help others find it. Optional."
             placeholder: "For instance: minutes of the March 2026 grazing workshop…"
+        tags:
+            label: "Tags"
+            hint: "Pick from the list kept by the administrators. A document may carry several."
 
 pages:
     user:
@@ -438,6 +441,8 @@ pages:
                 title: "Filters"
                 filetype:
                     label: "Document type"
+                tags:
+                    label: "Tag"
             query:
                 placeholder: "Find a document by name…"
             search: "Filter"
@@ -586,6 +591,10 @@ messages:
         document_created: "The document has been added"
         document_updated: "The document has been updated"
         document_deleted: "The document has been deleted"
+        tag_created: "The tag has been added"
+        tag_deleted: "The tag has been removed, and with it the classification of the documents carrying it"
+        tag_exists: "This tag already exists"
+        tag_empty: "The tag name cannot be empty"
 
 logevents:
     user_register: "%1$s has signed up"
