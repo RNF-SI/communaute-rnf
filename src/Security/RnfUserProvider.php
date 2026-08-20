@@ -87,10 +87,31 @@ class RnfUserProvider implements UserProviderInterface
         return $user;
     }
 
+    /**
+     * Appelée à chaque requête, pour recharger le compte porté par la session.
+     *
+     * `loadUserByUsername` ne sait lire que la session SSO. Une connexion par
+     * mot de passe n'en crée pas : sans le repli ci-dessous, elle authentifie
+     * une fois puis lève UsernameNotFoundException à la requête suivante, et
+     * la personne est éjectée sans avoir rien vu.
+     *
+     * Rien ne change pour le SSO : tant que sa session est là, c'est elle qui
+     * fait autorité et le compte est resynchronisé comme avant.
+     */
     public function refreshUser(UserInterface $user)
     {
         if (!$user instanceof User) {
             throw new UnsupportedUserException(sprintf('Instances of "%s" are not supported.', get_class($user)));
+        }
+
+        if (!$this->rnfAuthService->isAuthenticated()) {
+            $fresh = $this->entityManager->getRepository(User::class)->find($user->getId());
+
+            if (!$fresh) {
+                throw new UsernameNotFoundException('The account no longer exists');
+            }
+
+            return $fresh;
         }
 
         return $this->loadUserByUsername($user->getEmail());
