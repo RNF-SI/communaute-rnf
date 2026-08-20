@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Discussion;
 use App\Entity\User;
+use App\Entity\Usergroup;
 use App\Entity\UsergroupMembership;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query\Expr\Join;
@@ -55,6 +56,35 @@ class DiscussionRepository extends ServiceEntityRepository {
 	// /**
 	//  * @return Discussion[] Returns an array of Discussion objects
 	//  */
+	/**
+	 * Les discussions du groupe dont un message renvoie vers ce document.
+	 *
+	 * C'est ce qui referme la boucle entre les documents et le reste : depuis
+	 * un document, on retrouve ce qui en a été dit. Le lien est cherché dans
+	 * le texte des messages, parce que c'est ainsi qu'il a été écrit — aucune
+	 * table de liaison à tenir à jour, et un lien collé à la main compte
+	 * autant qu'un lien inséré par l'éditeur. (#32)
+	 *
+	 * @param \App\Entity\Usergroup $group
+	 * @param int                   $documentId
+	 *
+	 * @return Discussion[]
+	 */
+	public function findMentioningDocument ( Usergroup $group, $documentId ) {
+		return $this->createQueryBuilder( 'd' )
+					->innerJoin( 'd.messages', 'm' )
+					->andWhere( 'd.usergroup = :group' )
+					->andWhere( 'd.archivedAt IS NULL' )
+					->andWhere( 'm.deletedAt IS NULL' )
+					->andWhere( 'm.body LIKE :link' )
+					->setParameter( 'group', $group )
+					->setParameter( 'link', '%/documents/' . (int) $documentId . '%' )
+					->groupBy( 'd.id' )
+					->orderBy( 'd.activeAt', 'DESC' )
+					->getQuery()
+					->getResult();
+	}
+
 	/*
 	public function findByExampleField($value)
 	{

@@ -1,9 +1,11 @@
 {% set classes = ['document', 'document__teaser'] %}
 <div class="{{ classes|join(' ') }}" data-type="{{ document.file ? (document.file.type|default('')|escape('html_attr')) : '' }}">
+	{# Le titre mène à la fiche du document, pas au fichier : c'est là qu'on
+	   voit ce qu'il est, ce qui en a été dit, et qu'on peut y renvoyer
+	   quelqu'un. Le téléchargement reste à un clic, à côté. (#32) #}
 	<a class="document-infos" data-type="{{ document.file ? document.file.type|default('') : '' }}"
-	   href="{{ path('group_document_get', {'groupSlug': document.usergroup.slug, 'documentId': document.id}) }}"
-	   title="{{ document.title|escape('html_attr') }}"
-	   target="_blank">
+	   href="{{ path('group_document_index', {'groupSlug': document.usergroup.slug, 'documentId': document.id}) }}"
+	   title="{{ document.title|escape('html_attr') }}">
 
 		<div class="document--icon">
 			<span>{{ document.title }}</span>
@@ -28,6 +30,13 @@
 			<span>{{ 'pages.document.view.date'|trans|format(document.createdAt|localizeddate('short', 'none', app.request.locale)) }}</span>
 		</div>
 	</a>
+
+	{% if document.file %}
+		<a class="document--download"
+		   href="{{ path('group_document_get', {'groupSlug': document.usergroup.slug, 'documentId': document.id}) }}"
+		   title="{{ 'pages.document.view.download'|trans|escape('html_attr') }}"
+		   target="_blank">{{ 'pages.document.view.download'|trans }}</a>
+	{% endif %}
 
 	{% if is_granted(constant('App\\Security\\GroupDocumentVoter::EDIT'), document) %}
 		<div class="in-list-admin-panel">

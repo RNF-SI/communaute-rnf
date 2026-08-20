@@ -2,11 +2,13 @@
 
 namespace App\Controller;
 
+use App\Entity\Discussion;
 use App\Entity\Document;
 use App\Entity\DocumentFolder;
 use App\Entity\DocumentTag;
 use App\Entity\File;
 use App\Entity\LogEvent;
+use App\Entity\Page;
 use App\Entity\Usergroup;
 use App\Form\DocumentType;
 use App\Security\GroupDocumentVoter;
@@ -454,6 +456,73 @@ class GroupDocumentsController extends AbstractController {
 				'group'    => $group,
 				'form'     => $form->createView(),
 				'document' => $document,
+		] );
+	}
+
+	/**
+	 * La fiche d'un document. (#32)
+	 *
+	 * Il n'y en avait pas : un document n'était qu'un téléchargement. On ne
+	 * pouvait donc ni lui envoyer quelqu'un, ni revenir dessus, ni voir ce
+	 * qui en avait été dit — « les documents sont bruts ». Cette page lui
+	 * donne une adresse, montre ce qu'il est, et rattache les discussions et
+	 * les pages qui y renvoient.
+	 *
+	 * Déclarée après « /new » et bornée aux nombres, pour qu'aucune des deux
+	 * adresses ne mange l'autre.
+	 *
+	 * @Route(
+	 *     "/groups/{groupSlug}/documents/{documentId}",
+	 *     name="group_document_index",
+	 *     methods={"GET"},
+	 *     requirements={"documentId"="\d+"}
+	 * )
+	 *
+	 * @param                                      $groupSlug
+	 * @param                                      $documentId
+	 * @param \Doctrine\ORM\EntityManagerInterface $manager
+	 * @param \App\Service\FileManager             $fileManager
+	 *
+	 * @return \Symfony\Component\HttpFoundation\Response
+	 */
+	public function documentIndex (
+			$groupSlug,
+			$documentId,
+			EntityManagerInterface $manager,
+			FileManager $fileManager
+	) {
+		/**
+		 * @var \App\Entity\Usergroup $group
+		 */
+		$group = $manager->getRepository( Usergroup::class )
+						 ->findOneBy( [ 'slug' => $groupSlug ] );
+
+		if ( !$group ) {
+			throw $this->createNotFoundException( 'The group does not exist' );
+		}
+
+		/**
+		 * @var \App\Entity\Document $document
+		 */
+		$document = $manager->getRepository( Document::class )
+							->findOneBy( [ 'id' => $documentId, 'usergroup' => $group ] );
+
+		if ( !$document ) {
+			throw $this->createNotFoundException( 'The document does not exist' );
+		}
+
+		$this->denyAccessUnlessGranted( GroupDocumentVoter::READ, $document );
+
+		$file = $document->getFile();
+
+		return $this->render( 'pages/document/document-index.html.twig', [
+				'group'       => $group,
+				'document'    => $document,
+				'size'        => $file && $file->getSize() ? $fileManager->formatSize( $file->getSize() ) : NULL,
+				'discussions' => $manager->getRepository( Discussion::class )
+										 ->findMentioningDocument( $group, $document->getId() ),
+				'pages'       => $manager->getRepository( Page::class )
+										 ->findMentioningDocument( $group, $document->getId() ),
 		] );
 	}
 

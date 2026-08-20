@@ -378,6 +378,7 @@ pages:
             pages_index: "Index"
 
     discussion:
+        about_document: "About: %title%"
         list:
             title: "Discussions"
             rights: "Discussions are open to every member of the group. Everyone edits or removes their own messages; animators may remove a message or a whole topic."
@@ -463,6 +464,17 @@ pages:
             button: "Save changes"
         view:
             date: "On %s"
+            download: "Download"
+            folder: "Folder"
+            author: "Added by"
+            added: "Added on"
+            size: "Size"
+            no_file: "No file is attached to this document."
+            talk:
+                title: "What was said about it"
+                pages: "Pages linking to it"
+                empty: "Nobody has talked about it in this group yet."
+                ask: "Start a discussion about it"
 
     member:
         list:

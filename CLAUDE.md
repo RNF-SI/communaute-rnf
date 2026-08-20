@@ -118,6 +118,16 @@ filters on it. Free-form tags were deliberately rejected: in a network this
 size they split into synonyms within months. A folder says where a document is
 filed, a tag says what it is.
 
+### Document sheet (#32)
+A document has its own page, `group_document_index`
+(`/groups/{slug}/documents/{id}`): description, tags, folder, who added it,
+download, and **what was said about it** — the discussions and pages whose
+body links to that address. Those back-links are found by matching the URL in
+the text (`findMentioningDocument` on the discussion and page repositories),
+so there is no join table to keep in step and a link pasted by hand counts as
+much as one inserted by the editor. From the sheet, « En discuter » opens a
+pre-filled discussion carrying the link back.
+
 ### Guided tour (#39)
 `GuidedTour` declares the ordered steps; their wording lives in
 `pages.tour.steps.*` of the translation files, so a formulation changes without

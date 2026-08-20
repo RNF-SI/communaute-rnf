@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Discussion;
+use App\Entity\Document;
 use App\Entity\DiscussionMessage;
 use App\Entity\File;
 use App\Entity\LogEvent;
@@ -13,6 +14,7 @@ use App\Form\DiscussionMessageType;
 use App\Form\DiscussionTitleType;
 use App\Form\DiscussionType;
 use App\Security\GroupDiscussionVoter;
+use App\Security\GroupDocumentVoter;
 use App\Security\GroupVoter;
 use App\Security\UserVoter;
 use App\Service\DiscussionSender;
@@ -28,6 +30,7 @@ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class GroupDiscussionsController extends AbstractController {
@@ -88,7 +91,8 @@ class GroupDiscussionsController extends AbstractController {
 			FileManager $fileManager,
 			UrlGeneratorInterface $router,
 			DiscussionSender $sender,
-			NotificationSender $notificationSender
+			NotificationSender $notificationSender,
+			TranslatorInterface $translator
 	) {
 		/**
 		 * @var \App\Entity\Usergroup $group
@@ -110,6 +114,37 @@ class GroupDiscussionsController extends AbstractController {
 
 		$discussion = new Discussion();
 		$form       = $this->createForm( DiscussionType::class, $discussion );
+
+		// « En discuter » depuis la fiche d'un document : le sujet arrive
+		// prérempli, avec le lien vers le document dans le corps. C'est ce
+		// lien qui permettra ensuite de retrouver la discussion depuis le
+		// document. (#32)
+		if ( !$request->isMethod( 'POST' ) && $request->query->has( 'document' ) ) {
+			/**
+			 * @var \App\Entity\Document $document
+			 */
+			$document = $manager->getRepository( Document::class )
+								->findOneBy( [ 'id' => $request->query->get( 'document' ), 'usergroup' => $group ] );
+
+			if ( $document && $this->isGranted( GroupDocumentVoter::READ, $document ) ) {
+				$discussion->setTitle( mb_substr(
+						$translator->trans( 'pages.discussion.about_document', [
+								'%title%' => $document->getTitle(),
+						] ),
+						0,
+						100
+				) );
+
+				$form->get( 'body' )->setData( sprintf(
+						'<p><a href="%s">%s</a></p><p></p>',
+						htmlspecialchars( $router->generate( 'group_document_index', [
+								'groupSlug'  => $group->getSlug(),
+								'documentId' => $document->getId(),
+						] ), ENT_QUOTES ),
+						htmlspecialchars( (string) $document->getTitle(), ENT_QUOTES )
+				) );
+			}
+		}
 
 		$form->handleRequest( $request );
 

@@ -508,6 +508,7 @@ pages:
             pages_index: "Index"
 
     discussion:
+        about_document: "À propos de : %title%"
         list:
             title: "Listes de discussion"
             rights: "Les discussions sont ouvertes à tous les membres du groupe. Chacun modifie ou retire ses propres messages ; les animateurs peuvent retirer un message ou un sujet entier."
@@ -594,6 +595,17 @@ pages:
             button: "Enregistrer les modifications"
         view:
             date: "Le %s"
+            download: "Télécharger"
+            folder: "Dossier"
+            author: "Déposé par"
+            added: "Déposé le"
+            size: "Taille"
+            no_file: "Aucun fichier n’est attaché à ce document."
+            talk:
+                title: "Ce qui en a été dit"
+                pages: "Pages qui y renvoient"
+                empty: "Personne n’en a encore parlé dans ce groupe."
+                ask: "En discuter"
 
     member:
         list:

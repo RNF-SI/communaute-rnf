@@ -881,5 +881,33 @@ class AppFixtures extends Fixture {
 		$manager->persist( $document );
 
 		$manager->flush();
+
+		// Une page et un message qui renvoient vers un document : sans eux, la
+		// fiche du document affiche « personne n'en a encore parlé » et on ne
+		// voit pas ce que la navigation apporte. Le lien ne peut être écrit
+		// qu'ici, une fois le document enregistré et son identifiant connu.
+		// (#32)
+		$lien = sprintf( '/groups/%s/documents/%d', $group->getSlug(), $classe->getId() );
+
+		$page->setBody( sprintf(
+				'<p>%s</p><p>Le détail se trouve dans <a href="%s">%s</a>.</p>',
+				$faker->sentence( 12 ),
+				$lien,
+				$classe->getTitle()
+		) );
+
+		$renvoi = new DiscussionMessage();
+		$renvoi->setDiscussion( $discussion );
+		$renvoi->setAuthor( $member );
+		$renvoi->setBody( sprintf(
+				'<p>J’ai relu <a href="%s">%s</a>, deux remarques.</p>',
+				$lien,
+				$classe->getTitle()
+		) );
+		$renvoi->setCreatedAt( new \DateTime( '-30 minutes' ) );
+		$manager->persist( $renvoi );
+		$discussion->addMessage( $renvoi );
+
+		$manager->flush();
 	}
 }

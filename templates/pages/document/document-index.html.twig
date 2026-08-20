@@ -1,0 +1,127 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ document.title }} - {{ group.name }} | {{ plateform.name }}{% endblock %}
+
+{% block main %}
+	<section class="main main__document-index">
+		<div class="main--content content-container">
+			{% include 'components/app-flashes.html.twig' %}
+
+			<div class="panel">
+				<h1 class="h1">{{ document.title }}</h1>
+
+				<div class="panel--edit">
+					{% if document.file %}
+						<a class="cta" href="{{ path('group_document_get', {'groupSlug': group.slug, 'documentId': document.id}) }}" target="_blank">{{ 'pages.document.view.download'|trans }}</a>
+					{% endif %}
+					{% if is_granted(constant('App\\Security\\GroupDocumentVoter::EDIT'), document) %}
+						<a class="cta__inverted" href="{{ path('group_document_edit', {'groupSlug': group.slug, 'documentId': document.id}) }}">{{ 'pages.document.document_edit.link'|trans }}</a>
+					{% endif %}
+				</div>
+			</div>
+
+			{% include 'components/breadcrumb.html.twig' with {'items':[
+				{
+					label: 'pages.group.groups.title'|trans,
+					href: path('groups_index')
+				},
+				{
+					label: group.name,
+					href: path('group_index', {'groupSlug':group.slug})
+				},
+				{
+					label: 'pages.group.documents.title'|trans,
+					href: path('group_documents_index', {'groupSlug':group.slug})
+				},
+				{
+					label: document.title,
+				}
+			]} %}
+
+			<div class="thin">
+				<div class="document-sheet">
+					{% if document.description is not empty %}
+						<p class="document-sheet--description">{{ document.description|nl2br }}</p>
+					{% endif %}
+
+					{% if document.tags is not empty %}
+						<ul class="tags document-sheet--tags">
+							{% for tag in document.tags %}
+								<li class="tag">
+									<a href="{{ path('group_documents_index', {'groupSlug': group.slug, 'form': {'tags': [tag.id]}}) }}">{{ tag.name }}</a>
+								</li>
+							{% endfor %}
+						</ul>
+					{% endif %}
+
+					<dl class="document-sheet--facts">
+						{% if document.folder %}
+							<dt>{{ 'pages.document.view.folder'|trans }}</dt>
+							<dd>{{ document.folder.path }}</dd>
+						{% endif %}
+
+						{% if document.user %}
+							<dt>{{ 'pages.document.view.author'|trans }}</dt>
+							<dd><a href="{{ path('member', {'user_id': document.user.id}) }}">{{ document.user.name }}</a></dd>
+						{% endif %}
+
+						<dt>{{ 'pages.document.view.added'|trans }}</dt>
+						<dd>{{ document.createdAt|localizeddate('long', 'none', app.request.locale) }}</dd>
+
+						{% if size %}
+							<dt>{{ 'pages.document.view.size'|trans }}</dt>
+							<dd>{{ size }}</dd>
+						{% endif %}
+					</dl>
+
+					{% if document.file is empty %}
+						<p class="hint">{{ 'pages.document.view.no_file'|trans }}</p>
+					{% endif %}
+				</div>
+
+				{# Ce qui a été dit de ce document, et les pages qui s'y réfèrent :
+				   c'est la moitié manquante de la navigation, celle qui va du
+				   document vers le reste. (#32) #}
+				<section class="document-sheet--talk">
+					<h2 class="h3">{{ 'pages.document.view.talk.title'|trans }}</h2>
+
+					{% if discussions is not empty %}
+						<ul class="documents-list">
+							{% for discussion in discussions %}
+								<li>
+									<a class="document-infos" href="{{ path('group_discussion_index', {'groupSlug': group.slug, 'discussionUuid': discussion.uuid}) }}">
+										<div class="document--title"><span>{{ discussion.title }}</span></div>
+									</a>
+								</li>
+							{% endfor %}
+						</ul>
+					{% endif %}
+
+					{% if pages is not empty %}
+						<h3 class="h4">{{ 'pages.document.view.talk.pages'|trans }}</h3>
+						<ul class="documents-list">
+							{% for page in pages %}
+								<li>
+									<a class="document-infos" href="{{ path('group_page_index', {'groupSlug': group.slug, 'pageSlug': page.slug}) }}">
+										<div class="document--title"><span>{{ page.title }}</span></div>
+									</a>
+								</li>
+							{% endfor %}
+						</ul>
+					{% endif %}
+
+					{% if discussions is empty and pages is empty %}
+						<p class="hint">{{ 'pages.document.view.talk.empty'|trans }}</p>
+					{% endif %}
+
+					{% if is_granted(constant('App\\Security\\GroupDiscussionVoter::CREATE'), group) %}
+						<p>
+							<a class="cta__inverted document-sheet--ask"
+							   href="{{ path('group_discussion_new', {'groupSlug': group.slug, 'document': document.id}) }}">{{ 'pages.document.view.talk.ask'|trans }}</a>
+						</p>
+					{% endif %}
+				</section>
+			</div>
+		</div>
+	</section>
+{% endblock %}

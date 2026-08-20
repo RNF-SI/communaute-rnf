@@ -225,6 +225,36 @@ class SeedDataTest extends KernelTestCase {
 	}
 
 	/**************************************************
+	 * #32 — LA NAVIGATION ENTRE DOCUMENTS ET PAGES
+	 **************************************************/
+
+	public function testSomethingLinksToADocument () {
+		$documents = $this->manager->getRepository( Document::class )
+								   ->findBy( [ 'usergroup' => $this->referenceGroup() ] );
+
+		if ( empty( $documents ) ) {
+			$this->markTestSkipped( 'Fixtures not loaded: reference documents' );
+		}
+
+		$linked = FALSE;
+
+		foreach ( $documents as $document ) {
+			$fromPages = $this->manager->getRepository( Page::class )
+									   ->findMentioningDocument( $this->referenceGroup(), $document->getId() );
+
+			$fromDiscussions = $this->manager->getRepository( Discussion::class )
+											 ->findMentioningDocument( $this->referenceGroup(), $document->getId() );
+
+			$linked = $linked || !empty( $fromPages ) || !empty( $fromDiscussions );
+		}
+
+		$this->assertTrue(
+				$linked,
+				'Assert a document sheet shows what was said about it, rather than « nobody talked about it »'
+		);
+	}
+
+	/**************************************************
 	 * #39 — LA VISITE GUIDÉE
 	 **************************************************/
 
