@@ -194,6 +194,8 @@ pages:
             button: "Log in"
             link: "Log in"
             with_rnf: "Sign in with the RNF account"
+            with_password: "Sign in with a password"
+            test_accounts: "The test accounts do not exist in GeoNature: entering them above will always fail."
             form_only_here: "This environment allows signing in with a password, for the test accounts. On the live platform, only the RNF account signs you in."
         register:
             title: "Sign up"

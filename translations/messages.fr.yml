@@ -307,6 +307,8 @@ pages:
             button: "Se connecter"
             link: "Connexion"
             with_rnf: "Se connecter avec le compte RNF"
+            with_password: "Se connecter par mot de passe"
+            test_accounts: "Les comptes des données de test n’existent pas dans GeoNature : les saisir ci-dessus donnera toujours une erreur."
             form_only_here: "Cet environnement autorise la connexion par mot de passe, pour les comptes des données de test. Sur la plateforme en ligne, seul le compte RNF connecte."
         register:
             title: "Créer votre compte"

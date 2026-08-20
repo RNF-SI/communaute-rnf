@@ -56,6 +56,16 @@
 						Cette authentification est gérée par la plateforme centrale RNF
 					</small>
 				</div>
+
+				{# Un identifiant de compte de test saisi ci-dessus part chez
+				   GeoNature, qui ne le connaît pas et répond 401. Là où le
+				   formulaire de mot de passe est ouvert, il faut le dire. (#39) #}
+				{% if form_login_enabled|default(false) %}
+					<div class="text-center mt-4 login-test-accounts">
+						<p class="hint">{{ 'pages.user.login.test_accounts'|trans }}</p>
+						<a class="cta__inverted" href="{{ path('user_login') }}">{{ 'pages.user.login.with_password'|trans }}</a>
+					</div>
+				{% endif %}
 			</div>
 		</div>
 	</section>

@@ -6,6 +6,7 @@ use App\Service\RnfAuthService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use App\Security\LoginFormAuthenticator;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
@@ -23,7 +24,7 @@ class RnfAuthController extends AbstractController
     /**
      * @Route("/auth/login", name="rnf_auth_login", methods={"GET", "POST"})
      */
-    public function login(AuthenticationUtils $authenticationUtils): Response
+    public function login(AuthenticationUtils $authenticationUtils, LoginFormAuthenticator $formLogin): Response
     {
         // If user is already authenticated through Symfony security, redirect
         if ($this->getUser()) {
@@ -40,6 +41,10 @@ class RnfAuthController extends AbstractController
             'last_username' => $lastUsername,
             'error' => $error,
             'inscription_url' => $this->rnfAuthService->getInscriptionUrl(),
+            // Là où la connexion par mot de passe est ouverte, cette page doit
+            // le dire : les comptes des données de test n'existent pas dans
+            // GeoNature, et les saisir ici ne peut que donner un 401.
+            'form_login_enabled' => $formLogin->isEnabled(),
         ]);
     }
 
