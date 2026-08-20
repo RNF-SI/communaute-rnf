@@ -12,14 +12,34 @@ use Doctrine\Bundle\DoctrineBundle\EventSubscriber\EventSubscriberInterface;
 use Doctrine\ORM\Events;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use App\Service\SearchEngineManager;
+use Psr\Log\LoggerInterface;
+use Throwable;
 
 
+/**
+ * Tient les index de recherche à jour au fil des enregistrements.
+ *
+ * **Un index est un objet dérivé** : il se rebâtit en une commande. Le perdre
+ * un instant fait manquer un résultat de recherche ; empêcher un
+ * enregistrement, c'est bloquer la plateforme. Ce qui se passe ici ne doit
+ * donc jamais faire échouer ce qui l'a déclenché.
+ *
+ * Ce n'est pas théorique : les fichiers SQLite des index appartiennent à qui a
+ * lancé la dernière réindexation à la main. S'il n'est pas le serveur web,
+ * chaque écriture lève « attempt to write a readonly database » — et comme
+ * créer ou mettre à jour un compte déclenche l'indexation, **c'est la
+ * connexion qui tombe**, au pire endroit possible.
+ */
 class SearchEngineIndexSubscriber implements EventSubscriberInterface
 {
+	private $searchEngineManager;
 
-	public function __construct(SearchEngineManager $searchEngineManager)
+	private $logger;
+
+	public function __construct(SearchEngineManager $searchEngineManager, LoggerInterface $logger)
 	{
 		$this->searchEngineManager = $searchEngineManager;
+		$this->logger              = $logger;
 	}
 
 
@@ -50,6 +70,27 @@ class SearchEngineIndexSubscriber implements EventSubscriberInterface
 
 
 	private function processIndex(string $action, LifecycleEventArgs $args): void
+	{
+		try {
+			$this->index($action, $args);
+		}
+		catch (Throwable $error) {
+			// Droits sur les fichiers d'index, disque plein, index absent :
+			// autant de raisons de ne pas indexer, aucune de refuser
+			// l'enregistrement. `search:reindex:all` rattrape ce qui a été
+			// manqué.
+			$this->logger->error('Search index not updated', [
+				'action' => $action,
+				'entity' => get_class($args->getObject()),
+				'error'  => $error->getMessage(),
+			]);
+		}
+	}
+
+	/**
+	 * @throws \Throwable ce que la mise à jour de l'index a rencontré
+	 */
+	private function index(string $action, LifecycleEventArgs $args): void
 	{
 		$entity = $args->getObject();
 

@@ -256,10 +256,17 @@ production si on ne s'y prépare pas.
 | `chmod: Operation not permitted` | Propriété mêlée : certains fichiers appartiennent au serveur web (journaux SQLite `-wal`/`-shm`, cache Symfony), et on ne peut modifier que ce qu'on possède. | `sudo chown -R`, puis ACL |
 | La panne revient après chaque `search:reindex:all` | `chmod g+w` ne vaut que pour l'existant ; le bit `setgid` fait hériter le groupe mais **pas** le droit d'écriture. | ACL **par défaut** (`setfacl -d`) |
 
-C'est le point le plus coûteux du déploiement, et il se manifeste au pire endroit
-possible : **la première connexion d'un membre**. Une réindexation lancée un jour
-de maintenance suffirait à bloquer toutes les nouvelles inscriptions sans que
-rien d'autre ne semble cassé.
+C'est le point le plus coûteux du déploiement, et il se manifestait au pire
+endroit possible : **la première connexion d'un membre**. Une réindexation
+lancée un jour de maintenance suffisait à bloquer toutes les nouvelles
+inscriptions sans que rien d'autre ne semble cassé.
+
+**Ce n'est plus bloquant.** Un index est un objet dérivé : depuis la deuxième
+occurrence de cette panne, un échec d'indexation est journalisé et
+l'enregistrement se poursuit. La recherche manque alors ce qui n'a pas été
+indexé — `search:reindex:all` le rattrape — mais personne n'est plus empêché
+de se connecter. Les ACL restent la bonne façon de faire ; elles ne sont
+simplement plus un préalable à ce que la plateforme fonctionne.
 
 ### Rattacher un serveur existant au dépôt
 
