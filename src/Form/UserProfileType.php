@@ -8,6 +8,7 @@ use App\Repository\SkillRepository;
 use App\Service\FileManager;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\CountryType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
@@ -83,6 +84,13 @@ class UserProfileType extends AbstractType {
 						'required' => FALSE,
 				] )
 				->add( 'longitude', HiddenType::class, [
+						'required' => FALSE,
+				] )
+				->add( 'phone', TextType::class, [
+						'required' => FALSE,
+						'attr'     => [ 'maxlength' => 30 ],
+				] )
+				->add( 'emailVisible', CheckboxType::class, [
 						'required' => FALSE,
 				] )
 				->add( 'presentation', TextType::class, [

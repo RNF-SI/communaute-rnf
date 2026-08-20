@@ -102,6 +102,23 @@ class User implements UserInterface, JsonSerializable {
 	 */
 	private $profileVisibility;
 
+	/**
+	 * Le téléphone direct que le membre veut bien publier dans l'annuaire.
+	 * Vide par défaut : le renseigner est le consentement. (#27)
+	 *
+	 * @ORM\Column(type="string", length=30, nullable=true)
+	 */
+	private $phone;
+
+	/**
+	 * L'adresse est le moyen de contact du réseau, elle est donc montrée par
+	 * défaut aux membres connectés. Qui ne le souhaite pas la retire de sa
+	 * fiche. (#27)
+	 *
+	 * @ORM\Column(type="boolean", options={"default": true})
+	 */
+	private $emailVisible = TRUE;
+
 
 	/**
 	 * @ORM\ManyToMany(targetEntity="App\Entity\Skill")
@@ -334,6 +351,33 @@ class User implements UserInterface, JsonSerializable {
 
 	public function setPresentation ( ?string $presentation ): self {
 		$this->presentation = mb_substr( trim( $presentation ?? '' ), 0, 32 );
+
+		return $this;
+	}
+
+	public function getPhone (): ?string {
+		return $this->phone;
+	}
+
+	public function setPhone ( ?string $phone ): self {
+		$phone = trim( $phone ?? '' );
+
+		$this->phone = ( $phone === '' ) ? NULL : mb_substr( $phone, 0, 30 );
+
+		return $this;
+	}
+
+	/**
+	 * Les comptes créés avant l'ajout de la colonne valent NULL en base tant
+	 * qu'ils n'ont pas été réenregistrés : les traiter comme visibles, ce
+	 * qu'ils étaient jusque là.
+	 */
+	public function isEmailVisible (): bool {
+		return $this->emailVisible !== FALSE;
+	}
+
+	public function setEmailVisible ( ?bool $emailVisible ): self {
+		$this->emailVisible = (bool) $emailVisible;
 
 		return $this;
 	}

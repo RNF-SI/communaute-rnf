@@ -39,6 +39,13 @@ forms:
         country:
             label: "Country"
             placeholder: "Enter your country…"
+        phone:
+            label: "Phone number"
+            hint: "Optional. If filled in, it will be visible to logged-in members on your directory profile."
+            placeholder: "Example: +33 1 23 45 67 89"
+        email_visible:
+            label: "Show my email address in the directory"
+            hint: "Unchecked, your address (%s) is still known to the platform but no longer appears on your profile, and other members can no longer write to you from the directory."
         presentation:
             label: "Introduce yourself in a couple words"
             hint: "Limited to 32 characters (will be displayed under your name)"
@@ -216,6 +223,7 @@ pages:
             contact: "Send an email"
             email_copy: "Copy the address"
             email_copied: "Address copied!"
+            no_contact: "This member has not published any contact details."
             link: "My profile"
         is_admin: "Administrator"
         my_groups:

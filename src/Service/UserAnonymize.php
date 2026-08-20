@@ -56,6 +56,8 @@ class UserAnonymize {
 		$user->setZipCode(null);
 		$user->setCity(null);
 		$user->setCountry(null);
+		$user->setPhone(null);
+		$user->setEmailVisible(false);
 		$user->setPresentation(null);
 		$user->setBio(null);
 		$user->setProfileVisibility(null);

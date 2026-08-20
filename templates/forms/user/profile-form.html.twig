@@ -52,6 +52,18 @@
         <div class="form_errors">{{ form_errors(form.country) }}</div>
     </div>
     <div class="form-row form-row__field">
+        {{ form_label(form.phone, 'forms.user.phone.label') }}
+        <div class="hint">{{ 'forms.user.phone.hint'|trans }}</div>
+        {{ form_widget(form.phone, {'attr': {'placeholder': 'forms.user.phone.placeholder'}}) }}
+        <div class="form_errors">{{ form_errors(form.phone) }}</div>
+    </div>
+    <div class="form-row form-row__checkbox">
+        {{ form_widget(form.emailVisible) }}
+        {{ form_label(form.emailVisible, 'forms.user.email_visible.label') }}
+        <div class="hint">{{ 'forms.user.email_visible.hint'|trans|format(user.email) }}</div>
+        <div class="form_errors">{{ form_errors(form.emailVisible) }}</div>
+    </div>
+    <div class="form-row form-row__field">
         {{ form_label(form.presentation, 'forms.user.presentation.label') }}
         <div class="hint">{{ 'forms.user.presentation.hint'|trans }}</div>
         {{ form_widget(form.presentation, {'attr': {'placeholder': 'forms.user.presentation.placeholder'}}) }}

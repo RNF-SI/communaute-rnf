@@ -21,16 +21,32 @@
 					<a class="cta" href="{{ path('user_profile_edit') }}">{{ 'pages.user.profile_edit.link'|trans }}</a>
 				</div>
 			{% else %}
+				{# Chacun décide de ce qu'il publie : l'adresse peut être
+				   retirée de la fiche, le téléphone n'y figure que s'il a
+				   été saisi. (#27) #}
+				{% set showEmail = user.emailVisible or app.user.isAdmin %}
 				<div class="user-contact">
-					<a class="cta" href="mailto:{{ user.email }}">{{ 'pages.user.profile.contact'|trans }}</a>
+					{% if showEmail %}
+						<a class="cta" href="mailto:{{ user.email }}">{{ 'pages.user.profile.contact'|trans }}</a>
 
-					<div class="user--email">
-						<a href="mailto:{{ user.email }}">{{ user.email }}</a>
-						<button type="button"
-								class="user--email-copy"
-								data-copy-value="{{ user.email }}"
-								data-copy-done-label="{{ 'pages.user.profile.email_copied'|trans }}">{{ 'pages.user.profile.email_copy'|trans }}</button>
-					</div>
+						<div class="user--email">
+							<a href="mailto:{{ user.email }}">{{ user.email }}</a>
+							<button type="button"
+									class="user--email-copy"
+									data-copy-value="{{ user.email }}"
+									data-copy-done-label="{{ 'pages.user.profile.email_copied'|trans }}">{{ 'pages.user.profile.email_copy'|trans }}</button>
+						</div>
+					{% endif %}
+
+					{% if user.phone is not empty %}
+						<div class="user--phone">
+							<a href="tel:{{ user.phone|replace({' ': '', '.': '', '-': ''}) }}">{{ user.phone }}</a>
+						</div>
+					{% endif %}
+
+					{% if not showEmail and user.phone is empty %}
+						<div class="hint">{{ 'pages.user.profile.no_contact'|trans }}</div>
+					{% endif %}
 				</div>
 			{% endif %}
 		</div>

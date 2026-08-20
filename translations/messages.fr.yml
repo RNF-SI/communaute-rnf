@@ -39,6 +39,13 @@ forms:
         country:
             label: "Pays"
             placeholder: "Entrez votre pays…"
+        phone:
+            label: "Téléphone"
+            hint: "Facultatif. Renseigné, il sera visible par les membres connectés, dans votre fiche annuaire."
+            placeholder: "Exemple : 01 23 45 67 89"
+        email_visible:
+            label: "Afficher mon adresse e-mail dans l’annuaire"
+            hint: "Décoché, votre adresse (%s) reste connue de la plateforme mais n’apparaît plus sur votre fiche, et les autres membres ne peuvent plus vous écrire depuis l’annuaire."
         presentation:
             label: "Présentez-vous en deux mots"
             hint: "Limité à 32 caractères (sera affiché sous votre nom)"
@@ -321,6 +328,7 @@ pages:
             contact: "Contacter par e-mail"
             email_copy: "Copier l’adresse"
             email_copied: "Adresse copiée !"
+            no_contact: "Ce membre n’a pas publié de coordonnées de contact."
             link: "Mon profil"
         is_admin: "Administrateur"
         my_groups:
