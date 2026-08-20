@@ -124,7 +124,7 @@ en « attention » ce qui la laisse tourner en silence.
 ## 2. Déployer
 
 `clevercloud/post_build.sh` enchaîne migrations, cache, `import:skills` et build
-front. **Cinq migrations** vont s'appliquer :
+front. **Dix migrations** vont s'appliquer :
 
 | Migration | Effet |
 |---|---|
@@ -133,11 +133,36 @@ front. **Cinq migrations** vont s'appliquer :
 | `Version20260819073810` | `edited_at` sur les messages (#19) |
 | `Version20260819075409` | `notifications_settings` sur les comptes (#34) |
 | `Version20260819075543` | table `notifications` (#34) |
+| `Version20260820085500` | `phone` et `email_visible` sur les comptes (#27) |
+| `Version20260820120000` | **retire** `edition_restricted` des pages — colonne jamais écrite (#33) |
+| `Version20260820130000` | `job_title`, `organisation`, `reserves` sur les comptes (#30) |
+| `Version20260820140000` | tables `document_tags` et `documents_tags` (#26) |
+| `Version20260820160000` | `tour_seen_at` sur les comptes (#39) |
 
 Après déploiement, une fois seulement :
 
 ```bash
-php bin/console search:reindex documents   # la description entre dans l'index (#7)
+# L'index des membres change de colonnes : sans ça, la recherche par fonction
+# ne trouve rien tant qu'un profil n'a pas été réenregistré. (#30)
+php bin/console search:reindex:all
+```
+
+### À faire à la main, une fois
+
+- **Créer les étiquettes de documents** dans Administration → Étiquettes (#26).
+  Les fixtures les créent en dev, pas en production. Sans elles, ni le
+  formulaire de dépôt ni le filtre ne proposent quoi que ce soit.
+- **Renseigner `RNF_EXPORT_TOKEN`** si l'on veut que les réserves suivies
+  viennent de GeoNature (#28). Sans jeton, le champ reste saisi à la main.
+
+### Avant de supprimer la colonne `bio`
+
+Elle est retirée du profil et de la fiche annuaire (#30) mais reste en base :
+elle contient du texte que des gens ont écrit. Compter ce qu'elle garde encore
+avant de décider :
+
+```sql
+SELECT COUNT(*) FROM communaute_rnf_users WHERE bio IS NOT NULL AND bio <> '';
 ```
 
 ## 3. Recette
