@@ -18,6 +18,7 @@ use App\Service\EmailSender;
 use App\Service\FileManager;
 use App\Service\HashGenerator;
 use App\Service\UserAnonymize;
+use App\Twig\TourExtension;
 use App\Util\Geocoder;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
@@ -299,6 +300,57 @@ class UserController extends AbstractController
 		$this->addFlash('notice', 'messages.user.emails_stopped');
 
 		return $this->redirectToRoute('user_parameters_edit');
+	}
+
+	/**
+	 * La visite guidée a été vue : elle ne se relancera plus d'elle-même.
+	 *
+	 * Appelée par la visite elle-même, aussi bien quand on la termine que
+	 * quand on la referme — quelqu'un qui la ferme au premier écran a dit ce
+	 * qu'il pensait de la proposition, la relancer à chaque page serait la
+	 * transformer en harcèlement. (#39)
+	 *
+	 * @Route("/user/tour/seen", name="user_tour_seen", methods={"POST"})
+	 *
+	 * @param \Symfony\Component\HttpFoundation\Request $request
+	 * @param \Doctrine\ORM\EntityManagerInterface      $manager
+	 *
+	 * @return \Symfony\Component\HttpFoundation\JsonResponse
+	 */
+	public function userTourSeen ( Request $request, EntityManagerInterface $manager ) {
+		$this->denyAccessUnlessGranted( UserVoter::LOGGED );
+
+		if ( !$this->isCsrfTokenValid( 'guided-tour', $request->request->get( '_token' ) ) ) {
+			throw $this->createAccessDeniedException( 'Invalid token' );
+		}
+
+		/**
+		 * @var User $user
+		 */
+		$user = $this->getUser();
+
+		// Rien à réécrire si elle a déjà été vue : la date qui compte est
+		// celle de la première fois.
+		if ( !$user->hasSeenTour() ) {
+			$user->setTourSeenAt( new DateTime() );
+			$manager->flush();
+		}
+
+		return $this->json( [ 'seen' => TRUE ] );
+	}
+
+	/**
+	 * Rejouer la visite, depuis les paramètres.
+	 *
+	 * @Route("/user/tour", name="user_tour", methods={"GET"})
+	 *
+	 * @return \Symfony\Component\HttpFoundation\RedirectResponse
+	 */
+	public function userTour () {
+		$this->denyAccessUnlessGranted( UserVoter::LOGGED );
+
+		// Sur « mes groupes », là où la visite a de quoi montrer.
+		return $this->redirectToRoute( 'user_groups', [ TourExtension::REPLAY => 1 ] );
 	}
 
 	/**

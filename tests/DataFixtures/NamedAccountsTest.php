@@ -105,6 +105,27 @@ class NamedAccountsTest extends TestCase {
 		} ), 'Assert an untouched profile is seeded, so its rendering can be checked' );
 	}
 
+	public function testTheTwoStatesOfTheGuidedTourAreSeeded () {
+		$seen = 0;
+
+		foreach ( $this->accounts() as $account ) {
+			if ( !empty( $account[ 'tourSeen' ] ) ) {
+				$seen++;
+			}
+		}
+
+		$this->assertGreaterThan(
+				0,
+				$seen,
+				'Assert an account that already watched the tour is seeded (#39)'
+		);
+		$this->assertLessThan(
+				count( $this->accounts() ),
+				$seen,
+				'Assert an account that never watched it is seeded too, so the automatic launch can be tried'
+		);
+	}
+
 	public function testTheJobFieldsStayWithinTheColumnWidths () {
 		$widths = [ 'jobTitle' => 100, 'organisation' => 150, 'reserves' => 255, 'phone' => 30 ];
 

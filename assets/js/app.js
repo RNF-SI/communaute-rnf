@@ -34,6 +34,7 @@ import './ui/input-file-prefill';
 import './ui/see-more';
 import './ui/element-toggle';
 import './ui/wysiwyg';
+import './ui/tour';
 import './ui/documents-folding';
 import './ui/url-to-link';
 import './ui/confirm';

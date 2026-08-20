@@ -56,6 +56,23 @@
 	{% include 'layout/footer.html.twig' %}
 {% endblock %}
 
+{# La visite guidée : rendue seulement quand elle a lieu d'être, c'est-à-dire
+   tant qu'elle n'a pas été vue, ou quand on la redemande. (#39) #}
+{% set tourSteps = guided_tour() %}
+{% if tourSteps is not empty %}
+	<div id="guided-tour"
+		 data-steps="{{ tourSteps|json_encode|escape('html_attr') }}"
+		 data-seen-url="{{ path('user_tour_seen') }}"
+		 data-token="{{ csrf_token('guided-tour') }}"
+		 data-labels="{{ {
+			 'next': 'pages.tour.next'|trans,
+			 'previous': 'pages.tour.previous'|trans,
+			 'close': 'pages.tour.close'|trans,
+			 'end': 'pages.tour.end'|trans,
+			 'progress': 'pages.tour.progress'|trans
+		 }|json_encode|escape('html_attr') }}"></div>
+{% endif %}
+
 {% block javascripts %}
 	{{ encore_entry_script_tags('app') }}
 {% endblock %}

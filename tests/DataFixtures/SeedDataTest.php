@@ -225,6 +225,24 @@ class SeedDataTest extends KernelTestCase {
 	}
 
 	/**************************************************
+	 * #39 — LA VISITE GUIDÉE
+	 **************************************************/
+
+	public function testAnAccountHasAlreadyWatchedTheTour () {
+		$this->assertNotNull(
+				$this->account( 'admin@example.org' )->getTourSeenAt(),
+				'Assert the replay link can be tried without watching the tour first'
+		);
+	}
+
+	public function testAnAccountHasNeverWatchedIt () {
+		$this->assertNull(
+				$this->account( 'membre@example.org' )->getTourSeenAt(),
+				'Assert the automatic launch can be tried by signing in'
+		);
+	}
+
+	/**************************************************
 	 * #34 — LES NOTIFICATIONS
 	 **************************************************/
 

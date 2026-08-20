@@ -1,0 +1,112 @@
+/**************************************************
+* GUIDED TOUR
+**************************************************/
+
+/**
+ * La visite guidée : un voile, une bulle, et l'élément dont elle parle
+ * entouré. (#39)
+ */
+
+.tour-overlay {
+	position:   fixed;
+	inset:      0;
+	z-index:    900;
+
+	background: rgba(0, 0, 0, .45);
+}
+
+.tour-target {
+	position:      relative;
+	z-index:       901;
+
+	outline:       rem(3px) solid $color_action;
+	outline-offset: rem(4px);
+	border-radius: rem(3px);
+	background:    #fff;
+}
+
+.tour-bubble {
+	position:      fixed;
+	z-index:       902;
+	max-width:     rem(420px);
+	width:         calc(100% - #{rem(32px)});
+	padding:       rem(20px) rem(24px);
+
+	background:    #fff;
+	border-radius: rem(6px);
+	box-shadow:    0 rem(6px) rem(24px) rgba(0, 0, 0, .25);
+}
+
+.tour-bubble__center {
+	top:       50%;
+	left:      50%;
+	transform: translate(-50%, -50%);
+}
+
+.tour-bubble--title {
+	margin:      0 rem(24px) rem(8px) 0;
+
+	font-size:   rem(20px);
+	line-height: 1.3;
+}
+
+.tour-bubble--body {
+	margin:      0 0 rem(12px);
+
+	font-size:   rem(15px);
+	line-height: 1.6;
+}
+
+.tour-bubble--link {
+	display:         inline-block;
+	margin-bottom:   rem(12px);
+
+	color:           $color_action;
+	text-decoration: underline;
+}
+
+.tour-bubble--footer {
+	display:     flex;
+	align-items: center;
+	gap:         rem(12px);
+}
+
+.tour-bubble--progress {
+	margin-right: auto;
+
+	font-size:    rem(13px);
+	color:        $color_grey_neutral;
+}
+
+.tour-bubble--previous,
+.tour-bubble--next {
+	padding:       rem(6px) rem(16px);
+
+	border:        1px solid $color_action;
+	border-radius: rem(3px);
+	background:    #fff;
+
+	font-size:     rem(15px);
+	color:         $color_action;
+	cursor:        pointer;
+}
+
+.tour-bubble--next {
+	background: $color_action;
+	color:      #fff;
+}
+
+.tour-bubble--close {
+	position:    absolute;
+	top:         rem(8px);
+	right:       rem(10px);
+	padding:     0 rem(6px);
+
+	border:      none;
+	background:  none;
+
+	font-size:   rem(24px);
+	line-height: 1;
+	color:       $color_grey_neutral;
+	cursor:      pointer;
+}

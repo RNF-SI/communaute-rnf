@@ -118,6 +118,16 @@ filters on it. Free-form tags were deliberately rejected: in a network this
 size they split into synonyms within months. A folder says where a document is
 filed, a tag says what it is.
 
+### Guided tour (#39)
+`GuidedTour` declares the ordered steps; their wording lives in
+`pages.tour.steps.*` of the translation files, so a formulation changes without
+touching code while adding a step does not. A step may name a CSS `target`: the
+tour outlines it and anchors the bubble to it, and falls back to a centred card
+when the element is absent from the current page — no step depends on where the
+tour was started. It launches by itself while `User::$tourSeenAt` is null, and
+afterwards only through the settings link (`?tour=1`). Closing it counts as
+having seen it.
+
 ### Search (TNTSearch)
 Full-text search via `SearchEngineManager`. Indexes are stored under `public/media/cache/indexes/` (`INDEX_DIR` env var). Reindexing is triggered automatically via event subscribers in `src/EventSubscriber/`; rebuild manually with the `search:reindex*` commands.
 

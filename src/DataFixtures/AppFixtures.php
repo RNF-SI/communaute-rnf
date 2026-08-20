@@ -35,6 +35,9 @@ class AppFixtures extends Fixture {
 					'name'      => 'Alice Admin',
 					'siteAdmin' => TRUE,
 					'role'      => 'admin',
+					// Visite déjà vue : elle ne se relancera pas d'elle-même,
+					// seul le lien des paramètres la ramène. (#39)
+					'tourSeen'  => TRUE,
 					// Fiche complète et joignable : le cas le plus courant.
 					'profile'   => [
 							'jobTitle'     => 'Responsable de l’animation du réseau',
@@ -335,6 +338,11 @@ class AppFixtures extends Fixture {
 			$user->setReserves( isset( $profile[ 'reserves' ] ) ? $profile[ 'reserves' ] : NULL );
 			$user->setPhone( isset( $profile[ 'phone' ] ) ? $profile[ 'phone' ] : NULL );
 			$user->setEmailVisible( !isset( $profile[ 'emailVisible' ] ) || $profile[ 'emailVisible' ] );
+
+			// Un compte l'a déjà vue, un autre non : sans les deux, on ne
+			// peut éprouver ni le lancement automatique ni le lien de
+			// rejeu dans les paramètres. (#39)
+			$user->setTourSeenAt( empty( $account[ 'tourSeen' ] ) ? NULL : new \DateTime( '-1 month' ) );
 
 			$manager->persist( $user );
 

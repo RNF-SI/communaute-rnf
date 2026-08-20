@@ -76,6 +76,15 @@
                     </form>
                 </section>
 
+                {# Revoir la visite guidée : elle ne se relance plus d'elle-même
+                   une fois vue, c'est ici qu'on la redemande. (#39) #}
+                <section class="profile-form">
+                    <h2 class="h2">{{ 'pages.tour.replay'|trans }}</h2>
+                    <p>
+                        <a class="cta__inverted tour-replay" href="{{ path('user_tour') }}">{{ 'pages.tour.replay'|trans }}</a>
+                    </p>
+                </section>
+
                 <section class="profile-form">
                     {% include 'forms/user/delete-user-form.html.twig' %}
                 </section>

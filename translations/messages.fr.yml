@@ -633,6 +633,48 @@ pages:
             groups:
                 title: "Groupes"
 
+    tour:
+        next: "Suivant"
+        previous: "Précédent"
+        close: "Fermer la visite"
+        end: "Terminer"
+        progress: "Étape %d sur %d"
+        replay: "Revoir la visite guidée"
+        steps:
+            welcome:
+                title: "Bienvenue sur la Communauté RNF"
+                body: "En quelques écrans, voici ce que la plateforme sait faire et où trouver quoi. Vous pourrez la revoir à tout moment depuis vos paramètres."
+            groups:
+                title: "Tout se passe dans les groupes"
+                body: "Un groupe par commission, par thématique ou par atelier. Vous rejoignez ceux qui correspondent à vos missions ; c’est là que se trouvent les échanges, les documents et les pages qui vous concernent."
+                link: "Voir tous les groupes"
+            tabs:
+                title: "Quatre onglets dans chaque groupe"
+                body: "Discussions pour échanger, Actualités pour annoncer, Documents pour déposer et retrouver des fichiers, Pages pour ce qui doit rester : compte rendu de référence, mode d’emploi, contacts."
+            discussions:
+                title: "Les discussions"
+                body: "Un sujet, puis des réponses. Chaque message part aussi par e-mail aux membres qui suivent le groupe, et vous pouvez répondre directement depuis votre boîte mail. Écrire « @ » suivi d’un nom prévient la personne, même si elle a mis le sujet en sourdine."
+            documents:
+                title: "Les documents"
+                body: "Déposez un fichier, décrivez-le en une phrase, rangez-le dans un dossier et posez-lui une ou plusieurs étiquettes. La description et les étiquettes sont ce qui permettra aux autres de le retrouver dans six mois."
+            rights:
+                title: "Qui peut modifier quoi"
+                body: "Tout membre d’un groupe peut y créer une page, déposer un document, publier une actualité, ouvrir un sujet. Chacun modifie ensuite ce qu’il a écrit ; les animateurs du groupe peuvent modifier ou retirer n’importe quel contenu. Les discussions restent ouvertes à tous."
+            create_group:
+                title: "Créer un groupe"
+                body: "Un besoin qui n’a pas encore son espace ? Vous pouvez créer un groupe vous-même, ouvert à tous ou sur demande d’adhésion."
+                link: "Créer un groupe"
+            notifications:
+                title: "Vos notifications"
+                body: "La plateforme vous signale ce qui vous concerne : nouveaux messages, pages, documents, et les fois où quelqu’un vous a nommé. Tout se retrouve au même endroit."
+                link: "Voir mes notifications"
+            settings:
+                title: "Vous décidez de ce que vous recevez"
+                body: "Groupe par groupe et type de contenu par type de contenu, choisissez ce qui vous est envoyé. Et à quel rythme : un e-mail à chaque message, un résumé quotidien, ou un résumé hebdomadaire le lundi."
+                link: "Régler mes notifications"
+            end:
+                title: "À vous de jouer"
+                body: "C’est tout pour l’essentiel. Cette visite reste accessible depuis vos paramètres si vous voulez la revoir."
     event:
         list:
             title: "Activités"

@@ -128,6 +128,18 @@ class User implements UserInterface, JsonSerializable {
 	private $profileVisibility;
 
 	/**
+	 * Quand la visite guidée a été vue. Tant que c'est vide, elle se lance
+	 * d'elle-même à l'arrivée sur la plateforme ; ensuite elle ne se relance
+	 * que sur demande, depuis les paramètres. (#39)
+	 *
+	 * Une date plutôt qu'un oui/non : le jour où la visite change, on saura
+	 * qui l'a vue dans sa version d'avant.
+	 *
+	 * @ORM\Column(type="datetime", nullable=true)
+	 */
+	private $tourSeenAt;
+
+	/**
 	 * Le téléphone direct que le membre veut bien publier dans l'annuaire.
 	 * Vide par défaut : le renseigner est le consentement. (#27)
 	 *
@@ -378,6 +390,20 @@ class User implements UserInterface, JsonSerializable {
 		$this->presentation = mb_substr( trim( $presentation ?? '' ), 0, 32 );
 
 		return $this;
+	}
+
+	public function getTourSeenAt (): ?DateTimeInterface {
+		return $this->tourSeenAt;
+	}
+
+	public function setTourSeenAt ( ?DateTimeInterface $tourSeenAt ): self {
+		$this->tourSeenAt = $tourSeenAt;
+
+		return $this;
+	}
+
+	public function hasSeenTour (): bool {
+		return $this->tourSeenAt !== NULL;
 	}
 
 	public function getJobTitle (): ?string {
