@@ -10,6 +10,7 @@ use App\Entity\DiscussionMessage;
 use App\Entity\Document;
 use App\Entity\DocumentFolder;
 use App\Entity\DocumentTag;
+use App\Entity\Notification;
 use App\Entity\LogEvent;
 use App\Entity\Page;
 use App\Entity\Skill;
@@ -30,12 +31,74 @@ class AppFixtures extends Fixture {
 	 * stands for a situation the platform has to handle.
 	 */
 	private const NAMED_ACCOUNTS = [
-			'admin@example.org'      => [ 'name' => 'Alice Admin', 'siteAdmin' => TRUE, 'role' => 'admin' ],
-			'referent@example.org'   => [ 'name' => 'Rémi Référent', 'siteAdmin' => FALSE, 'role' => 'admin' ],
-			'membre@example.org'     => [ 'name' => 'Manon Membre', 'siteAdmin' => FALSE, 'role' => 'user' ],
-			'candidat@example.org'   => [ 'name' => 'Camille Candidate', 'siteAdmin' => FALSE, 'role' => 'pending' ],
-			'banni@example.org'      => [ 'name' => 'Bruno Banni', 'siteAdmin' => FALSE, 'role' => 'banned' ],
-			'exterieur@example.org'  => [ 'name' => 'Éric Extérieur', 'siteAdmin' => FALSE, 'role' => 'none' ],
+			'admin@example.org'      => [
+					'name'      => 'Alice Admin',
+					'siteAdmin' => TRUE,
+					'role'      => 'admin',
+					// Fiche complète et joignable : le cas le plus courant.
+					'profile'   => [
+							'jobTitle'     => 'Responsable de l’animation du réseau',
+							'organisation' => 'Réserves Naturelles de France',
+							'reserves'     => '',
+							'phone'        => '01 23 45 67 89',
+							'emailVisible' => TRUE,
+					],
+			],
+			'referent@example.org'   => [
+					'name'      => 'Rémi Référent',
+					'siteAdmin' => FALSE,
+					'role'      => 'admin',
+					// Le cas d'un gestionnaire de terrain : plusieurs réserves,
+					// joignable par e-mail seulement.
+					'profile'   => [
+							'jobTitle'     => 'Conservateur de réserve naturelle',
+							'organisation' => 'Conservatoire d’espaces naturels',
+							'reserves'     => 'RN de la Bassée, RN du Marais',
+							'phone'        => '',
+							'emailVisible' => TRUE,
+					],
+			],
+			'membre@example.org'     => [
+					'name'      => 'Manon Membre',
+					'siteAdmin' => FALSE,
+					'role'      => 'user',
+					// Adresse retirée et pas de téléphone : la fiche sans
+					// aucune coordonnée, à ne pas prendre pour une panne. (#27)
+					'profile'   => [
+							'jobTitle'     => 'Chargée de mission scientifique',
+							'organisation' => 'Parc naturel régional',
+							'reserves'     => 'RN du Marais',
+							'phone'        => '',
+							'emailVisible' => FALSE,
+					],
+			],
+			'candidat@example.org'   => [
+					'name'      => 'Camille Candidate',
+					'siteAdmin' => FALSE,
+					'role'      => 'pending',
+					// Fiche vide : ce que voit un compte qui n'a rien rempli.
+					'profile'   => [],
+			],
+			'banni@example.org'      => [
+					'name'      => 'Bruno Banni',
+					'siteAdmin' => FALSE,
+					'role'      => 'banned',
+					'profile'   => [],
+			],
+			'exterieur@example.org'  => [
+					'name'      => 'Éric Extérieur',
+					'siteAdmin' => FALSE,
+					'role'      => 'none',
+					// Téléphone publié mais adresse retirée : l'autre moitié
+					// du choix laissé à chacun. (#27)
+					'profile'   => [
+							'jobTitle'     => 'Garde technicien',
+							'organisation' => '',
+							'reserves'     => 'RN de la Bassée',
+							'phone'        => '06 12 34 56 78',
+							'emailVisible' => FALSE,
+					],
+			],
 	];
 
 	/**
@@ -226,6 +289,15 @@ class AppFixtures extends Fixture {
 			] ) );
 			$user->setReserves( 'RN ' . $faker->city() );
 
+			// Un annuaire où tout le monde publie tout ne montre pas ce que
+			// le choix change. Un compte sur trois donne son téléphone, un
+			// sur cinq retire son adresse. (#27)
+			if ( rand( 0, 2 ) === 0 ) {
+				$user->setPhone( $faker->phoneNumber() );
+			}
+
+			$user->setEmailVisible( rand( 0, 4 ) > 0 );
+
 			$manager->persist( $user );
 			$manager->flush();
 
@@ -252,6 +324,17 @@ class AppFixtures extends Fixture {
 			$user->setStatus( User::STATUS_ACTIVE );
 			$user->setCountry( 'FR' );
 			$user->setHasAgreedTermsOfUse( TRUE );
+
+			// Chaque compte nommé porte une situation d'annuaire différente,
+			// pour que les cas de #27 et #30 soient tous visibles sans avoir
+			// à remplir un profil à la main. (#27, #30)
+			$profile = isset( $account[ 'profile' ] ) ? $account[ 'profile' ] : [];
+
+			$user->setJobTitle( isset( $profile[ 'jobTitle' ] ) ? $profile[ 'jobTitle' ] : NULL );
+			$user->setOrganisation( isset( $profile[ 'organisation' ] ) ? $profile[ 'organisation' ] : NULL );
+			$user->setReserves( isset( $profile[ 'reserves' ] ) ? $profile[ 'reserves' ] : NULL );
+			$user->setPhone( isset( $profile[ 'phone' ] ) ? $profile[ 'phone' ] : NULL );
+			$user->setEmailVisible( !isset( $profile[ 'emailVisible' ] ) || $profile[ 'emailVisible' ] );
 
 			$manager->persist( $user );
 
@@ -483,7 +566,7 @@ class AppFixtures extends Fixture {
 		 * membership requests, notifications — happens here rather than in a
 		 * randomly generated group whose composition changes at each load.
 		 */
-		$this->buildReferenceGroups( $manager, $named, $categories );
+		$this->buildReferenceGroups( $manager, $named, $categories, $documentTags );
 	}
 
 	/**
@@ -523,7 +606,7 @@ class AppFixtures extends Fixture {
 	 * @param \App\Entity\User[]                  $named
 	 * @param \App\Entity\Category[]              $categories
 	 */
-	private function buildReferenceGroups ( ObjectManager $manager, array $named, array $categories ) {
+	private function buildReferenceGroups ( ObjectManager $manager, array $named, array $categories, array $documentTags = [] ) {
 		$faker = Faker\Factory::create( 'fr_FR' );
 
 		$groups = [
@@ -603,7 +686,7 @@ class AppFixtures extends Fixture {
 
 			$built[ $slug ] = $group;
 
-			$this->fillReferenceGroup( $manager, $group, $named, $faker );
+			$this->fillReferenceGroup( $manager, $group, $named, $faker, $documentTags );
 		}
 
 		// Les deux groupes de test dépendent de la commission de test.
@@ -623,7 +706,7 @@ class AppFixtures extends Fixture {
 	 * @param \App\Entity\User[]                  $named
 	 * @param \Faker\Generator                     $faker
 	 */
-	private function fillReferenceGroup ( ObjectManager $manager, Usergroup $group, array $named, $faker ) {
+	private function fillReferenceGroup ( ObjectManager $manager, Usergroup $group, array $named, $faker, array $documentTags = [] ) {
 		$referent = $named[ 'referent@example.org' ];
 		$member   = $named[ 'membre@example.org' ];
 
@@ -636,14 +719,60 @@ class AppFixtures extends Fixture {
 		$discussion->setActiveAt( new \DateTime( '-1 hour' ) );
 		$manager->persist( $discussion );
 
-		foreach ( [ $referent, $member, $referent ] as $index => $author ) {
+		// Le deuxième message nomme quelqu'un : sans une mention posée
+		// d'avance, on ne voit ni le lien vers l'annuaire ni la notification
+		// qu'elle déclenche. (#37)
+		$bodies = [
+				'<p>' . $faker->sentence( 12 ) . '</p>',
+				'<p>@' . $member->getName() . ' peux-tu regarder ce point ?</p>',
+				'<p>' . $faker->sentence( 12 ) . '</p>',
+		];
+
+		foreach ( [ $referent, $referent, $member ] as $index => $author ) {
 			$message = new DiscussionMessage();
 			$message->setDiscussion( $discussion );
 			$message->setAuthor( $author );
-			$message->setBody( '<p>' . $faker->sentence( 12 ) . '</p>' );
+			$message->setBody( $bodies[ $index ] );
 			$message->setCreatedAt( new \DateTime( sprintf( '-%d hours', 72 - ( $index * 24 ) ) ) );
 			$manager->persist( $message );
 			$discussion->addMessage( $message );
+		}
+
+		// Les notifications ne naissent que du passage par NotificationSender,
+		// que les fixtures ne déclenchent pas : sans celles-ci, la page des
+		// notifications est vide au premier chargement et il n'y a rien à
+		// recetter. Seulement dans le groupe de référence — trois fois les
+		// mêmes, dont certaines vers un groupe dont Manon n'est pas membre,
+		// ne rendraient service à personne. (#34, #37)
+		if ( $group->getSlug() === self::REFERENCE_GROUP ) {
+			// L'adresse est écrite à la main plutôt que routée : les fixtures
+			// n'ont pas de contexte de requête, et ce chemin est celui de la
+			// route group_discussion_index.
+			$discussionUrl = sprintf( '/groups/%s/discussions/%s', $group->getSlug(), $discussion->getUuid() );
+
+			$mention = new Notification();
+			$mention->setRecipient( $member );
+			$mention->setAuthor( $referent );
+			$mention->setUsergroup( $group );
+			$mention->setType( Notification::DISCUSSION_MENTION );
+			$mention->setTitle( $discussion->getTitle() );
+			$mention->setUrl( $discussionUrl );
+			$mention->setCreatedAt( new \DateTime( '-2 hours' ) );
+			$mention->setByEmail( FALSE );
+			$manager->persist( $mention );
+
+			// Une notification déjà lue, pour que la distinction se voie.
+			$lue = new Notification();
+			$lue->setRecipient( $member );
+			$lue->setAuthor( $referent );
+			$lue->setUsergroup( $group );
+			$lue->setType( Notification::DISCUSSION_MESSAGE );
+			$lue->setTitle( $discussion->getTitle() );
+			$lue->setUrl( $discussionUrl );
+			$lue->setCreatedAt( new \DateTime( '-3 days' ) );
+			$lue->setByEmail( FALSE );
+			$lue->setReadAt( new \DateTime( '-2 days' ) );
+			$manager->persist( $lue );
 		}
 
 		// A discussion without any message: the case that used to break the
@@ -675,6 +804,18 @@ class AppFixtures extends Fixture {
 		$page->setCreatedAt( new \DateTime() );
 		$manager->persist( $page );
 
+		// Rédigée par un membre ordinaire : c'est ce qui permet d'éprouver la
+		// règle de #33 — son auteur la modifie, un autre membre ne peut pas,
+		// un animateur le peut.
+		$deMembre = new Page();
+		$deMembre->setTitle( 'Page rédigée par un membre' );
+		$deMembre->setSlug( $this->slugGenerator->generateSlug( 'Page redigee par un membre ' . $group->getSlug() ) );
+		$deMembre->setUsergroup( $group );
+		$deMembre->setAuthor( $member );
+		$deMembre->setBody( '<p>' . $faker->sentence( 12 ) . '</p>' );
+		$deMembre->setCreatedAt( new \DateTime() );
+		$manager->persist( $deMembre );
+
 		$article = new Article();
 		$article->setTitle( 'Actualité de test' );
 		$article->setSlug( $this->slugGenerator->generateSlug( 'Actualite de test ' . $group->getSlug(), Article::class, 'slug' ) );
@@ -704,6 +845,18 @@ class AppFixtures extends Fixture {
 		$classe->setUser( $referent );
 		$classe->setFolder( $sousDossier );
 		$classe->setCreatedAt( new \DateTime() );
+
+		// Étiqueté et rangé dans un sous-dossier : les deux axes de classement
+		// se croisent, c'est tout l'intérêt de les avoir séparés. (#26)
+		//
+		// Choisies par leur nom : la liste a été mélangée pour les documents
+		// tirés au hasard, sa position n'a plus rien de stable.
+		foreach ( $documentTags as $tag ) {
+			if ( in_array( $tag->getName(), [ 'Grand public', 'Cycle 1' ], TRUE ) ) {
+				$classe->addTag( $tag );
+			}
+		}
+
 		$manager->persist( $classe );
 
 		$document = new Document();
@@ -711,8 +864,12 @@ class AppFixtures extends Fixture {
 		$document->setSlug( $this->slugGenerator->generateSlug( 'Document de test ' . $group->getSlug(), Document::class, 'slug' ) );
 		$document->setDescription( 'Un document décrit, pour éprouver l’affichage et la recherche.' );
 		$document->setUsergroup( $group );
-		$document->setUser( $referent );
+		$document->setUser( $member );
 		$document->setCreatedAt( new \DateTime() );
+
+		// Déposé par un membre ordinaire, et sans étiquette : la fiche que
+		// seul son déposant modifie (#33), et le document que le filtre par
+		// étiquette laisse de côté (#26).
 		$manager->persist( $document );
 
 		$manager->flush();

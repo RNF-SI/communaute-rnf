@@ -107,7 +107,7 @@ services:
           class: "Document"
         "membres":
           propertyList: ["id", "name", "presentation", "jobTitle", "organisation", "reserves"]
-          indexPropertyList: ["id", "name", "presentation", "bio"]
+          indexPropertyList: ["id", "name", "presentation", "jobTitle", "organisation", "reserves"]
           index: "members.index"
           class: "User"
         "groups":
