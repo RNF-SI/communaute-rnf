@@ -371,9 +371,9 @@ pages:
             hint: "Your message will be sent by email to the members of the group."
             button: "Send"
         discussion_edit:
-            title: "Editing discussion"
-            link: "Edit discussion"
-            button: "Save changes"
+            title: "Rename the discussion"
+            link: "Rename the discussion"
+            button: "Save the title"
         deleted:
             notice: "Message deleted"
         archived:
@@ -549,6 +549,7 @@ messages:
         message_edited: "The message has been updated"
         discussion_restored: "The discussion is back online"
         message_error: "Your message cannot be posted, please retry"
+        title_error: "The discussion title cannot be empty"
         discussion_updated: "The discussion has been updated"
         discussion_deleted: "The discussion has been deleted"
 

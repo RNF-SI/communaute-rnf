@@ -10,6 +10,7 @@ use App\Entity\User;
 use App\Entity\Usergroup;
 use App\Entity\UsergroupMembership;
 use App\Form\DiscussionMessageType;
+use App\Form\DiscussionTitleType;
 use App\Form\DiscussionType;
 use App\Security\GroupDiscussionVoter;
 use App\Security\GroupVoter;
@@ -311,6 +312,91 @@ class GroupDiscussionsController extends AbstractController {
 										->getMembership( $this->getUser(), $group ),
 				'form'       => $form ? $form->createView() : FALSE,
 				'upload'     => $router->generate( 'file_upload', [ 'groupId' => $group->getId() ] ),
+		] );
+	}
+
+	/**
+	 * @Route("/groups/{groupSlug}/discussions/{discussionUuid}/edit", name="group_discussion_edit")
+	 *
+	 * @param                                           $groupSlug
+	 * @param                                           $discussionUuid
+	 * @param \Symfony\Component\HttpFoundation\Request $request
+	 * @param \Doctrine\ORM\EntityManagerInterface      $manager
+	 *
+	 * @return \Symfony\Component\HttpFoundation\Response
+	 * @throws \Exception
+	 */
+	public function groupDiscussionEdit (
+			$groupSlug,
+			$discussionUuid,
+			Request $request,
+			EntityManagerInterface $manager
+	) {
+		/**
+		 * @var \App\Entity\Usergroup $group
+		 */
+		$group = $manager->getRepository( Usergroup::class )
+						 ->findOneBy( [ 'slug' => $groupSlug ] );
+
+		if ( !$group ) {
+			throw $this->createNotFoundException( 'The group does not exist' );
+		}
+
+		/**
+		 * @var \App\Entity\Discussion $discussion
+		 */
+		$discussion = $manager->getRepository( Discussion::class )
+							  ->findOneBy( [ 'usergroup' => $group, 'uuid' => $discussionUuid ] );
+
+		if ( !$discussion ) {
+			throw $this->createNotFoundException( 'The discussion does not exist' );
+		}
+
+		$this->denyAccessUnlessGranted( GroupDiscussionVoter::RENAME, $discussion );
+
+		$form = $this->createForm( DiscussionTitleType::class );
+		$form->get( 'title' )->setData( $discussion->getTitle() );
+
+		$form->handleRequest( $request );
+
+		if ( $form->isSubmitted() && $form->isValid() ) {
+			$title = trim( (string) $form->get( 'title' )->getData() );
+
+			if ( $title === '' ) {
+				$this->addFlash( 'warning', 'messages.discussion.title_error' );
+			}
+			else {
+				$discussion->setTitle( $title );
+
+				// Log Event
+
+				$log = new LogEvent();
+				$log->setType( LogEvent::DISCUSSION_EDIT );
+				$log->setUser( $this->getUser() );
+				$log->setUsergroup( $group );
+				$log->setCreatedAt( new DateTime() );
+				$log->setData( [ 'discussion' => $discussion->getId(), 'title' => $discussion->getTitle() ] );
+				$manager->persist( $log );
+
+				$manager->flush();
+
+				// Aucune notification : renommer n'est pas une prise de parole,
+				// et relancer tout le groupe pour un titre corrigé serait pire
+				// que le titre fautif.
+
+				$this->addFlash( 'notice', 'messages.discussion.discussion_updated' );
+
+				return $this->redirectToRoute( 'group_discussion_index', [
+						'groupSlug'      => $group->getSlug(),
+						'discussionUuid' => $discussion->getUuid(),
+				] );
+			}
+		}
+
+		return $this->render( 'pages/discussion/discussion-edit.html.twig', [
+				'group'      => $group,
+				'discussion' => $discussion,
+				'form'       => $form->createView(),
 		] );
 	}
 

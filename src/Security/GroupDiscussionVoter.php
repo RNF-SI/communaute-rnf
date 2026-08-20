@@ -36,6 +36,13 @@ class GroupDiscussionVoter extends Voter {
 	const ARCHIVE = 'group:discussion:archive';
 
 	/**
+	 * Renommer une discussion : corriger un intitulé fautif ou trop vague,
+	 * sans toucher aux messages. L'auteur, qui a posé le titre, ou un
+	 * animateur du groupe.
+	 */
+	const RENAME = 'group:discussion:rename';
+
+	/**
 	 * @var \Doctrine\ORM\EntityManagerInterface
 	 */
 	private $manager;
@@ -64,7 +71,7 @@ class GroupDiscussionVoter extends Voter {
 			return TRUE;
 		}
 
-		if ( ( $attribute === self::ARCHIVE ) && ( $subject instanceof Discussion ) ) {
+		if ( in_array( $attribute, [ self::ARCHIVE, self::RENAME ] ) && ( $subject instanceof Discussion ) ) {
 			return TRUE;
 		}
 
@@ -136,6 +143,24 @@ class GroupDiscussionVoter extends Voter {
 				}
 
 				return $this->security->isGranted( GroupVoter::DELETE, $discussion->getUsergroup() );
+
+			case self::RENAME:
+				/**
+				 * @var \App\Entity\Discussion $discussion
+				 */
+				$discussion = $subject;
+
+				// Le titre est celui que l'auteur a choisi : il le corrige
+				// tant qu'il peut encore s'exprimer dans le groupe. Sinon
+				// c'est l'affaire des animateurs, un intitulé s'adressant à
+				// tout le groupe.
+				if ( ( $user instanceof User )
+					 && $discussion->getAuthor()
+					 && ( $discussion->getAuthor()->getId() === $user->getId() ) ) {
+					return $this->security->isGranted( GroupVoter::PARTICIPATE, $discussion->getUsergroup() );
+				}
+
+				return $this->security->isGranted( GroupVoter::EDIT, $discussion->getUsergroup() );
 
 			case self::DELETE_MESSAGE:
 			case self::EDIT_MESSAGE:

@@ -493,9 +493,9 @@ pages:
             hint: "Votre message sera envoyé par e-mail aux membres du groupe."
             button: "Envoyer"
         discussion_edit:
-            title: "Édition de la discussion"
-            link: "Modifier la discussion"
-            button: "Enregistrer les modifications"
+            title: "Renommer le sujet"
+            link: "Renommer le sujet"
+            button: "Enregistrer le titre"
         deleted:
             notice: "Message supprimé"
         archived:
@@ -729,6 +729,7 @@ messages:
         message_edited: "Le message a été modifié"
         discussion_restored: "La discussion a été remise en ligne"
         message_error: "Votre message n’a pas pû être posté, veuillez réessayer"
+        title_error: "Le titre du sujet ne peut pas être vide"
         discussion_updated: "La discussion a été mise à jour"
         discussion_deleted: "La discussion a été supprimée"
 
