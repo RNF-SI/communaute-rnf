@@ -118,6 +118,24 @@ filters on it. Free-form tags were deliberately rejected: in a network this
 size they split into synonyms within months. A folder says where a document is
 filed, a tag says what it is.
 
+### GeoNature directory data (#28)
+The single sign-on already hands us `id_role`, `id_organisme` and
+`roleOPNLInfo` at every login, and stores them on `User` — the last two were
+read nowhere until now. On top of that, GeoNature publishes an export API
+whose catalogue is public (`/api/exports/swagger-ressources/{id}`) even though
+the data needs a token: **export 3, « Liens utilisateurs-réserves »**, is
+filterable by `role_id` and is the only one carrying directory data. It gives
+the reserves, not the job title, and only an id for the organisation.
+
+`RnfReserves` reads it; `app:rnf:sync-reserves` fills `User::$reserves` from
+it (a nightly command, not a call on every login — nobody wants their sign-in
+to wait on a third-party API). Without `RNF_EXPORT_TOKEN` the service stays
+silent and the field remains hand-written; an unreachable or refused export
+never empties a profile. `app:rnf:inspect` prints what GeoNature actually
+answers for one account, including the never-read `roleOPNLInfo` — the export
+view's columns are not published anywhere, so looking is the only honest way
+to know them.
+
 ### Document sheet (#32)
 A document has its own page, `group_document_index`
 (`/groups/{slug}/documents/{id}`): description, tags, folder, who added it,

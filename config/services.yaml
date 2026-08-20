@@ -71,6 +71,14 @@ services:
   App\EventSubscriber\UserLocaleSubscriber:
     arguments: ["%kernel.default_locale%"]
 
+  # L'export « Liens utilisateurs-réserves » de GeoNature demande un jeton.
+  # Sans lui le service se tait et le champ reste saisi à la main. (#28)
+  App\Service\RnfReserves:
+    arguments:
+      $endpoint: "%env(string:RNF_AUTH_API_ENDPOINT)%"
+      $token: "%env(string:RNF_EXPORT_TOKEN)%"
+      $exportId: "%env(int:RNF_EXPORT_RESERVES_ID)%"
+
   App\Service\Community:
     arguments: ["%env(string:COMMUNITY_SLUG)%"]
 

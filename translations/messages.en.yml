@@ -26,6 +26,7 @@ forms:
             label: "How do you want to be called?"
             placeholder: "Enter your first name, your full name, a nickname…"
         identity_from_rnf: "This information comes from your RNF account and cannot be changed here."
+        reserves_from_rnf: "This list is kept by GeoNature, from the reserves you are attached to. To correct it, go through your RNF account."
         avatar:
             label: "Profile picture"
             button: "Browse"

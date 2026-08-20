@@ -88,6 +88,23 @@ class AppFixtures extends Fixture {
 					'role'      => 'banned',
 					'profile'   => [],
 			],
+			// Le seul compte marqué comme venant du SSO : sans lui, on ne peut
+			// éprouver ni l'identité verrouillée de #36, ni les réserves
+			// tenues par GeoNature de #28. Il se connecte comme les autres
+			// avec le mot de passe « test ».
+			'sso@example.org'        => [
+					'name'      => 'Sophie SSO',
+					'siteAdmin' => FALSE,
+					'role'      => 'user',
+					'rnfIdRole' => 4242,
+					'profile'   => [
+							'jobTitle'     => 'Conservatrice de réserve naturelle',
+							'organisation' => 'Office national des forêts',
+							'reserves'     => 'RN de la Bassée',
+							'phone'        => '',
+							'emailVisible' => TRUE,
+					],
+			],
 			'exterieur@example.org'  => [
 					'name'      => 'Éric Extérieur',
 					'siteAdmin' => FALSE,
@@ -343,6 +360,11 @@ class AppFixtures extends Fixture {
 			// peut éprouver ni le lancement automatique ni le lien de
 			// rejeu dans les paramètres. (#39)
 			$user->setTourSeenAt( empty( $account[ 'tourSeen' ] ) ? NULL : new \DateTime( '-1 month' ) );
+
+			// Marqué comme venant de GeoNature : le nom devient non modifiable
+			// (#36), et les réserves aussi dès qu'un jeton d'export est
+			// configuré (#28).
+			$user->setRnfIdRole( isset( $account[ 'rnfIdRole' ] ) ? $account[ 'rnfIdRole' ] : NULL );
 
 			$manager->persist( $user );
 

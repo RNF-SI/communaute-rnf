@@ -111,6 +111,11 @@ RNF_AUTH_API_ENDPOINT=https://geonature.reserves-naturelles.org
 RNF_AUTH_ID_APPLICATION=14
 RNF_AUTH_APP_CODE=COMM_RNF
 
+# Export GeoNature « Liens utilisateurs-réserves » (#28)
+# Sans jeton, les réserves du profil restent saisies à la main.
+RNF_EXPORT_TOKEN=
+RNF_EXPORT_RESERVES_ID=3
+
 # Analytics feature flag
 ANALYTICS_ENABLED=false
 

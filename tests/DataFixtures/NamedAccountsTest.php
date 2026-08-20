@@ -126,6 +126,27 @@ class NamedAccountsTest extends TestCase {
 		);
 	}
 
+	public function testAnAccountComesFromTheSingleSignOn () {
+		$fromSso = 0;
+
+		foreach ( $this->accounts() as $account ) {
+			if ( !empty( $account[ 'rnfIdRole' ] ) ) {
+				$fromSso++;
+			}
+		}
+
+		$this->assertGreaterThan(
+				0,
+				$fromSso,
+				'Assert the locked identity of #36 and the GeoNature-held reserves of #28 can be seen'
+		);
+		$this->assertLessThan(
+				count( $this->accounts() ),
+				$fromSso,
+				'Assert a plain local account is seeded too, the one that still writes its own profile'
+		);
+	}
+
 	public function testTheJobFieldsStayWithinTheColumnWidths () {
 		$widths = [ 'jobTitle' => 100, 'organisation' => 150, 'reserves' => 255, 'phone' => 30 ];
 

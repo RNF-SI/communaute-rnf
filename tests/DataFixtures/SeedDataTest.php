@@ -255,6 +255,24 @@ class SeedDataTest extends KernelTestCase {
 	}
 
 	/**************************************************
+	 * #28 / #36 — UN COMPTE VENANT DE GEONATURE
+	 **************************************************/
+
+	public function testAnAccountCarriesAGeoNatureIdentity () {
+		$this->assertNotNull(
+				$this->account( 'sso@example.org' )->getRnfIdRole(),
+				'Assert the locked fields can be seen without a real single sign-on round trip'
+		);
+	}
+
+	public function testAPlainLocalAccountExistsBesideIt () {
+		$this->assertNull(
+				$this->account( 'membre@example.org' )->getRnfIdRole(),
+				'Assert the account that still writes its own profile is seeded too'
+		);
+	}
+
+	/**************************************************
 	 * #39 — LA VISITE GUIDÉE
 	 **************************************************/
 

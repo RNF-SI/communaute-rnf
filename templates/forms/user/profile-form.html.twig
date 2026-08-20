@@ -47,7 +47,11 @@
     </div>
     <div class="form-row form-row__field">
         {{ form_label(form.reserves, 'forms.user.reserves.label') }}
-        <div class="hint">{{ 'forms.user.reserves.hint'|trans }}</div>
+        {% if form.reserves.vars.disabled %}
+            <div class="hint">{{ 'forms.user.reserves_from_rnf'|trans }}</div>
+        {% else %}
+            <div class="hint">{{ 'forms.user.reserves.hint'|trans }}</div>
+        {% endif %}
         {{ form_widget(form.reserves, {'attr': {'placeholder': 'forms.user.reserves.placeholder'}}) }}
         <div class="form_errors">{{ form_errors(form.reserves) }}</div>
     </div>

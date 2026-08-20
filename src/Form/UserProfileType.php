@@ -6,6 +6,7 @@ use App\Entity\Skill;
 use App\Entity\User;
 use App\Repository\SkillRepository;
 use App\Service\FileManager;
+use App\Service\RnfReserves;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
@@ -22,13 +23,15 @@ use Symfony\Component\Validator\Constraints\File;
 class UserProfileType extends AbstractType {
 	private $fileManager;
 
+	private $reserves;
+
 	/**
-	 * DocumentType constructor.
-	 *
 	 * @param \App\Service\FileManager $fileManager
+	 * @param \App\Service\RnfReserves $reserves
 	 */
-	public function __construct ( FileManager $fileManager) {
+	public function __construct ( FileManager $fileManager, RnfReserves $reserves ) {
 		$this->fileManager = $fileManager;
+		$this->reserves    = $reserves;
 	}
 
 	/**
@@ -47,6 +50,13 @@ class UserProfileType extends AbstractType {
 		// two fields for editing would only promise a change that does not
 		// survive the next connection. (#36)
 		$identityComesFromRnf = ( $user instanceof User ) && !empty( $user->getRnfIdRole() );
+
+		// Les réserves suivies viennent de GeoNature dès que l'export est
+		// configuré : les proposer à la saisie promettrait alors une
+		// modification que la prochaine synchronisation écraserait. Sans
+		// jeton, elles restent saisies à la main — mieux vaut une saisie
+		// manuelle qu'une case vide. (#28)
+		$reservesComeFromRnf = $this->reserves->feedsProfileOf( $user );
 
 		$builder
 				->add( 'name', TextType::class, [
@@ -95,6 +105,7 @@ class UserProfileType extends AbstractType {
 				] )
 				->add( 'reserves', TextType::class, [
 						'required' => FALSE,
+						'disabled' => $reservesComeFromRnf,
 						'attr'     => [ 'maxlength' => 255 ],
 				] )
 				->add( 'phone', TextType::class, [

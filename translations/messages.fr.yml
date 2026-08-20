@@ -26,6 +26,7 @@ forms:
             label: "Comment faut-il vous appeler ?"
             placeholder: "Entrez, au choix, votre prénom, votre nom, un pseudo…"
         identity_from_rnf: "Cette information provient de votre compte RNF et ne peut pas être modifiée ici."
+        reserves_from_rnf: "Cette liste est tenue par GeoNature, à partir de vos rattachements. Pour la corriger, passez par votre compte RNF."
         avatar:
             label: "Image de profil"
             button: "Parcourir"
