@@ -306,6 +306,8 @@ pages:
             subtitle: "Si vous avez déjà un compte"
             button: "Se connecter"
             link: "Connexion"
+            with_rnf: "Se connecter avec le compte RNF"
+            form_only_here: "Cet environnement autorise la connexion par mot de passe, pour les comptes des données de test. Sur la plateforme en ligne, seul le compte RNF connecte."
         register:
             title: "Créer votre compte"
             subtitle: "Si c’est votre première visite"

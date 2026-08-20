@@ -10,34 +10,45 @@ Numéros d'issues entre parenthèses.
 
 ## 0. Deux préalables, sans quoi la recette est faussée
 
-### Les assets
+### Les assets — plus rien à faire
 
-Node est absent du serveur : `npm run build` n'y passe pas, et **les fichiers
-compilés ne sont pas mis à jour par un `git pull`**. Sans eux, les mentions et
-la visite guidée ne font rien — sans la moindre erreur visible.
+Node étant absent des serveurs, `public/build/` est désormais **versé dans le
+dépôt** : un `git pull` suffit, les assets suivent le code.
+
+En contrepartie, qui modifie `assets/` doit recompiler **avant de commiter** :
 
 ```bash
-node -v    # sur le serveur
+NODE_OPTIONS=--openssl-legacy-provider npm run build
+git add public/build
 ```
 
-- **Node répond** : `NODE_OPTIONS=--openssl-legacy-provider npm ci && NODE_OPTIONS=--openssl-legacy-provider npm run build`
-- **Node ne répond pas** : compiler sur un poste de développement puis copier
-
-  ```bash
-  NODE_OPTIONS=--openssl-legacy-provider npm run build
-  rsync -avz --delete public/build/ UTILISATEUR@SERVEUR:/var/www/html/communaute/public/build/
-  ```
-
-Vérification : la page d'un groupe doit afficher les notes de droits (#33), qui
-sont mises en forme par la nouvelle feuille de style.
+Vérification après déploiement : la page d'un groupe affiche les notes de
+droits (#33), mises en forme par une feuille de style récente.
 
 ### Votre compte
 
-Le pare-feu ne branche **que le SSO RNF** : les six comptes de test et leur mot
-de passe ne servent qu'en local. Sur un serveur, seul un vrai compte GeoNature
-entre.
+Deux façons d'entrer, selon ce que vous voulez essayer.
 
-Le chargement des fixtures ayant vidé la base, votre compte a disparu :
+**Avec les comptes des données de test** — pratique pour passer d'un rôle à
+l'autre. Ils n'existent pas dans GeoNature : il faut allumer la connexion par
+mot de passe, éteinte partout par défaut.
+
+```bash
+# .env.local, préproduction seulement — JAMAIS en production
+FORM_LOGIN_ENABLED=1
+```
+
+Puis `php bin/console cache:clear`, et se connecter sur `/user/login` avec
+`antoine.schlegel+admin@rnfrance.org`, `+referent@`, `+membre@`… et le mot de
+passe **`test`**. Les adresses portent votre étiquette parce que
+`TEST_ACCOUNTS_EMAIL` était renseigné au chargement des fixtures ; sans elle,
+ce sont les adresses en `@example.org`.
+
+Un compte venu du SSO ne s'ouvre **jamais** par ce chemin, même allumé : sa
+colonne de mot de passe est vide, et c'est refusé explicitement.
+
+**Avec votre vrai compte GeoNature** — indispensable pour éprouver le SSO
+lui-même. Le chargement des fixtures ayant vidé la base, il a disparu :
 
 1. se connecter par le SSO — le compte est recréé ;
 2. lui redonner ses droits :
@@ -47,7 +58,8 @@ Le chargement des fixtures ayant vidé la base, votre compte a disparu :
    ```
 
 **Corollaire** : on n'est jamais notifié de ses propres actions. Recetter les
-notifications demande **deux personnes**, ou deux comptes GeoNature.
+notifications demande **deux comptes** — deux comptes de test dans deux
+navigateurs suffisent, une fois la connexion par mot de passe allumée.
 
 ---
 
@@ -139,7 +151,7 @@ Aller dans **Groupe de test**.
 
 ## 6. Notifications et e-mails — **à deux**
 
-C'est la partie qui demande un second compte GeoNature.
+C'est la partie qui demande deux comptes — deux comptes de test dans deux navigateurs suffisent.
 
 | À faire | Attendu |
 |---|---|

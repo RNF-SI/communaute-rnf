@@ -17,7 +17,11 @@
 ###< symfony/phpunit-bridge ###
 ###> symfony/webpack-encore-bundle ###
 /node_modules/
-/public/build/
+# public/build/ est VERSÉ dans le dépôt : node est absent des serveurs, et le
+# déploiement se fait par « git pull ». Sans ça, les assets ne suivent jamais
+# le code — et une fonctionnalité front absente ne lève aucune erreur.
+# Recompiler avant de commiter :
+#   NODE_OPTIONS=--openssl-legacy-provider npm run build
 npm-debug.log
 yarn-error.log
 ###< symfony/webpack-encore-bundle ###

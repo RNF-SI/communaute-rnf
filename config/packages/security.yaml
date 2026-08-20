@@ -26,6 +26,11 @@ security:
             guard:
                 authenticators:
                     - App\Security\RnfAuthenticatorGuard
+                    # Éteint par défaut : LoginFormAuthenticator ne répond que
+                    # si FORM_LOGIN_ENABLED=1. Les deux écoutent des routes
+                    # différentes — /auth/login et /user/login — ils ne se
+                    # disputent aucune requête.
+                    - App\Security\LoginFormAuthenticator
             entry_point: App\Security\RnfAuthenticatorGuard
             logout:
                 path: user_logout

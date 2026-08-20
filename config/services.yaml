@@ -79,6 +79,12 @@ services:
       $token: "%env(string:RNF_EXPORT_TOKEN)%"
       $exportId: "%env(int:RNF_EXPORT_RESERVES_ID)%"
 
+  # La connexion par mot de passe, éteinte par défaut. À n'allumer que là où
+  # l'on doit entrer avec les comptes des données de test.
+  App\Security\LoginFormAuthenticator:
+    arguments:
+      $enabled: "%env(string:FORM_LOGIN_ENABLED)%"
+
   App\Service\Community:
     arguments: ["%env(string:COMMUNITY_SLUG)%"]
 

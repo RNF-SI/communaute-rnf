@@ -12,6 +12,7 @@ use App\Notification\NotificationCategory;
 use App\Notification\NotificationLevel;
 use App\Notification\NotificationRhythm;
 use App\Form\UserProfileType;
+use App\Security\LoginFormAuthenticator;
 use App\Security\UserVoter;
 use App\Service\Community;
 use App\Service\EmailSender;
@@ -82,12 +83,32 @@ class UserController extends AbstractController
 	/**
 	 * @Route("/user/login", name="user_login")
 	 *
+	 * Sur la production, l'identité fait autorité chez GeoNature : cette
+	 * adresse renvoie au SSO. Là où `FORM_LOGIN_ENABLED=1` — une préproduction
+	 * de recette, un poste de développement — elle présente le formulaire de
+	 * mot de passe, sans lequel les comptes des données de test ne peuvent pas
+	 * entrer : ils n'existent pas dans GeoNature.
+	 *
+	 * @param \App\Security\LoginFormAuthenticator                            $authenticator
+	 * @param \Symfony\Component\Security\Http\Authentication\AuthenticationUtils $utils
+	 *
 	 * @return \Symfony\Component\HttpFoundation\Response
 	 */
-	public function loginPage()
+	public function loginPage( LoginFormAuthenticator $authenticator, AuthenticationUtils $utils )
 	{
-		// Redirect to RNF authentication
-		return $this->redirectToRoute('rnf_auth_login');
+		if ( !$authenticator->isEnabled() ) {
+			return $this->redirectToRoute('rnf_auth_login');
+		}
+
+		if ( $error = $utils->getLastAuthenticationError() ) {
+			$key = $error->getMessageKey();
+
+			$this->addFlash( 'error', $key === 'Invalid credentials.' ? 'messages.user.invalid_credentials' : $key );
+		}
+
+		return $this->render( 'pages/user/login-form.html.twig', [
+				'last_username' => $utils->getLastUsername(),
+		] );
 	}
 
 	/**

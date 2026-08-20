@@ -193,6 +193,8 @@ pages:
             subtitle: "If you already have an account"
             button: "Log in"
             link: "Log in"
+            with_rnf: "Sign in with the RNF account"
+            form_only_here: "This environment allows signing in with a password, for the test accounts. On the live platform, only the RNF account signs you in."
         register:
             title: "Sign up"
             subtitle: "If it's your first visit"

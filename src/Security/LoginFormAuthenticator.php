@@ -20,6 +20,17 @@ use Symfony\Component\Security\Guard\Authenticator\AbstractFormLoginAuthenticato
 use Symfony\Component\Security\Http\Util\TargetPathTrait;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+/**
+ * La connexion par mot de passe.
+ *
+ * **Éteinte par défaut.** Sur les serveurs, l'identité fait autorité chez
+ * GeoNature : c'est le SSO qui connecte, et lui seul. Ce chemin n'existe que
+ * pour les environnements où l'on doit pouvoir entrer avec les comptes des
+ * données de test — un poste de développement, une préproduction dédiée à la
+ * recette — puisque ces comptes n'existent pas dans GeoNature.
+ *
+ * `FORM_LOGIN_ENABLED=1` l'allume. **Jamais sur la production.**
+ */
 class LoginFormAuthenticator extends AbstractFormLoginAuthenticator {
 	use TargetPathTrait;
 
@@ -28,16 +39,31 @@ class LoginFormAuthenticator extends AbstractFormLoginAuthenticator {
 	private $csrfTokenManager;
 	private $passwordEncoder;
 	private $translator;
+	private $enabled;
 
-	public function __construct ( EntityManagerInterface $entityManager, RouterInterface $router, CsrfTokenManagerInterface $csrfTokenManager, UserPasswordEncoderInterface $passwordEncoder, TranslatorInterface $translator ) {
+	public function __construct ( EntityManagerInterface $entityManager, RouterInterface $router, CsrfTokenManagerInterface $csrfTokenManager, UserPasswordEncoderInterface $passwordEncoder, TranslatorInterface $translator, string $enabled = '' ) {
 		$this->entityManager    = $entityManager;
 		$this->router           = $router;
 		$this->csrfTokenManager = $csrfTokenManager;
 		$this->passwordEncoder  = $passwordEncoder;
 		$this->translator       = $translator;
+		$this->enabled          = filter_var( $enabled, FILTER_VALIDATE_BOOLEAN );
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function isEnabled () {
+		return $this->enabled;
 	}
 
 	public function supports ( Request $request ) {
+		// Éteint, l'authentificateur ne regarde même pas la requête : le
+		// formulaire ne mène nulle part, et c'est le SSO qui reste.
+		if ( !$this->enabled ) {
+			return FALSE;
+		}
+
 		return ( $request->attributes->get( '_route' ) === 'user_login' )
 			   && $request->isMethod( 'POST' )
 			   && $request->request->has( 'email' )
@@ -78,6 +104,14 @@ class LoginFormAuthenticator extends AbstractFormLoginAuthenticator {
 	}
 
 	public function checkCredentials ( $credentials, UserInterface $user ) {
+		// Un compte venu du SSO n'a pas de mot de passe : sa colonne vaut la
+		// chaîne vide. bcrypt refuserait déjà une empreinte vide, mais le dire
+		// ici rend la règle lisible et vérifiable — aucun compte GeoNature ne
+		// s'ouvre par ce chemin, même allumé.
+		if ( trim( (string) $user->getPassword() ) === '' ) {
+			return FALSE;
+		}
+
 		return $this->passwordEncoder->isPasswordValid( $user, $credentials[ 'password' ] );
 	}
 

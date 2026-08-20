@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'pages.user.login.title'|trans }} | {{ plateform.name }}{% endblock %}
+
+{% block main %}
+	<section class="main main__user-page main__user-page__login">
+		<div class="main--content content-container">
+			<div class="thin">
+				{% include 'components/app-flashes.html.twig' %}
+
+				<section class="login-form">
+					<h1 class="h2">{{ 'pages.user.login.title'|trans }}</h1>
+
+					{# Ce formulaire n'existe que là où FORM_LOGIN_ENABLED vaut 1 :
+					   une préproduction de recette, un poste de développement. Sur
+					   la production, c'est le SSO et lui seul. #}
+					<p class="hint">{{ 'pages.user.login.form_only_here'|trans }}</p>
+
+					<form method="post" action="{{ path('user_login') }}">
+						<input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+						<div class="form-rows">
+							<div class="form-row form-row__field">
+								<label for="login-email">{{ 'forms.user.email.label'|trans }}</label>
+								<input type="email" id="login-email" name="email" value="{{ last_username }}" required autofocus>
+							</div>
+							<div class="form-row form-row__field">
+								<label for="login-password">{{ 'forms.user.password.label'|trans }}</label>
+								<input type="password" id="login-password" name="password" required>
+							</div>
+						</div>
+
+						<div class="form-row form-row__submit">
+							<button type="submit" class="cta">{{ 'pages.user.login.button'|trans }}</button>
+							<a class="cta__inverted" href="{{ path('rnf_auth_login') }}">{{ 'pages.user.login.with_rnf'|trans }}</a>
+						</div>
+					</form>
+				</section>
+			</div>
+		</div>
+	</section>
+{% endblock %}
