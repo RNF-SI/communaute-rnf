@@ -170,6 +170,11 @@ SELECT COUNT(*) FROM communaute_rnf_users WHERE bio IS NOT NULL AND bio <> '';
 
 ## 3. Recette
 
+> **Le script détaillé est dans [`recette.md`](recette.md)** : quoi regarder,
+> dans quel ordre, et ce qui doit se passer. La présente section garde les
+> points propres au déploiement.
+
+
 Comptes de test : voir [`donnees-reelles.md`](donnees-reelles.md). Sur une
 préproduction alimentée par une copie de production, utiliser des comptes réels
 conservés avec `--keep-email`.
