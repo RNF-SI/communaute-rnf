@@ -60,6 +60,9 @@ class UserAnonymize {
 		$user->setEmailVisible(false);
 		$user->setPresentation(null);
 		$user->setBio(null);
+		$user->setJobTitle(null);
+		$user->setOrganisation(null);
+		$user->setReserves(null);
 		$user->setProfileVisibility(null);
 		$user->setLocale(null);
 		$user->setTimezone(null);

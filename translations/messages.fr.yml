@@ -50,10 +50,17 @@ forms:
             label: "Présentez-vous en deux mots"
             hint: "Limité à 32 caractères (sera affiché sous votre nom)"
             placeholder: "Exemple : Botaniste"
-        bio:
-            label: "Bio"
-            hint: "Précisez ce que vous faites dans la vie, ce que vous recherchez sur la plateforme… (sera affiché sur votre profil)"
-            placeholder: "Dites nous en plus sur vous…"
+        job_title:
+            label: "Fonction"
+            hint: "Votre poste, tel que vous le présenteriez à un collègue du réseau"
+            placeholder: "Exemple : Conservatrice de réserve naturelle"
+        organisation:
+            label: "Structure ou organisme gestionnaire"
+            placeholder: "Exemple : Conservatoire d’espaces naturels"
+        reserves:
+            label: "Réserve(s) naturelle(s) suivie(s)"
+            hint: "Séparez-les par des virgules s’il y en a plusieurs"
+            placeholder: "Exemple : RN de la Bassée, RN du Marais"
         inscription_type:
             label: "Type d’inscription"
             labels:
@@ -593,7 +600,7 @@ pages:
                 skills:
                     label: "Compétences"
             query:
-                placeholder: "Chercher un membre par nom, pseudo, bio…"
+                placeholder: "Chercher un membre par nom, fonction, structure…"
             search: "Filtrer"
         actions:
             pending_set_member: "Approuver l’inscription"
@@ -607,8 +614,8 @@ pages:
         profile:
             skills:
                 title: "Compétences"
-            bio:
-                title: "Biographie"
+            reserves:
+                title: "Réserves naturelles suivies"
             groups:
                 title: "Groupes"
 

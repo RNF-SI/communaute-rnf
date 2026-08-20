@@ -50,10 +50,17 @@ forms:
             label: "Introduce yourself in a couple words"
             hint: "Limited to 32 characters (will be displayed under your name)"
             placeholder: "Example: Botanist"
-        bio:
-            label: "Bio"
-            hint: "Explain what are your occupations, what you're looking for on this platform… (will be displayed on your profile)"
-            placeholder: "Tell us more about yourself…"
+        job_title:
+            label: "Job title"
+            hint: "Your position, as you would introduce it to a colleague of the network"
+            placeholder: "Example: Nature reserve manager"
+        organisation:
+            label: "Organisation or managing body"
+            placeholder: "Example: Conservatory of natural areas"
+        reserves:
+            label: "Nature reserve(s) you follow"
+            hint: "Separate them with commas if there are several"
+            placeholder: "Example: Bassée reserve, Marais reserve"
         inscription_type:
             label: "Type of registration"
             labels:
@@ -466,7 +473,7 @@ pages:
                 skills:
                     label: "Skills"
             query:
-                placeholder: "Find a member by name, nickname, bio…"
+                placeholder: "Find a member by name, job title, organisation…"
             search: "Filter"
         actions:
             pending_set_member: "Approve registration"
@@ -480,8 +487,8 @@ pages:
         profile:
             skills:
                 title: "Skills"
-            bio:
-                title: "Bio"
+            reserves:
+                title: "Nature reserves followed"
             groups:
                 title: "Groups"
 

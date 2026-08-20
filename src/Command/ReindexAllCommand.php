@@ -57,7 +57,7 @@ class ReindexAllCommand extends Command {
 			case 'groups':
 				return 'SELECT id, name, description, presentation FROM communaute_rnf_usergroups;';
 			case 'members':
-				return 'SELECT id, name, presentation, bio FROM communaute_rnf_users;';
+				return 'SELECT id, name, presentation, job_title, organisation, reserves FROM communaute_rnf_users;';
 			default:
 				return '';
 		}

@@ -8,6 +8,13 @@
 				<div>
 					<h1 class="h2 user--name">{{ user.name }}</h1>
 
+					{% set job = [] %}
+					{% if user.jobTitle is not empty %}{% set job = job|merge([user.jobTitle]) %}{% endif %}
+					{% if user.organisation is not empty %}{% set job = job|merge([user.organisation]) %}{% endif %}
+					{% if job is not empty %}
+						<div class="user--job">{{ job|join(' — ') }}</div>
+					{% endif %}
+
 					{% set location = [] %}
 					{% if user.city is not empty %}{% set location = location|merge([user.city]) %}{% endif %}
 					{% if user.country is not empty %}{% set location = location|merge([user.country|countryName]) %}{% endif %}
@@ -65,11 +72,11 @@
 			</div>
 		{% endif %}
 
-		{% if user.bio is not empty %}
-			<div class="user--bio">
-				<h2 class="h3">{{ 'pages.member.profile.bio.title'|trans }}&nbsp;:</h2>
+		{% if user.reserves is not empty %}
+			<div class="user--reserves">
+				<h2 class="h3">{{ 'pages.member.profile.reserves.title'|trans }}&nbsp;:</h2>
 
-				<p>{{ user.bio|nl2br }}</p>
+				<p>{{ user.reserves }}</p>
 			</div>
 		{% endif %}
 	</div>

@@ -32,6 +32,12 @@
 				<div class="user--infos">
 					<div class="user--name">{{ user.name }}</div>
 					<div class="user--presentation">{{ user.presentation }}</div>
+					{% set job = [] %}
+					{% if user.jobTitle is not empty %}{% set job = job|merge([user.jobTitle]) %}{% endif %}
+					{% if user.organisation is not empty %}{% set job = job|merge([user.organisation]) %}{% endif %}
+					{% if job is not empty %}
+						<div class="user--job">{{ job|join(' — ') }}</div>
+					{% endif %}
 				</div>
 			</div>
 		</a>

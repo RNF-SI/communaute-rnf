@@ -34,6 +34,23 @@
             </div>
         </div>
     </div>
+    <div class="form-row form-row__field">
+        {{ form_label(form.jobTitle, 'forms.user.job_title.label') }}
+        <div class="hint">{{ 'forms.user.job_title.hint'|trans }}</div>
+        {{ form_widget(form.jobTitle, {'attr': {'placeholder': 'forms.user.job_title.placeholder'}}) }}
+        <div class="form_errors">{{ form_errors(form.jobTitle) }}</div>
+    </div>
+    <div class="form-row form-row__field">
+        {{ form_label(form.organisation, 'forms.user.organisation.label') }}
+        {{ form_widget(form.organisation, {'attr': {'placeholder': 'forms.user.organisation.placeholder'}}) }}
+        <div class="form_errors">{{ form_errors(form.organisation) }}</div>
+    </div>
+    <div class="form-row form-row__field">
+        {{ form_label(form.reserves, 'forms.user.reserves.label') }}
+        <div class="hint">{{ 'forms.user.reserves.hint'|trans }}</div>
+        {{ form_widget(form.reserves, {'attr': {'placeholder': 'forms.user.reserves.placeholder'}}) }}
+        <div class="form_errors">{{ form_errors(form.reserves) }}</div>
+    </div>
     <div class="columns__66-33">
         <div class="form-row form-row__field">
             {{ form_label(form.city, 'forms.user.city.label') }}
@@ -68,12 +85,6 @@
         <div class="hint">{{ 'forms.user.presentation.hint'|trans }}</div>
         {{ form_widget(form.presentation, {'attr': {'placeholder': 'forms.user.presentation.placeholder'}}) }}
         <div class="form_errors">{{ form_errors(form.presentation) }}</div>
-    </div>
-    <div class="form-row form-row__field">
-        {{ form_label(form.bio, 'forms.user.bio.label') }}
-        <div class="hint">{{ 'forms.user.bio.hint'|trans }}</div>
-        {{ form_widget(form.bio, {'attr': {'placeholder': 'forms.user.bio.placeholder'}}) }}
-        <div class="form_errors">{{ form_errors(form.bio) }}</div>
     </div>
     <div class="form-row form-row__field">
         {{ form_label(form.skills, 'forms.user.skills.label') }}

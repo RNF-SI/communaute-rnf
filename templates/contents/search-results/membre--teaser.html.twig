@@ -4,6 +4,11 @@
 		<div class="result-type">{{ 'search.results.membre'|trans }}</div>
 		<div class="result-title">{{ membre.name|raw }}</div>
 		<div class="result-small-text">{{ membre.presentation|striptags('<br><em><p>')|raw }}</div>
-		<div class="result-small-text">{{ membre.bio|striptags('<br><em><p>')|raw }}</div>
+		{% set job = [] %}
+		{% if membre.jobTitle is not empty %}{% set job = job|merge([membre.jobTitle]) %}{% endif %}
+		{% if membre.organisation is not empty %}{% set job = job|merge([membre.organisation]) %}{% endif %}
+		{% if job is not empty %}
+			<div class="result-small-text">{{ job|join(' — ')|raw }}</div>
+		{% endif %}
 	</div>
 </a>

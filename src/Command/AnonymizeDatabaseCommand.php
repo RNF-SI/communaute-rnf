@@ -191,6 +191,26 @@ class AnonymizeDatabaseCommand extends Command {
 			$user->setBio( implode( ' ', $faker->paragraphs( 2 ) ) );
 		}
 
+		// Une structure et une réserve suffisent à reconnaître quelqu'un dans
+		// un réseau de cette taille : elles ne sortent pas de production. (#30)
+		if ( !empty( $user->getJobTitle() ) ) {
+			$user->setJobTitle( $faker->jobTitle() );
+		}
+
+		if ( !empty( $user->getOrganisation() ) ) {
+			$user->setOrganisation( $faker->company() );
+		}
+
+		if ( !empty( $user->getReserves() ) ) {
+			$user->setReserves( 'RN ' . $faker->city() );
+		}
+
+		// Un numéro direct est ce qu'il y a de plus personnel dans la fiche.
+		// (#27)
+		if ( !empty( $user->getPhone() ) ) {
+			$user->setPhone( $faker->phoneNumber() );
+		}
+
 		// Nobody must be able to sign in with a password taken from the copy.
 		$user->setPassword( '' );
 		$user->setResetToken( NULL );

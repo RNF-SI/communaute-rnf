@@ -183,8 +183,27 @@ class AppFixtures extends Fixture {
 			}
 
 			$user->setPresentation( mb_substr( $faker->sentence( 3 ), 0, 32 ) );
-			$user->setBio( implode( ' ', $faker->paragraphs( 2 ) ) );
 			$user->setCity( $faker->city() );
+
+			// Ce que l'annuaire montre d'abord : sans ces trois champs, les
+			// fiches se ressemblent toutes et on ne voit pas ce qu'ils
+			// apportent. (#30)
+			$user->setJobTitle( $faker->randomElement( [
+					'Conservateur de réserve naturelle',
+					'Conservatrice de réserve naturelle',
+					'Garde technicien',
+					'Chargée de mission scientifique',
+					'Animateur nature',
+					'Responsable de pôle',
+			] ) );
+			$user->setOrganisation( $faker->randomElement( [
+					'Conservatoire d\'espaces naturels',
+					'Parc naturel régional',
+					'Ligue pour la protection des oiseaux',
+					'Office national des forêts',
+					'Syndicat mixte de gestion',
+			] ) );
+			$user->setReserves( 'RN ' . $faker->city() );
 
 			$manager->persist( $user );
 			$manager->flush();

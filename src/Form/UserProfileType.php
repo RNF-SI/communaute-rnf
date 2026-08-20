@@ -14,7 +14,6 @@ use Symfony\Component\Form\Extension\Core\Type\CountryType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
-use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -86,6 +85,18 @@ class UserProfileType extends AbstractType {
 				->add( 'longitude', HiddenType::class, [
 						'required' => FALSE,
 				] )
+				->add( 'jobTitle', TextType::class, [
+						'required' => FALSE,
+						'attr'     => [ 'maxlength' => 100 ],
+				] )
+				->add( 'organisation', TextType::class, [
+						'required' => FALSE,
+						'attr'     => [ 'maxlength' => 150 ],
+				] )
+				->add( 'reserves', TextType::class, [
+						'required' => FALSE,
+						'attr'     => [ 'maxlength' => 255 ],
+				] )
 				->add( 'phone', TextType::class, [
 						'required' => FALSE,
 						'attr'     => [ 'maxlength' => 30 ],
@@ -96,9 +107,6 @@ class UserProfileType extends AbstractType {
 				->add( 'presentation', TextType::class, [
 						'required' => FALSE,
 						'attr'     => [ 'maxlength' => 32 ],
-				] )
-				->add( 'bio', TextareaType::class, [
-						'required' => FALSE,
 				] )
 				->add( 'skills', EntityType::class, [
 						'class'                     => Skill::class,

@@ -250,6 +250,15 @@
 			color:     $color_grey_neutral
 		}
 
+		/* Fonction et structure : ce qui identifie quelqu'un dans un annuaire
+		   professionnel, donc lu avant la localisation. (#30) */
+		.user--job {
+			margin-bottom: rem(4px);
+
+			font-size:     rem(16px);
+			font-weight:   600;
+		}
+
 		.user--avatar {
 			width:  rem(100px);
 			height: rem(100px);
@@ -468,5 +477,17 @@
 
 		color:     $color_grey_neutral;
 		font-size: rem(13px);
+	}
+}
+
+/**
+ * La fonction dans les listes de membres : plus discrète que sur la fiche,
+ * elle doit rester lisible sans voler la vedette au nom. (#30)
+ */
+.user__teaser,
+.user__in-members-list {
+	.user--job {
+		font-size: rem(14px);
+		color:     $color_grey_neutral;
 	}
 }

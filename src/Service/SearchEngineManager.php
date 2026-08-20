@@ -199,7 +199,7 @@ class SearchEngineManager
 			$entities = $repository->searchFromIdsAndProperties($searchResults['ids'], $groups, $particularGroupsFilter, $currentUserId, $categoryParams['propertyList'], ['page' => $options['page'], 'limit' => $options['per_index_per_page']]);
 			//Style
 			$toHightlight = ['title', 'discussion_title', 'name'];
-			$toSnippetAndHightlight = ['body', 'presentation', 'bio'];
+			$toSnippetAndHightlight = ['body', 'presentation', 'jobTitle', 'organisation', 'reserves'];
 			$results[$category] = $this->applyTntStyles($text, $entities, $toHightlight, $toSnippetAndHightlight);
 			$categoryCount = $repository->searchCountFromIdsAndProperties($searchResults['ids'], $groups, $particularGroupsFilter, $currentUserId, $categoryParams['propertyList']);
 			if ($maxCountPerCategory < $categoryCount) {

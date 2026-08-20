@@ -93,6 +93,31 @@ class User implements UserInterface, JsonSerializable {
 	private $presentation;
 
 	/**
+	 * Ce qu'un annuaire professionnel doit dire d'abord : la fonction, la
+	 * structure, et les réserves suivies. Saisi à la main pour l'instant ;
+	 * GeoNature fait autorité sur ces informations et devrait les fournir un
+	 * jour, comme il le fait déjà pour le nom. (#30, #28)
+	 *
+	 * @ORM\Column(type="string", length=100, nullable=true)
+	 */
+	private $jobTitle;
+
+	/**
+	 * @ORM\Column(type="string", length=150, nullable=true)
+	 */
+	private $organisation;
+
+	/**
+	 * @ORM\Column(type="string", length=255, nullable=true)
+	 */
+	private $reserves;
+
+	/**
+	 * Héritage NaturAdapt, retiré du profil et de la fiche annuaire : une
+	 * biographie libre ne disait pas ce qu'on cherche dans cet annuaire.
+	 * La colonne reste le temps de vérifier ce qu'elle contient encore, elle
+	 * n'est plus ni lue ni écrite nulle part. (#30)
+	 *
 	 * @ORM\Column(type="text", nullable=true)
 	 */
 	private $bio;
@@ -351,6 +376,42 @@ class User implements UserInterface, JsonSerializable {
 
 	public function setPresentation ( ?string $presentation ): self {
 		$this->presentation = mb_substr( trim( $presentation ?? '' ), 0, 32 );
+
+		return $this;
+	}
+
+	public function getJobTitle (): ?string {
+		return $this->jobTitle;
+	}
+
+	public function setJobTitle ( ?string $jobTitle ): self {
+		$jobTitle = trim( $jobTitle ?? '' );
+
+		$this->jobTitle = ( $jobTitle === '' ) ? NULL : mb_substr( $jobTitle, 0, 100 );
+
+		return $this;
+	}
+
+	public function getOrganisation (): ?string {
+		return $this->organisation;
+	}
+
+	public function setOrganisation ( ?string $organisation ): self {
+		$organisation = trim( $organisation ?? '' );
+
+		$this->organisation = ( $organisation === '' ) ? NULL : mb_substr( $organisation, 0, 150 );
+
+		return $this;
+	}
+
+	public function getReserves (): ?string {
+		return $this->reserves;
+	}
+
+	public function setReserves ( ?string $reserves ): self {
+		$reserves = trim( $reserves ?? '' );
+
+		$this->reserves = ( $reserves === '' ) ? NULL : mb_substr( $reserves, 0, 255 );
 
 		return $this;
 	}

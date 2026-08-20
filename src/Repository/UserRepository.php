@@ -154,7 +154,9 @@ class UserRepository extends ServiceEntityRepository {
 						$qb->expr()->like( 'u.name', ':' . $var ),
 						$qb->expr()->like( 'u.displayName', ':' . $var ),
 						$qb->expr()->like( 'u.presentation', ':' . $var ),
-						$qb->expr()->like( 'u.bio', ':' . $var )
+						$qb->expr()->like( 'u.jobTitle', ':' . $var ),
+						$qb->expr()->like( 'u.organisation', ':' . $var ),
+						$qb->expr()->like( 'u.reserves', ':' . $var )
 				) )
 				   ->setParameter( $var, '%' . $word . '%' );
 			}

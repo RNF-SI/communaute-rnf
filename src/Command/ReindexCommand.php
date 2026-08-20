@@ -64,7 +64,7 @@ class ReindexCommand extends Command {
 						WHERE is_active<>0
 						ORDER BY is_important DESC, id ASC;';
 			case 'members':
-				return 'SELECT id, name, presentation, bio FROM communaute_rnf_users;';
+				return 'SELECT id, name, presentation, job_title, organisation, reserves FROM communaute_rnf_users;';
 			default:
 				return '';
 		}
