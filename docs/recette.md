@@ -29,8 +29,33 @@ droits (#33), mises en forme par une feuille de style récente.
 
 Deux façons d'entrer, selon ce que vous voulez essayer.
 
-**Avec les comptes des données de test** — pratique pour passer d'un rôle à
-l'autre. Ils n'existent pas dans GeoNature : il faut allumer la connexion par
+### D'abord : contre quel GeoNature ?
+
+Une préproduction doit pointer vers l'instance de **test**, sans quoi elle
+authentifie contre le GeoNature de production :
+
+```bash
+# .env.local
+RNF_AUTH_API_ENDPOINT=https://geonature-test.reserves-naturelles.org
+RNF_AUTH_ID_APPLICATION=…   # à vérifier : l'identifiant peut différer de celui de production
+```
+
+**La meilleure façon d'entrer** est alors d'y créer des comptes portant **les
+mêmes adresses que les comptes des données de test**. À la première connexion,
+`syncLocalUser` retrouve le compte local par son adresse et l'adopte : on hérite
+de son profil, de ses groupes, de ses notifications — et l'on éprouve le vrai
+chemin d'authentification, celui de la production. Seuls le nom et le nom
+affiché sont réécrits par GeoNature, ce qui est précisément le comportement de
+#36.
+
+⚠️ L'export « Liens utilisateurs-réserves » **n'existe pas** sur l'instance de
+test : `app:rnf:sync-reserves` n'y remontera rien, et le champ reste saisi à la
+main. Le service le constate sans rien vider (#28).
+
+### À défaut : la connexion par mot de passe
+
+**Avec les comptes des données de test** — dépannage quand le SSO de test n'est
+pas prêt. Ils n'existent pas dans GeoNature : il faut allumer la connexion par
 mot de passe, éteinte partout par défaut.
 
 ```bash

@@ -57,6 +57,13 @@ plateforme envoie est mis en quarantaine**.
 
 ### Les variables
 
+⚠️ **`RNF_AUTH_API_ENDPOINT` doit pointer vers l'instance de test** en
+préproduction (`https://geonature-test.reserves-naturelles.org`). La valeur du
+dépôt est celle de la production : la laisser telle quelle fait authentifier la
+préproduction contre les comptes réels du réseau. `RNF_AUTH_ID_APPLICATION`
+peut différer d'une instance à l'autre, à vérifier dans UsersHub.
+
+
 Dans le `.env.local` de la préproduction :
 
 ```bash
