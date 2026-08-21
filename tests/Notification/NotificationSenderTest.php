@@ -238,6 +238,8 @@ class NotificationSenderTest extends KernelTestCase {
 	public function testADiscussionMessageOnTheImmediateRhythmIsNotQueuedForTheSummary () {
 		$author = $this->member();
 		$reader = $this->member();
+		$reader->setNotificationLevel( NotificationCategory::DISCUSSIONS, NotificationLevel::IMMEDIATE );
+		$this->manager->flush();
 
 		$this->sender->notifyNewDiscussionMessage( $this->discussionMessage( $author->getUser() ) );
 
@@ -250,15 +252,93 @@ class NotificationSenderTest extends KernelTestCase {
 		);
 	}
 
-	public function testADiscussionMessageOnTheDigestRhythmIsQueuedForTheSummary () {
+	public function testADiscussionMessageIsQueuedForTheSummaryByDefault () {
 		$author = $this->member();
 		$reader = $this->member();
-		$reader->getUser()->setDiscussionEmailRhythm( NotificationRhythm::DIGEST );
-		$this->manager->flush();
 
 		$this->sender->notifyNewDiscussionMessage( $this->discussionMessage( $author->getUser() ) );
 
-		$this->assertTrue( $this->notificationsFor( $reader->getUser() )[ 0 ]->isByEmail() );
+		$this->assertTrue(
+				$this->notificationsFor( $reader->getUser() )[ 0 ]->isByEmail(),
+				'Assert the default is the daily summary, as asked in #40'
+		);
+	}
+
+	/**
+	 * Le rythme est retenu sur la notification, et non relu sur le membre au
+	 * moment de l'envoi : c'est ce qui permet à deux notifications d'une même
+	 * personne de partir des jours différents. (#40)
+	 */
+	public function testTheNotificationRemembersWhenItsSummaryLeaves () {
+		$author = $this->member();
+		$reader = $this->member();
+		$reader->setNotificationLevel( NotificationCategory::PAGES, NotificationLevel::WEEKLY );
+		$this->manager->flush();
+
+		$this->sender->notifyNewPage( $this->page( $author->getUser() ) );
+
+		$notification = $this->notificationsFor( $reader->getUser() )[ 0 ];
+
+		$this->assertTrue( $notification->isByEmail() );
+		$this->assertEquals( NotificationRhythm::WEEKLY, $notification->getRhythm() );
+	}
+
+	public function testTwoCategoriesOfTheSameMemberCanLeaveOnDifferentDays () {
+		$author = $this->member();
+		$reader = $this->member();
+		$reader->setNotificationLevel( NotificationCategory::PAGES, NotificationLevel::WEEKLY );
+		$reader->setNotificationLevel( NotificationCategory::DISCUSSIONS, NotificationLevel::DAILY );
+		$this->manager->flush();
+
+		$this->sender->notifyNewPage( $this->page( $author->getUser() ) );
+		$this->sender->notifyNewDiscussionMessage( $this->discussionMessage( $author->getUser() ) );
+
+		$rhythms = [];
+
+		foreach ( $this->notificationsFor( $reader->getUser() ) as $notification ) {
+			$rhythms[ $notification->getType() ] = $notification->getRhythm();
+		}
+
+		$this->assertEquals( NotificationRhythm::WEEKLY, $rhythms[ Notification::PAGE_CREATE ] );
+		$this->assertEquals( NotificationRhythm::DAILY, $rhythms[ Notification::DISCUSSION_MESSAGE ] );
+	}
+
+	/**
+	 * Une page réglée sur l'immédiat part tout de suite : elle ne doit pas
+	 * repartir le soir dans le résumé. En test le jeton Postmark est vide,
+	 * l'envoi ne sort pas de la machine, mais la notification est marquée
+	 * comme partie — c'est cela qu'on vérifie. (#40)
+	 */
+	public function testAPageOnTheImmediateRhythmDoesNotAlsoJoinTheSummary () {
+		$author = $this->member();
+		$reader = $this->member();
+		$reader->setNotificationLevel( NotificationCategory::PAGES, NotificationLevel::IMMEDIATE );
+		$this->manager->flush();
+
+		$this->sender->notifyNewPage( $this->page( $author->getUser() ) );
+
+		$notification = $this->notificationsFor( $reader->getUser() )[ 0 ];
+
+		$this->assertFalse( $notification->isByEmail(), 'Assert it does not wait for the summary' );
+		$this->assertNotNull( $notification->getEmailedAt(), 'Assert it went out as the page was published' );
+	}
+
+	public function testAMemberWhoRefusesEmailsGetsNothingImmediateEither () {
+		$author = $this->member();
+		$reader = $this->member();
+		$reader->setNotificationLevel( NotificationCategory::PAGES, NotificationLevel::IMMEDIATE );
+		$reader->getUser()->setWantsEmails( FALSE );
+		$this->manager->flush();
+
+		$this->sender->notifyNewPage( $this->page( $author->getUser() ) );
+
+		$notification = $this->notificationsFor( $reader->getUser() )[ 0 ];
+
+		$this->assertFalse( $notification->isByEmail() );
+		$this->assertNull(
+				$notification->getEmailedAt(),
+				'Assert « aucun e-mail » holds against the immediate rhythm too'
+		);
 	}
 
 	public function testFollowingOneDiscussionInAMutedCategory () {
@@ -267,7 +347,7 @@ class NotificationSenderTest extends KernelTestCase {
 		$message = $this->discussionMessage( $author->getUser() );
 
 		$reader->setNotificationLevel( NotificationCategory::DISCUSSIONS, NotificationLevel::NONE );
-		$reader->setDiscussionOverride( $message->getDiscussion()->getUuid(), NotificationLevel::EMAIL );
+		$reader->setDiscussionOverride( $message->getDiscussion()->getUuid(), NotificationLevel::DAILY );
 		$this->manager->flush();
 
 		$this->sender->notifyNewDiscussionMessage( $message );

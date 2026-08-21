@@ -10,7 +10,6 @@ use App\Entity\User;
 use App\Entity\UsergroupMembership;
 use App\Notification\NotificationCategory;
 use App\Notification\NotificationLevel;
-use App\Notification\NotificationRhythm;
 use App\Form\UserProfileType;
 use App\Security\LoginFormAuthenticator;
 use App\Security\UserVoter;
@@ -202,10 +201,6 @@ class UserController extends AbstractController
 
 			$user->setWantsEmails(!empty($settings['emails']));
 
-			if (!empty($settings['discussionRhythm'])) {
-				$user->setDiscussionEmailRhythm($settings['discussionRhythm']);
-			}
-
 			// Le réglage général : ce que vaut un groupe qui ne dit rien.
 			foreach (NotificationCategory::all() as $category) {
 				if (!empty($settings['defaults'][$category])) {
@@ -258,11 +253,17 @@ class UserController extends AbstractController
 			return $this->redirectToRoute('user_parameters_edit');
 		}
 
+		// Y venir, c'est avoir lu l'annonce : elle envoie ici, et la répéter
+		// ensuite ne dirait plus rien. (#40)
+		if ($user->awaitsNotificationsNotice()) {
+			$user->markNotificationsNoticeSeen(new DateTime());
+			$manager->flush();
+		}
+
 		return $this->render('pages/user/parameters-edit.html.twig', [
 				'user'       => $user,
 				'categories' => NotificationCategory::all(),
 				'levels'     => NotificationLevel::all(),
-				'rhythms'    => NotificationRhythm::all(),
 		]);
 	}
 
@@ -405,6 +406,58 @@ class UserController extends AbstractController
 
 		// Sur « mes groupes », là où la visite a de quoi montrer.
 		return $this->redirectToRoute( 'user_groups', [ TourExtension::REPLAY => 1 ] );
+	}
+
+	/**
+	 * Refermer l'annonce du changement de notifications. (#40)
+	 *
+	 * Un formulaire, pas un appel JavaScript : le bandeau doit pouvoir se
+	 * refermer sans scripts, comme le reste de la page des paramètres.
+	 *
+	 * @Route("/user/notifications/notice", name="user_notifications_notice", methods={"POST"})
+	 *
+	 * @param \Symfony\Component\HttpFoundation\Request $request
+	 * @param \Doctrine\ORM\EntityManagerInterface      $manager
+	 *
+	 * @return \Symfony\Component\HttpFoundation\RedirectResponse
+	 */
+	public function userNotificationsNotice ( Request $request, EntityManagerInterface $manager ) {
+		$this->denyAccessUnlessGranted( UserVoter::LOGGED );
+
+		if ( !$this->isCsrfTokenValid( 'notifications-notice', $request->request->get( '_token' ) ) ) {
+			throw $this->createAccessDeniedException( 'Invalid token' );
+		}
+
+		/**
+		 * @var User $user
+		 */
+		$user = $this->getUser();
+
+		if ( $user->awaitsNotificationsNotice() ) {
+			$user->markNotificationsNoticeSeen( new DateTime() );
+			$manager->flush();
+		}
+
+		// Revenir là où on était : l'annonce suit le membre de page en page,
+		// la refermer ne doit pas le déplacer.
+		$back = $request->request->get( 'back' );
+
+		return $this->redirect( $this->isSafeRedirect( $back ) ? $back : $this->generateUrl( 'homepage' ) );
+	}
+
+	/**
+	 * Une adresse interne, et rien d'autre : un chemin absolu qui ne repart
+	 * pas vers un autre hôte.
+	 *
+	 * @param string|null $target
+	 *
+	 * @return bool
+	 */
+	private function isSafeRedirect ( $target ) {
+		return is_string( $target )
+			   && ( strpos( $target, '/' ) === 0 )
+			   && ( strpos( $target, '//' ) !== 0 )
+			   && ( strpos( $target, '/\\' ) !== 0 );
 	}
 
 	/**

@@ -8,7 +8,6 @@ use App\Entity\Usergroup;
 use App\Entity\UsergroupMembership;
 use App\Notification\NotificationCategory;
 use App\Notification\NotificationLevel;
-use App\Notification\NotificationRhythm;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Ramsey\Uuid\Uuid;
@@ -166,7 +165,7 @@ class NotificationSettingsTest extends WebTestCase {
 				'Assert the choice is kept'
 		);
 		$this->assertEquals(
-				NotificationLevel::EMAIL,
+				NotificationLevel::DAILY,
 				$membership->getNotificationLevel( NotificationCategory::DOCUMENTS ),
 				'Assert the other categories are untouched'
 		);
@@ -276,15 +275,57 @@ class NotificationSettingsTest extends WebTestCase {
 		$this->assertFalse( $this->reloadUser()->wantsEmails() );
 	}
 
-	public function testTheDiscussionRhythmCanBeChanged () {
+	/**
+	 * Le rythme se choisit dans la même liste que le reste, catégorie par
+	 * catégorie : il n'y a plus de réglage séparé. (#40)
+	 */
+	public function testTheRhythmIsChosenCategoryByCategory () {
 		$crawler = $this->openSettings();
 		$form    = $crawler->filter( '.notifications-settings form' )->form();
 
-		$form[ 'notifications[discussionRhythm]' ]->select( NotificationRhythm::DIGEST );
+		$form[ 'notifications[defaults][' . NotificationCategory::DISCUSSIONS . ']' ]
+				->select( NotificationLevel::IMMEDIATE );
+		$form[ 'notifications[defaults][' . NotificationCategory::DOCUMENTS . ']' ]
+				->select( NotificationLevel::WEEKLY );
 
 		$this->client->submit( $form );
 
-		$this->assertEquals( NotificationRhythm::DIGEST, $this->reloadUser()->getDiscussionEmailRhythm() );
+		$user = $this->reloadUser();
+
+		$this->assertEquals(
+				NotificationLevel::IMMEDIATE,
+				$user->getDefaultNotificationLevel( NotificationCategory::DISCUSSIONS )
+		);
+		$this->assertEquals(
+				NotificationLevel::WEEKLY,
+				$user->getDefaultNotificationLevel( NotificationCategory::DOCUMENTS )
+		);
+	}
+
+	public function testTheFiveChoicesAreOffered () {
+		$crawler = $this->openSettings();
+
+		$options = $crawler
+				->filter( '#notif-default-' . NotificationCategory::PAGES . ' option' )
+				->each( function ( $option ) {
+					return $option->attr( 'value' );
+				} );
+
+		$this->assertEquals(
+				NotificationLevel::all(),
+				$options,
+				'Assert the whole scale is offered: nothing, platform, immediate, daily, weekly'
+		);
+	}
+
+	public function testTheOldSeparateRhythmFieldIsGone () {
+		$crawler = $this->openSettings();
+
+		$this->assertEquals(
+				0,
+				$crawler->filter( '#discussion-rhythm' )->count(),
+				'Assert the rhythm is not asked twice, in two places that could disagree'
+		);
 	}
 
 	public function testSettingsAreRefusedWithoutAValidToken () {
@@ -336,15 +377,35 @@ class NotificationSettingsTest extends WebTestCase {
 		$this->manager->flush();
 
 		$this->client->request( 'GET', sprintf(
-				'/groups/%s/discussions/%s/follow/email',
+				'/groups/%s/discussions/%s/follow/%s',
 				$this->group->getSlug(),
-				$discussion->getUuid()
+				$discussion->getUuid(),
+				NotificationLevel::DAILY
 		) );
 
 		$this->assertEquals(
-				NotificationLevel::EMAIL,
+				NotificationLevel::DAILY,
 				$this->reloadMembership()->getLevelForDiscussion( $discussion->getUuid() ),
 				'Assert the special case of the issue can be reached from the interface'
+		);
+	}
+
+	/**
+	 * « Suivre » doit dire un rythme, maintenant qu'il y en a trois. Il
+	 * reprend celui que le membre a choisi sur les discussions du groupe
+	 * plutôt que de lui en imposer un. (#40)
+	 */
+	public function testFollowingADiscussionKeepsTheRhythmTheMemberChose () {
+		$this->membership->setNotificationLevel( NotificationCategory::DISCUSSIONS, NotificationLevel::WEEKLY );
+
+		$this->assertEquals( NotificationLevel::WEEKLY, $this->membership->getFollowLevel() );
+
+		$this->membership->setNotificationLevel( NotificationCategory::DISCUSSIONS, NotificationLevel::NONE );
+
+		$this->assertEquals(
+				NotificationLevel::DAILY,
+				$this->membership->getFollowLevel(),
+				'Assert a muted category falls back on the daily summary rather than on nothing'
 		);
 	}
 

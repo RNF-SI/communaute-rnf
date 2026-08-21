@@ -42,7 +42,7 @@ class NotificationRhythmTest extends TestCase {
 	public function testTheDailySummaryLeavesEveryDay () {
 		foreach ( [ '2026-08-24', '2026-08-27', '2026-08-30' ] as $day ) {
 			$this->assertTrue(
-					NotificationRhythm::sendsOn( NotificationRhythm::DIGEST, $this->day( $day ) ),
+					NotificationRhythm::sendsOn( NotificationRhythm::DAILY, $this->day( $day ) ),
 					sprintf( 'Assert the daily summary is not held back on %s', $day )
 			);
 		}
@@ -57,8 +57,19 @@ class NotificationRhythmTest extends TestCase {
 
 	public function testTheThreeRhythmsAreOffered () {
 		$this->assertEquals(
-				[ NotificationRhythm::IMMEDIATE, NotificationRhythm::DIGEST, NotificationRhythm::WEEKLY ],
+				[ NotificationRhythm::IMMEDIATE, NotificationRhythm::DAILY, NotificationRhythm::WEEKLY ],
 				NotificationRhythm::all()
+		);
+	}
+
+	public function testTheOldNameOfTheDailySummaryIsStillRead () {
+		$this->assertFalse(
+				NotificationRhythm::exists( NotificationRhythm::LEGACY_DIGEST ),
+				'Assert it is not offered any more'
+		);
+		$this->assertTrue(
+				NotificationRhythm::stored( NotificationRhythm::LEGACY_DIGEST ),
+				'Assert an account settled before #40 is still readable'
 		);
 	}
 
@@ -72,11 +83,11 @@ class NotificationRhythmTest extends TestCase {
 		$this->assertFalse( NotificationRhythm::exists( 'mensuel' ) );
 	}
 
-	public function testTheDefaultRhythmChangesNobodyBehaviour () {
+	public function testTheDefaultRhythmIsTheDailySummary () {
 		$this->assertEquals(
-				NotificationRhythm::IMMEDIATE,
+				NotificationRhythm::DAILY,
 				NotificationRhythm::DEFAULT_RHYTHM,
-				'Assert somebody who never opened the settings keeps getting what they used to'
+				'Assert an e-mail nobody said anything about goes out once a day, as asked in #40'
 		);
 	}
 

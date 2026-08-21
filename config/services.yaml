@@ -93,6 +93,13 @@ services:
       $transport: "@postmark_bulk"
       $params: "%postmark%"
 
+  # Même transport en lot que les discussions, mais l'adresse d'expédition de
+  # la plateforme : on ne répond pas à une page. (#40)
+  App\Service\ContentSender:
+    arguments:
+      $transport: "@postmark_bulk"
+      $params: "%plateform%"
+
   # Le transport des discussions porte le second jeton Postmark : la commande
   # de contrôle doit l'éprouver lui, pas le mailer par défaut. (#14)
   App\Command\MailCheckCommand:

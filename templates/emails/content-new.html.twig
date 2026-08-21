@@ -1,0 +1,37 @@
+{% extends 'emails/base.html.twig' %}
+
+{# L'e-mail qui part au moment où une page, une actualité ou un document
+   paraît, pour qui a demandé l'immédiat sur cette catégorie. (#40)
+
+   Il dit la même phrase que le résumé — la même clé de traduction — pour que
+   les deux se lisent pareil : ce qui change est le moment, pas le propos. #}
+
+{% set what = ('pages.user.notifications.types.' ~ notification.type|replace({':': '_'}))|trans %}
+
+{% block title %}{{ what }} {{ notification.title }}{% endblock %}
+
+{% block preheader %}{{ what }} {{ notification.title }}{% endblock %}
+
+{% block body %}
+	<p>{{ 'emails.content.hello'|trans|format(user.displayName) }}</p>
+
+	<p>
+		{% if group %}
+			{{ 'emails.content.in_group'|trans|format(group.name) }}
+		{% endif %}
+		{{ what }}
+	</p>
+
+	<p>
+		<a href="{{ absolute_url(notification.url) }}">{{ notification.title }}</a>
+	</p>
+
+	{% if notification.author %}
+		<p class="sub">{{ 'emails.content.by'|trans|format(notification.author.displayName) }}</p>
+	{% endif %}
+
+	<p class="sub">
+		{{ 'emails.content.settings'|trans }}
+		<a href="{{ absolute_url(path('user_parameters_edit')) }}">{{ 'pages.user.parameters_edit.link'|trans }}</a>
+	</p>
+{% endblock %}

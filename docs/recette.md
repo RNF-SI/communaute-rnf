@@ -197,7 +197,11 @@ C'est la partie qui demande deux comptes — deux comptes de test dans deux navi
 | Avec beaucoup de groupes : taper un nom dans **Chercher un groupe** | La liste se réduit, le compte suit ; accents et majuscules sont ignorés |
 | « Remettre tous mes groupes au réglage général » | Confirmation demandée, puis tous les groupes suivent de nouveau |
 | Couper la catégorie discussions, puis « suivre » une discussion | Notifié de celle-là seulement (#17) |
-| Mes paramètres → rythme | **Trois choix** : à chaque message, résumé quotidien, **résumé hebdomadaire le lundi** (#38) |
+| Mes paramètres → n'importe quelle liste | **Cinq choix** : aucune, plateforme seulement, e-mail immédiat, résumé quotidien, résumé hebdomadaire le lundi (#38, #40) |
+| Un compte qui n'a jamais rien réglé | Tout arrive dans le **résumé quotidien** : c'est le défaut depuis #40 |
+| Régler « Discussions » sur **e-mail immédiat** et « Documents » sur **hebdomadaire** | Les messages arrivent un par un, les documents attendent lundi — le rythme se choisit ligne par ligne (#40) |
+| Régler « Pages » sur **e-mail immédiat**, publier une page depuis l'autre compte | Un e-mail part tout de suite, et la page **ne revient pas** dans le résumé du soir (#40) |
+| Première connexion après la mise à jour | Un bandeau annonce le changement, avec un lien vers les réglages ; il ne revient pas ensuite (#40) |
 | L'autre personne vous mentionne dans une discussion **mise en sourdine** | Vous êtes quand même notifié (#37) |
 | Poster un message de discussion | L'autre le reçoit **une seule fois** (#12), vous ne le recevez pas (#15) |
 | Demander à rejoindre un groupe privé | L'animateur le voit, même si l'e-mail échoue (#4) |

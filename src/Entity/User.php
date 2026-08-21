@@ -824,13 +824,29 @@ class User implements UserInterface, JsonSerializable {
 	}
 
 	/**
-	 * @return string one of NotificationRhythm
+	 * @return string|null the rhythm this member chose before #40, when the
+	 *                     rhythm was one setting for everything, or NULL if
+	 *                     they never chose one
 	 */
-	public function getDiscussionEmailRhythm (): string {
+	public function getLegacyDiscussionRhythm (): ?string {
 		$settings = $this->notificationsSettings ?: [];
 		$rhythm   = isset( $settings[ 'discussionRhythm' ] ) ? $settings[ 'discussionRhythm' ] : NULL;
 
-		return NotificationRhythm::exists( $rhythm ) ? $rhythm : NotificationRhythm::DEFAULT_RHYTHM;
+		return NotificationRhythm::stored( $rhythm ) ? $rhythm : NULL;
+	}
+
+	/**
+	 * @deprecated depuis #40 : le rythme se lit dans le niveau de chaque
+	 *             catégorie. Ne subsiste que pour lire les comptes d'avant.
+	 *
+	 * @return string one of NotificationRhythm
+	 */
+	public function getDiscussionEmailRhythm (): string {
+		$rhythm = $this->getLegacyDiscussionRhythm();
+
+		return ( $rhythm === NotificationRhythm::LEGACY_DIGEST )
+				? NotificationRhythm::DAILY
+				: ( $rhythm ?: NotificationRhythm::DEFAULT_RHYTHM );
 	}
 
 	/**
@@ -842,9 +858,11 @@ class User implements UserInterface, JsonSerializable {
 	 */
 	public function getDefaultNotificationLevel ( string $category ): string {
 		$settings = $this->notificationsSettings ?: [];
-		$level    = isset( $settings[ 'categories' ][ $category ] ) ? $settings[ 'categories' ][ $category ] : NULL;
+		$stored   = isset( $settings[ 'categories' ][ $category ] ) ? $settings[ 'categories' ][ $category ] : NULL;
 
-		return NotificationLevel::exists( $level ) ? $level : NotificationLevel::DEFAULT_LEVEL;
+		$level = NotificationLevel::fromLegacy( $stored, $this->getLegacyDiscussionRhythm(), $category );
+
+		return $level !== NULL ? $level : NotificationLevel::DEFAULT_LEVEL;
 	}
 
 	/**
@@ -867,13 +885,70 @@ class User implements UserInterface, JsonSerializable {
 		return $this;
 	}
 
+	/**
+	 * @deprecated depuis #40. Accepte l'ancien vocabulaire — « digest » — pour
+	 *             que les comptes d'avant se reconstituent tels quels.
+	 */
 	public function setDiscussionEmailRhythm ( string $rhythm ): self {
-		if ( !NotificationRhythm::exists( $rhythm ) ) {
+		if ( !NotificationRhythm::stored( $rhythm ) ) {
 			return $this;
 		}
 
 		$settings                       = $this->notificationsSettings ?: [];
 		$settings[ 'discussionRhythm' ] = $rhythm;
+
+		$this->notificationsSettings = $settings;
+
+		return $this;
+	}
+
+	/**
+	 * Le JSON tel quel. Écrire par ici court-circuite les validations : c'est
+	 * fait pour reconstituer un compte d'avant #40, pas pour enregistrer un
+	 * choix.
+	 *
+	 * @return array
+	 */
+	public function getNotificationsSettings (): array {
+		return $this->notificationsSettings ?: [];
+	}
+
+	public function setNotificationsSettings ( ?array $settings ): self {
+		$this->notificationsSettings = $settings ?: [];
+
+		return $this;
+	}
+
+	/**
+	 * Reste-t-il à prévenir ce membre que les notifications ont changé de
+	 * fonctionnement ? (#40)
+	 *
+	 * Le changement de défaut ne se voit pas : quelqu'un qui recevait un
+	 * e-mail par message de discussion se retrouve avec un résumé quotidien
+	 * sans que rien ne le lui dise. L'annonce est là pour ça, elle ne se
+	 * montre qu'une fois, et elle ne s'adresse qu'aux comptes que la bascule
+	 * a effectivement traversée : c'est la migration qui pose le drapeau sur
+	 * les comptes existants, personne ne le pose ensuite, et les inscrits
+	 * d'après ne lisent donc jamais l'annonce d'un changement qu'ils n'ont
+	 * pas connu.
+	 *
+	 * @return bool
+	 */
+	public function awaitsNotificationsNotice (): bool {
+		$settings = $this->notificationsSettings ?: [];
+
+		return !empty( $settings[ 'noticePending' ] );
+	}
+
+	/**
+	 * @return $this
+	 */
+	public function markNotificationsNoticeSeen ( DateTimeInterface $seenAt ): self {
+		$settings = $this->notificationsSettings ?: [];
+
+		unset( $settings[ 'noticePending' ] );
+
+		$settings[ 'noticeSeenAt' ] = $seenAt->format( DATE_ATOM );
 
 		$this->notificationsSettings = $settings;
 

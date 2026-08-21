@@ -363,12 +363,7 @@ pages:
             introduction: "Choisissez ce dont vous voulez être prévenu·e : une fois pour tous vos groupes, puis groupe par groupe pour ceux qui doivent s’en écarter."
             emails: "Recevoir des e-mails"
             emails_hint: "Décoché, vous gardez vos notifications sur la plateforme mais ne recevez plus aucun e-mail."
-            rhythm: "E-mails des discussions"
-            rhythm_hint: "Le résumé regroupe tout en un seul e-mail, mais ne permet plus de répondre depuis votre boîte mail. Le résumé hebdomadaire part le lundi matin."
-            rhythms:
-                immediate: "Un e-mail à chaque message"
-                digest: "Dans le résumé quotidien"
-                weekly: "Dans le résumé hebdomadaire, le lundi"
+            rhythm_hint: "Le rythme se choisit ligne par ligne : un e-mail dès qu’il se passe quelque chose, ou un résumé qui regroupe tout — une fois par jour, ou le lundi matin. Un résumé ne permet pas de répondre depuis votre boîte mail."
             general: "Pour tous mes groupes"
             general_hint: "Ce réglage s’applique à tous vos groupes. Vous n’aurez à descendre plus bas que pour les quelques-uns qui doivent s’en écarter."
             groups_hint: "Un groupe suit le réglage général tant que vous ne dites rien d’autre ici. Dépliez-en un pour le régler à part."
@@ -389,8 +384,16 @@ pages:
             levels:
                 none: "Aucune notification"
                 app: "Sur la plateforme seulement"
+                immediate: "E-mail immédiat"
+                daily: "Résumé quotidien"
+                weekly: "Résumé hebdomadaire, le lundi"
                 email: "Sur la plateforme et par e-mail"
             submit: "Enregistrer mes préférences"
+        notifications_notice:
+            title: "Vos notifications ont changé"
+            body: "Vous choisissez désormais, pour chaque type de contenu et pour chaque groupe, un e-mail immédiat, un résumé quotidien ou un résumé hebdomadaire. Sans réglage de votre part, tout arrive maintenant dans un résumé quotidien — y compris les messages de discussion, qui partaient jusqu’ici un par un."
+            settings: "Régler mes notifications"
+            dismiss: "J’ai compris"
         notifications:
             title: "Mes notifications"
             link: "Mes notifications"
@@ -741,7 +744,7 @@ pages:
                 link: "Régler mes notifications"
             rhythm:
                 title: "À quel rythme"
-                body: "Un e-mail à chaque message, un résumé quotidien, ou un résumé hebdomadaire le lundi. C’est ce réglage qui décide si la plateforme vous aide ou vous encombre."
+                body: "Chaque liste offre le même choix : rien, la plateforme seule, un e-mail immédiat, un résumé quotidien ou un résumé hebdomadaire le lundi. C’est ce réglage qui décide si la plateforme vous aide ou vous encombre."
             replay:
                 title: "Revoir cette visite"
                 body: "Ce lien la relance depuis le début, quand vous voulez. Une fois terminée, elle ne se rouvrira pas d’elle-même."
@@ -815,6 +818,12 @@ emails:
         hello: "Bonjour %s,"
         introduction: "Voici ce qui s’est passé dans vos groupes depuis le dernier résumé."
         settings: "Vous pouvez régler ce que vous recevez depuis vos"
+
+    content:
+        hello: "Bonjour %s,"
+        in_group: "Dans le groupe « %s » :"
+        by: "Déposé par %s."
+        settings: "Vous recevez cet e-mail tout de suite parce que vous l’avez demandé. Pour passer à un résumé, voyez vos"
 
 messages:
     user:

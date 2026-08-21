@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Notification\NotificationRhythm;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -68,12 +69,24 @@ class Notification {
 	private $url;
 
 	/**
-	 * Whether this one belongs in the daily summary. Decided when the
-	 * notification is created, from the preferences in force at that moment.
+	 * Whether this one belongs in a summary. Decided when the notification is
+	 * created, from the preferences in force at that moment.
 	 *
 	 * @ORM\Column(type="boolean")
 	 */
 	private $byEmail = FALSE;
+
+	/**
+	 * Le rythme du résumé qui l'emportera : quotidien ou hebdomadaire. Retenu
+	 * ici, et non relu sur le membre au moment de l'envoi, parce que depuis
+	 * #40 le rythme dépend de la catégorie et du groupe — deux notifications
+	 * du même membre ne partent plus forcément le même jour.
+	 *
+	 * NULL pour celles mises en file avant #40 : elles valent le quotidien.
+	 *
+	 * @ORM\Column(type="string", length=20, nullable=true)
+	 */
+	private $rhythm;
 
 	/**
 	 * @ORM\Column(type="datetime")
@@ -160,6 +173,21 @@ class Notification {
 
 	public function setByEmail ( bool $byEmail ): self {
 		$this->byEmail = $byEmail;
+
+		return $this;
+	}
+
+	/**
+	 * @return string one of NotificationRhythm
+	 */
+	public function getRhythm (): string {
+		return NotificationRhythm::exists( $this->rhythm )
+				? $this->rhythm
+				: NotificationRhythm::DEFAULT_RHYTHM;
+	}
+
+	public function setRhythm ( ?string $rhythm ): self {
+		$this->rhythm = NotificationRhythm::exists( $rhythm ) ? $rhythm : NULL;
 
 		return $this;
 	}

@@ -123,7 +123,9 @@ C'est la partie la plus délicate, et la plus utile.
 | Depuis l'autre compte, créer une page dans un groupe commun | Tu es notifié, **l'autre ne l'est pas** |
 | Régler une catégorie sur « aucune », puis publier depuis l'autre compte | Plus de notification pour cette catégorie |
 | Couper la catégorie discussions, puis « suivre » une discussion précise | Notifié de celle-là seulement |
-| **Mes paramètres → rythme des e-mails** | **Trois choix** : à chaque message, résumé quotidien, **résumé hebdomadaire le lundi** |
+| **Mes paramètres → n'importe quelle liste** | **Cinq choix** : aucune, plateforme seulement, e-mail immédiat, résumé quotidien, résumé hebdomadaire le lundi |
+| Régler « Discussions » sur **e-mail immédiat** et « Documents » sur **hebdomadaire** | Chaque type de contenu suit son propre rythme |
+| À ta première connexion après la mise à jour | Un bandeau explique ce qui a changé et mène aux réglages ; il ne revient pas ensuite |
 | Depuis l'autre compte, te mentionner dans une discussion que tu as **mise en sourdine** | Tu es **quand même** notifié |
 | Poster un message de discussion | L'autre le reçoit **une seule fois**, toi **pas du tout** |
 

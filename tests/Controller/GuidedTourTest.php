@@ -349,6 +349,34 @@ class GuidedTourTest extends WebTestCase {
 		);
 	}
 
+	/**
+	 * Une cible qui n'existe plus ne casse rien — l'étape retombe sur une
+	 * carte centrée — mais elle ne montre plus ce qu'elle annonce. Les étapes
+	 * jouées sur la page des paramètres sont vérifiées ici parce que c'est
+	 * celle qui a le plus bougé.
+	 */
+	public function testTheStepsOfTheSettingsPagePointAtSomethingThatExists () {
+		$user    = $this->user();
+		$crawler = $this->open( '/user/parameters/edit' );
+		$checked = 0;
+
+		foreach ( self::$container->get( GuidedTour::class )->steps( $user ) as $step ) {
+			if ( empty( $step[ 'target' ] ) || ( strpos( $step[ 'url' ] ?? '', '/user/parameters/edit' ) === FALSE ) ) {
+				continue;
+			}
+
+			$checked++;
+
+			$this->assertGreaterThan(
+					0,
+					$crawler->filter( $step[ 'target' ] )->count(),
+					sprintf( 'Assert "%s" outlines %s, which the page still has', $step[ 'key' ], $step[ 'target' ] )
+			);
+		}
+
+		$this->assertGreaterThan( 0, $checked, 'Assert the tour still visits the settings page' );
+	}
+
 	public function testTheTourOpensAGroupThePersonBelongsTo () {
 		$user  = $this->user();
 		$group = $this->groupOf( $user );

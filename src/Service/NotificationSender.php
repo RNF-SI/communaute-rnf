@@ -22,8 +22,10 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
  * Turns something that happened in a group into one notification per member
  * who asked to hear about it. (#34)
  *
- * Nothing is sent from here: a notification is shown on the platform, and the
- * ones flagged for e-mail are picked up later by the daily summary.
+ * A notification is always shown on the platform. Ce qui la suit dépend du
+ * niveau choisi sur la catégorie : rien, le résumé quotidien, le résumé du
+ * lundi, ou un e-mail tout de suite — celui-là part d'ici, par ContentSender.
+ * (#40)
  */
 class NotificationSender {
 	private $manager;
@@ -32,14 +34,21 @@ class NotificationSender {
 
 	private $mentions;
 
+	/**
+	 * @var \App\Service\ContentSender
+	 */
+	private $sender;
+
 	public function __construct (
 			EntityManagerInterface $manager,
 			UrlGeneratorInterface $router,
-			MentionParser $mentions
+			MentionParser $mentions,
+			ContentSender $sender
 	) {
 		$this->manager  = $manager;
 		$this->router   = $router;
 		$this->mentions = $mentions;
+		$this->sender   = $sender;
 	}
 
 	/**
@@ -169,6 +178,8 @@ class NotificationSender {
 		$notified = [];
 
 		foreach ( $mentioned as $recipient ) {
+			$level = $this->levelForDiscussion( $recipient, $group, $discussion );
+
 			$notification = new Notification();
 			$notification->setRecipient( $recipient );
 			$notification->setAuthor( $message->getAuthor() );
@@ -178,11 +189,17 @@ class NotificationSender {
 			$notification->setUrl( $url );
 			$notification->setCreatedAt( new DateTime() );
 
+			// Une mention passe outre une discussion coupée : le rythme du
+			// résumé se lit alors sur le réglage quand il en porte un, et vaut
+			// le quotidien sinon. Ce qu'on ne fait pas, c'est la retenir.
+			$rhythm = NotificationLevel::rhythm( $level );
+			$notification->setRhythm( $rhythm ?: NotificationRhythm::DEFAULT_RHYTHM );
+
 			// The summary is the only way a mention reaches a muted member by
 			// e-mail; those who already get the message as it is posted do not
 			// need to read about it twice.
 			$notification->setByEmail(
-					$recipient->wantsEmails() && !$this->alreadyEmailed( $recipient, $group, $discussion )
+					$recipient->wantsEmails() && !NotificationLevel::sendsNow( $level )
 			);
 
 			$this->manager->persist( $notification );
@@ -196,19 +213,17 @@ class NotificationSender {
 	}
 
 	/**
-	 * Whether the message itself is already on its way to this member.
+	 * Ce que ce membre a demandé sur cette discussion-là — ce qui dit à la
+	 * fois s'il reçoit déjà le message à chaud et à quel rythme son résumé
+	 * part.
 	 *
 	 * @param \App\Entity\User      $recipient
 	 * @param \App\Entity\Usergroup $group
 	 * @param \App\Entity\Discussion $discussion
 	 *
-	 * @return bool
+	 * @return string one of NotificationLevel
 	 */
-	private function alreadyEmailed ( User $recipient, Usergroup $group, Discussion $discussion ) {
-		if ( $recipient->getDiscussionEmailRhythm() !== NotificationRhythm::IMMEDIATE ) {
-			return FALSE;
-		}
-
+	private function levelForDiscussion ( User $recipient, Usergroup $group, Discussion $discussion ) {
 		foreach ( $group->getMembers() as $membership ) {
 			$member = $membership->getUser();
 
@@ -216,10 +231,10 @@ class NotificationSender {
 				continue;
 			}
 
-			return NotificationLevel::sendsEmail( $membership->getLevelForDiscussion( $discussion->getUuid() ) );
+			return $membership->getLevelForDiscussion( $discussion->getUuid() );
 		}
 
-		return FALSE;
+		return NotificationLevel::NONE;
 	}
 
 	/**
@@ -248,7 +263,8 @@ class NotificationSender {
 			return 0;
 		}
 
-		$created = 0;
+		$created   = 0;
+		$immediate = [];
 
 		/**
 		 * @var \App\Entity\UsergroupMembership $membership
@@ -289,7 +305,15 @@ class NotificationSender {
 			$notification->setTitle( (string) $title );
 			$notification->setUrl( $url );
 			$notification->setCreatedAt( new DateTime() );
-			$notification->setByEmail( $this->shouldGoInTheSummary( $recipient, $level, $type ) );
+			$notification->setRhythm( NotificationLevel::rhythm( $level ) );
+			$notification->setByEmail( $this->shouldGoInTheSummary( $recipient, $level ) );
+
+			// L'immédiat sur une page, une actualité ou un document part
+			// d'ici. Sur un message de discussion, non : DiscussionSender l'a
+			// déjà envoyé, avec le Reply-To qui permet d'y répondre.
+			if ( $this->shouldBeSentNow( $recipient, $level, $type ) ) {
+				$immediate[] = $notification;
+			}
 
 			$this->manager->persist( $notification );
 
@@ -298,30 +322,76 @@ class NotificationSender {
 
 		$this->manager->flush();
 
+		$this->sendNow( $immediate );
+
 		return $created;
 	}
 
 	/**
-	 * Discussion messages only join the summary for members who did not ask
-	 * for the immediate e-mail; the others already got one as the message was
-	 * posted. Quotidien ou hebdomadaire, c'est le même résumé — seul le jour
-	 * de départ change, et c'est la commande qui en décide. (#38)
-	 *
 	 * @param \App\Entity\User $recipient
 	 * @param string           $level
 	 * @param string           $type
 	 *
 	 * @return bool
 	 */
-	private function shouldGoInTheSummary ( User $recipient, $level, $type ) {
+	private function shouldBeSentNow ( User $recipient, $level, $type ) {
+		if ( !NotificationLevel::sendsNow( $level ) || !$recipient->wantsEmails() ) {
+			return FALSE;
+		}
+
+		return !in_array( $type, [ Notification::DISCUSSION_MESSAGE, Notification::DISCUSSION_MENTION ], TRUE );
+	}
+
+	/**
+	 * Ce qui vient de partir ne doit pas repartir le soir dans le résumé.
+	 *
+	 * Une notification que le transport a refusée reste non marquée : elle
+	 * rejoint le résumé plutôt que de disparaître.
+	 *
+	 * @param Notification[] $notifications
+	 *
+	 * @return void
+	 */
+	private function sendNow ( array $notifications ) {
+		if ( empty( $notifications ) ) {
+			return;
+		}
+
+		$sent = $this->sender->sendNow( $notifications );
+
+		if ( empty( $sent ) ) {
+			return;
+		}
+
+		$now = new DateTime();
+
+		foreach ( $sent as $notification ) {
+			$notification->setByEmail( FALSE );
+			$notification->setEmailedAt( $now );
+		}
+
+		$this->manager->flush();
+	}
+
+	/**
+	 * Ce qui part tout de suite ne rejoint pas le résumé : celui qui reçoit
+	 * le message à la seconde où il est posté n'a pas à le relire le soir.
+	 * Quotidien ou hebdomadaire, c'est le même résumé — seul le jour de départ
+	 * change, et il est retenu sur la notification. (#38, #40)
+	 *
+	 * @param \App\Entity\User $recipient
+	 * @param string           $level
+	 *
+	 * @return bool
+	 */
+	private function shouldGoInTheSummary ( User $recipient, $level ) {
 		if ( !NotificationLevel::sendsEmail( $level ) || !$recipient->wantsEmails() ) {
 			return FALSE;
 		}
 
-		if ( $type === Notification::DISCUSSION_MESSAGE ) {
-			return $recipient->getDiscussionEmailRhythm() !== NotificationRhythm::IMMEDIATE;
-		}
-
-		return TRUE;
+		// L'immédiat ne passe pas par le résumé : l'e-mail est déjà parti, ou
+		// s'apprête à partir. S'il échoue, sendNow() laisse la notification
+		// non marquée et le résumé la reprend.
+		return !NotificationLevel::sendsNow( $level );
 	}
 }

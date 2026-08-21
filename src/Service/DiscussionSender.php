@@ -5,7 +5,6 @@ namespace App\Service;
 use App\Entity\DiscussionMessage;
 use App\Entity\UsergroupMembership;
 use App\Notification\NotificationLevel;
-use App\Notification\NotificationRhythm;
 use App\Postmark\BulkTransport;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Swift_Message;
@@ -85,10 +84,10 @@ class DiscussionSender {
 	/**
 	 * Whether this member gets an e-mail as the message is posted.
 	 *
-	 * Three things have to line up: the level that applies to this discussion
-	 * in particular, the member wanting e-mails at all, and their chosen
-	 * rhythm. Someone on the daily summary is served later by the digest
-	 * command, not here. (#34)
+	 * Two things have to line up : que le membre veuille des e-mails, et que
+	 * le niveau qui s'applique à cette discussion-là soit l'immédiat. Depuis
+	 * #40 le rythme est dans ce niveau, il n'y a plus de réglage à croiser :
+	 * qui est au résumé est servi plus tard par la commande, pas ici.
 	 *
 	 * @param \App\Entity\UsergroupMembership $membership
 	 * @param \App\Entity\DiscussionMessage   $discussionMessage
@@ -111,13 +110,9 @@ class DiscussionSender {
 			return FALSE;
 		}
 
-		if ( $user->getDiscussionEmailRhythm() !== NotificationRhythm::IMMEDIATE ) {
-			return FALSE;
-		}
-
 		$level = $membership->getLevelForDiscussion( $discussionMessage->getDiscussion()->getUuid() );
 
-		return NotificationLevel::sendsEmail( $level );
+		return NotificationLevel::sendsNow( $level );
 	}
 
 	/**

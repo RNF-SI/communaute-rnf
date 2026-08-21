@@ -77,11 +77,9 @@ class WeeklyDigestTest extends KernelTestCase {
 	}
 
 	/**
-	 * @param string $rhythm
-	 *
 	 * @return \App\Entity\User
 	 */
-	private function user ( $rhythm ) {
+	private function user () {
 		$user = new User();
 		$user->setEmail( uniqid() . '@example.org' );
 		$user->setName( 'Test User' );
@@ -90,7 +88,6 @@ class WeeklyDigestTest extends KernelTestCase {
 		$user->setStatus( User::STATUS_ACTIVE );
 		$user->setPassword( '' );
 		$user->setHasAgreedTermsOfUse( TRUE );
-		$user->setDiscussionEmailRhythm( $rhythm );
 
 		$this->manager->persist( $user );
 		$this->manager->flush();
@@ -99,11 +96,15 @@ class WeeklyDigestTest extends KernelTestCase {
 	}
 
 	/**
+	 * Le rythme est porté par la notification depuis #40, et non plus par son
+	 * destinataire.
+	 *
 	 * @param \App\Entity\User $recipient
+	 * @param string           $rhythm
 	 *
 	 * @return \App\Entity\Notification
 	 */
-	private function notification ( User $recipient ) {
+	private function notification ( User $recipient, $rhythm = NotificationRhythm::DAILY ) {
 		$notification = new Notification();
 		$notification->setRecipient( $recipient );
 		$notification->setUsergroup( $this->group );
@@ -112,6 +113,7 @@ class WeeklyDigestTest extends KernelTestCase {
 		$notification->setUrl( '/groups/g/pages/compte-rendu' );
 		$notification->setCreatedAt( new DateTime() );
 		$notification->setByEmail( TRUE );
+		$notification->setRhythm( $rhythm );
 
 		$this->manager->persist( $notification );
 		$this->manager->flush();
@@ -138,7 +140,7 @@ class WeeklyDigestTest extends KernelTestCase {
 	}
 
 	public function testAWeeklyReaderIsPassedOverOnATuesday () {
-		$notification = $this->notification( $this->user( NotificationRhythm::WEEKLY ) );
+		$notification = $this->notification( $this->user(), NotificationRhythm::WEEKLY );
 
 		$this->digest( self::TUESDAY );
 
@@ -149,7 +151,7 @@ class WeeklyDigestTest extends KernelTestCase {
 	}
 
 	public function testWhatWaitedIsNotLost () {
-		$notification = $this->notification( $this->user( NotificationRhythm::WEEKLY ) );
+		$notification = $this->notification( $this->user(), NotificationRhythm::WEEKLY );
 
 		$this->digest( self::TUESDAY );
 
@@ -160,7 +162,7 @@ class WeeklyDigestTest extends KernelTestCase {
 	}
 
 	public function testTheMondayCarriesIt () {
-		$notification = $this->notification( $this->user( NotificationRhythm::WEEKLY ) );
+		$notification = $this->notification( $this->user(), NotificationRhythm::WEEKLY );
 
 		$this->digest( self::MONDAY );
 
@@ -168,9 +170,13 @@ class WeeklyDigestTest extends KernelTestCase {
 	}
 
 	public function testAWholeWeekLeavesInOneGo () {
-		$user = $this->user( NotificationRhythm::WEEKLY );
+		$user = $this->user();
 
-		$notifications = [ $this->notification( $user ), $this->notification( $user ), $this->notification( $user ) ];
+		$notifications = [
+				$this->notification( $user, NotificationRhythm::WEEKLY ),
+				$this->notification( $user, NotificationRhythm::WEEKLY ),
+				$this->notification( $user, NotificationRhythm::WEEKLY ),
+		];
 
 		$this->digest( self::TUESDAY );
 		$this->digest( self::MONDAY );
@@ -184,7 +190,7 @@ class WeeklyDigestTest extends KernelTestCase {
 	}
 
 	public function testADailyReaderIsServedOnATuesday () {
-		$notification = $this->notification( $this->user( NotificationRhythm::DIGEST ) );
+		$notification = $this->notification( $this->user() );
 
 		$this->digest( self::TUESDAY );
 
@@ -195,19 +201,40 @@ class WeeklyDigestTest extends KernelTestCase {
 	}
 
 	public function testTheReportSaysWhoIsBeingHeld () {
-		$this->notification( $this->user( NotificationRhythm::WEEKLY ) );
+		$this->notification( $this->user(), NotificationRhythm::WEEKLY );
 
 		$this->digest( self::TUESDAY );
 
 		$this->assertStringContainsString(
-				'held until their weekly day',
+				'with nothing due today',
 				$this->command->getDisplay(),
 				'Assert an operator reading the output can tell nothing was lost'
 		);
 	}
 
+	/**
+	 * Depuis #40, un même membre peut avoir du quotidien et de l'hebdomadaire
+	 * en attente. Le mardi n'emporte que le premier, et le lundi les deux —
+	 * dans le même e-mail. (#40)
+	 */
+	public function testTheSameMemberCanHaveBothRhythmsWaiting () {
+		$user = $this->user();
+
+		$daily  = $this->notification( $user, NotificationRhythm::DAILY );
+		$weekly = $this->notification( $user, NotificationRhythm::WEEKLY );
+
+		$this->digest( self::TUESDAY );
+
+		$this->assertTrue( $this->wasSent( $daily ), 'Assert the daily one leaves on a Tuesday' );
+		$this->assertFalse( $this->wasSent( $weekly ), 'Assert the weekly one waits for its Monday' );
+
+		$this->digest( self::MONDAY );
+
+		$this->assertTrue( $this->wasSent( $weekly ) );
+	}
+
 	public function testTheDayIsShownInTheReport () {
-		$this->notification( $this->user( NotificationRhythm::DIGEST ) );
+		$this->notification( $this->user() );
 
 		$this->digest( self::MONDAY );
 
@@ -219,7 +246,7 @@ class WeeklyDigestTest extends KernelTestCase {
 	}
 
 	public function testAnUnreadableDayIsRefused () {
-		$notification = $this->notification( $this->user( NotificationRhythm::DIGEST ) );
+		$notification = $this->notification( $this->user() );
 
 		$this->command->execute( [ '--day' => 'lundi prochain' ] );
 

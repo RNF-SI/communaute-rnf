@@ -3,8 +3,14 @@
 namespace App\Notification;
 
 /**
- * When the e-mails of a discussion leave. A single choice per member, all
- * groups taken together. (#34)
+ * Quand part l'e-mail que porte un niveau : tout de suite, tous les jours, ou
+ * le lundi.
+ *
+ * Depuis #40 le rythme n'est plus un réglage à lui : il est la part e-mail
+ * d'un NotificationLevel, et se choisit donc catégorie par catégorie et groupe
+ * par groupe. Cette classe garde ce qui, lui, reste commun à toute la
+ * plateforme — le jour où part l'hebdomadaire — et sait encore lire l'ancien
+ * champ `discussionRhythm`. (#34, #38)
  */
 final class NotificationRhythm {
 	/**
@@ -23,10 +29,9 @@ final class NotificationRhythm {
 	const IMMEDIATE = 'immediate';
 
 	/**
-	 * Discussion messages join the daily summary. One e-mail a day, but no
-	 * more answering by e-mail.
+	 * Le résumé, une fois par jour.
 	 */
-	const DIGEST = 'digest';
+	const DAILY = 'daily';
 
 	/**
 	 * Same summary, but only once a week — for those to whom a daily e-mail
@@ -35,15 +40,22 @@ final class NotificationRhythm {
 	const WEEKLY = 'weekly';
 
 	/**
-	 * Nobody sees their current behaviour change without having asked.
+	 * Le nom que portait le quotidien avant #40, dans le champ
+	 * `discussionRhythm`. Jamais écrit, encore lu.
 	 */
-	const DEFAULT_RHYTHM = self::IMMEDIATE;
+	const LEGACY_DIGEST = 'digest';
+
+	/**
+	 * Le rythme d'un e-mail dont personne n'a rien dit : une fois par jour.
+	 * (#40)
+	 */
+	const DEFAULT_RHYTHM = self::DAILY;
 
 	/**
 	 * @return string[]
 	 */
 	public static function all () {
-		return [ self::IMMEDIATE, self::DIGEST, self::WEEKLY ];
+		return [ self::IMMEDIATE, self::DAILY, self::WEEKLY ];
 	}
 
 	/**
@@ -76,5 +88,16 @@ final class NotificationRhythm {
 	 */
 	public static function exists ( $rhythm ) {
 		return in_array( $rhythm, self::all(), TRUE );
+	}
+
+	/**
+	 * Une valeur qu'on accepte de lire, l'ancien « digest » compris.
+	 *
+	 * @param string $rhythm
+	 *
+	 * @return bool
+	 */
+	public static function stored ( $rhythm ) {
+		return self::exists( $rhythm ) || ( $rhythm === self::LEGACY_DIGEST );
 	}
 }

@@ -250,12 +250,7 @@ pages:
             introduction: "Choose what you want to hear about: once for all your groups, then group by group for the few that have to differ."
             emails: "Receive e-mails"
             emails_hint: "Unchecked, you keep your notifications on the platform but receive no e-mail at all."
-            rhythm: "Discussion e-mails"
-            rhythm_hint: "The summary gathers everything into a single e-mail, but no longer lets you answer from your mailbox. The weekly summary goes out on Monday morning."
-            rhythms:
-                immediate: "One e-mail per message"
-                digest: "In the daily summary"
-                weekly: "In the weekly summary, on Monday"
+            rhythm_hint: "The rhythm is chosen line by line: an e-mail as soon as something happens, or a summary gathering everything — once a day, or on Monday morning. A summary does not let you answer from your mailbox."
             general: "For all my groups"
             general_hint: "This applies to every group you are in. You only need to go further down for the few that have to differ."
             groups_hint: "A group follows the general setting until you say otherwise here. Unfold one to set it apart."
@@ -276,8 +271,16 @@ pages:
             levels:
                 none: "No notification"
                 app: "On the platform only"
+                immediate: "Immediate e-mail"
+                daily: "Daily summary"
+                weekly: "Weekly summary, on Monday"
                 email: "On the platform and by e-mail"
             submit: "Save my preferences"
+        notifications_notice:
+            title: "Your notifications have changed"
+            body: "You now choose, for each kind of content and each group, an immediate e-mail, a daily summary or a weekly one. Without a setting of your own, everything now arrives in a daily summary — including discussion messages, which used to go out one by one."
+            settings: "Set up my notifications"
+            dismiss: "Got it"
         notifications:
             title: "My notifications"
             link: "My notifications"
@@ -606,7 +609,7 @@ pages:
                 link: "Set up my notifications"
             rhythm:
                 title: "At what pace"
-                body: "One e-mail per message, a daily summary, or a weekly summary on Monday. This setting decides whether the platform helps you or clutters you."
+                body: "Every list offers the same choice: nothing, the platform only, an immediate e-mail, a daily summary or a weekly one on Monday. This setting decides whether the platform helps you or clutters you."
             replay:
                 title: "Watching this tour again"
                 body: "This link starts it over, whenever you want. Once finished, it will not open by itself again."
@@ -625,6 +628,12 @@ emails:
         hello: "Hello %s,"
         introduction: "Here is what happened in your groups since the last summary."
         settings: "You can choose what you receive from your"
+
+    content:
+        hello: "Hello %s,"
+        in_group: "In the group “%s”:"
+        by: "Added by %s."
+        settings: "You get this e-mail straight away because you asked for it. To switch to a summary, see your"
 
 messages:
     user:

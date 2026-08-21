@@ -7,6 +7,7 @@ use App\Entity\UsergroupMembership;
 use App\Notification\NotificationCategory;
 use App\Notification\NotificationLevel;
 use App\Notification\NotificationRhythm;
+use DateTime;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -60,9 +61,9 @@ class NotificationPreferencesTest extends TestCase {
 
 		foreach ( NotificationCategory::all() as $category ) {
 			$this->assertEquals(
-					NotificationLevel::EMAIL,
+					NotificationLevel::DAILY,
 					$membership->getNotificationLevel( $category ),
-					sprintf( 'Assert "%s" warns by default, as asked in #34', $category )
+					sprintf( 'Assert "%s" warns by default — dans le résumé quotidien depuis #40', $category )
 			);
 		}
 	}
@@ -85,7 +86,7 @@ class NotificationPreferencesTest extends TestCase {
 
 		$this->assertEquals( NotificationLevel::APP, $membership->getNotificationLevel( NotificationCategory::PAGES ) );
 		$this->assertEquals(
-				NotificationLevel::EMAIL,
+				NotificationLevel::DAILY,
 				$membership->getNotificationLevel( NotificationCategory::DOCUMENTS ),
 				'Assert the other categories are untouched'
 		);
@@ -93,15 +94,15 @@ class NotificationPreferencesTest extends TestCase {
 
 	public function testChoosingACategoryClearsTheLegacyOptOut () {
 		$membership = $this->membership( [ 'unsubscribed' => TRUE ] );
-		$membership->setNotificationLevel( NotificationCategory::PAGES, NotificationLevel::EMAIL );
+		$membership->setNotificationLevel( NotificationCategory::PAGES, NotificationLevel::DAILY );
 
 		$this->assertEquals(
-				NotificationLevel::EMAIL,
+				NotificationLevel::DAILY,
 				$membership->getNotificationLevel( NotificationCategory::PAGES ),
 				'Assert an explicit choice is not overridden by the old flag'
 		);
 		$this->assertEquals(
-				NotificationLevel::EMAIL,
+				NotificationLevel::DAILY,
 				$membership->getNotificationLevel( NotificationCategory::DOCUMENTS ),
 				'Assert the old flag stops applying once the member states a choice'
 		);
@@ -123,10 +124,10 @@ class NotificationPreferencesTest extends TestCase {
 
 	public function testTheGeneralSettingDoesNotOverrideAGroupSetOnPurpose () {
 		$membership = $this->membership( [], $this->member( NotificationLevel::NONE ) );
-		$membership->setNotificationLevel( NotificationCategory::DISCUSSIONS, NotificationLevel::EMAIL );
+		$membership->setNotificationLevel( NotificationCategory::DISCUSSIONS, NotificationLevel::DAILY );
 
 		$this->assertEquals(
-				NotificationLevel::EMAIL,
+				NotificationLevel::DAILY,
 				$membership->getNotificationLevel( NotificationCategory::DISCUSSIONS ),
 				'Assert what was said about this group wins'
 		);
@@ -153,7 +154,7 @@ class NotificationPreferencesTest extends TestCase {
 	}
 
 	public function testAWholeGroupCanBeSentBackInOneGo () {
-		$membership = $this->membership( [], $this->member( NotificationLevel::EMAIL ) );
+		$membership = $this->membership( [], $this->member( NotificationLevel::DAILY ) );
 
 		foreach ( NotificationCategory::all() as $category ) {
 			$membership->setNotificationLevel( $category, NotificationLevel::NONE );
@@ -164,12 +165,12 @@ class NotificationPreferencesTest extends TestCase {
 		$this->assertTrue( $membership->followsGeneralSettings() );
 
 		foreach ( NotificationCategory::all() as $category ) {
-			$this->assertEquals( NotificationLevel::EMAIL, $membership->getNotificationLevel( $category ) );
+			$this->assertEquals( NotificationLevel::DAILY, $membership->getNotificationLevel( $category ) );
 		}
 	}
 
 	public function testALegacyOptOutIsNotUndoneByAGeneralSetting () {
-		$membership = $this->membership( [ 'unsubscribed' => TRUE ], $this->member( NotificationLevel::EMAIL ) );
+		$membership = $this->membership( [ 'unsubscribed' => TRUE ], $this->member( NotificationLevel::DAILY ) );
 
 		foreach ( NotificationCategory::all() as $category ) {
 			$this->assertEquals(
@@ -186,7 +187,7 @@ class NotificationPreferencesTest extends TestCase {
 	}
 
 	public function testALegacyOptOutIsShownAsWhatItIs () {
-		$membership = $this->membership( [ 'unsubscribed' => TRUE ], $this->member( NotificationLevel::EMAIL ) );
+		$membership = $this->membership( [ 'unsubscribed' => TRUE ], $this->member( NotificationLevel::DAILY ) );
 
 		$this->assertEquals(
 				array_fill_keys( NotificationCategory::all(), NotificationLevel::NONE ),
@@ -196,22 +197,14 @@ class NotificationPreferencesTest extends TestCase {
 	}
 
 	public function testAskingAGroupToFollowDropsTheLegacyOptOut () {
-		$membership = $this->membership( [ 'unsubscribed' => TRUE ], $this->member( NotificationLevel::EMAIL ) );
+		$membership = $this->membership( [ 'unsubscribed' => TRUE ], $this->member( NotificationLevel::DAILY ) );
 		$membership->followGeneralSettings();
 
 		$this->assertEquals(
-				NotificationLevel::EMAIL,
+				NotificationLevel::DAILY,
 				$membership->getNotificationLevel( NotificationCategory::PAGES ),
 				'Assert asking for it explicitly does what it says'
 		);
-	}
-
-	public function testAMemberWithoutAGeneralSettingKeepsTheBuiltInDefault () {
-		$user = new User();
-
-		foreach ( NotificationCategory::all() as $category ) {
-			$this->assertEquals( NotificationLevel::EMAIL, $user->getDefaultNotificationLevel( $category ) );
-		}
 	}
 
 	public function testAnUnknownCategoryOrLevelIsRefusedAsAGeneralSetting () {
@@ -219,7 +212,7 @@ class NotificationPreferencesTest extends TestCase {
 		$user->setDefaultNotificationLevel( 'nonsense', NotificationLevel::NONE );
 		$user->setDefaultNotificationLevel( NotificationCategory::PAGES, 'nonsense' );
 
-		$this->assertEquals( NotificationLevel::EMAIL, $user->getDefaultNotificationLevel( NotificationCategory::PAGES ) );
+		$this->assertEquals( NotificationLevel::DAILY, $user->getDefaultNotificationLevel( NotificationCategory::PAGES ) );
 	}
 
 	public function testAnUnknownCategoryOrLevelIsRefused () {
@@ -227,7 +220,7 @@ class NotificationPreferencesTest extends TestCase {
 		$membership->setNotificationLevel( 'nonsense', NotificationLevel::NONE );
 		$membership->setNotificationLevel( NotificationCategory::PAGES, 'nonsense' );
 
-		$this->assertEquals( NotificationLevel::EMAIL, $membership->getNotificationLevel( NotificationCategory::PAGES ) );
+		$this->assertEquals( NotificationLevel::DAILY, $membership->getNotificationLevel( NotificationCategory::PAGES ) );
 	}
 
 	public function testADiscussionFollowsItsCategoryByDefault () {
@@ -241,10 +234,10 @@ class NotificationPreferencesTest extends TestCase {
 	public function testFollowingOneDiscussionInAMutedCategory () {
 		$membership = $this->membership();
 		$membership->setNotificationLevel( NotificationCategory::DISCUSSIONS, NotificationLevel::NONE );
-		$membership->setDiscussionOverride( 'followed', NotificationLevel::EMAIL );
+		$membership->setDiscussionOverride( 'followed', NotificationLevel::DAILY );
 
 		$this->assertEquals(
-				NotificationLevel::EMAIL,
+				NotificationLevel::DAILY,
 				$membership->getLevelForDiscussion( 'followed' ),
 				'Assert the case spelled out in the issue: a muted category does not prevent following one discussion'
 		);
@@ -260,7 +253,7 @@ class NotificationPreferencesTest extends TestCase {
 		$membership->setDiscussionOverride( 'noisy', NotificationLevel::NONE );
 
 		$this->assertEquals( NotificationLevel::NONE, $membership->getLevelForDiscussion( 'noisy' ) );
-		$this->assertEquals( NotificationLevel::EMAIL, $membership->getLevelForDiscussion( 'another' ) );
+		$this->assertEquals( NotificationLevel::DAILY, $membership->getLevelForDiscussion( 'another' ) );
 	}
 
 	public function testADiscussionChoiceCanBeTakenBack () {
@@ -270,7 +263,7 @@ class NotificationPreferencesTest extends TestCase {
 
 		$this->assertNull( $membership->getDiscussionOverride( 'noisy' ) );
 		$this->assertEquals(
-				NotificationLevel::EMAIL,
+				NotificationLevel::DAILY,
 				$membership->getLevelForDiscussion( 'noisy' ),
 				'Assert it goes back to following the category'
 		);
@@ -286,28 +279,157 @@ class NotificationPreferencesTest extends TestCase {
 		$this->assertFalse( $user->wantsEmails() );
 	}
 
-	public function testDiscussionEmailsLeaveImmediatelyByDefault () {
+	public function testTheDefaultIsTheDailySummary () {
 		$user = new User();
 
+		foreach ( NotificationCategory::all() as $category ) {
+			$this->assertEquals(
+					NotificationLevel::DAILY,
+					$user->getDefaultNotificationLevel( $category ),
+					sprintf( 'Assert "%s" lands in the daily summary, the default asked for in #40', $category )
+			);
+		}
+	}
+
+	public function testARhythmIsChosenCategoryByCategory () {
+		$membership = $this->membership( [], $this->member( NotificationLevel::DAILY ) );
+		$membership->setNotificationLevel( NotificationCategory::DISCUSSIONS, NotificationLevel::IMMEDIATE );
+		$membership->setNotificationLevel( NotificationCategory::DOCUMENTS, NotificationLevel::WEEKLY );
+
 		$this->assertEquals(
-				NotificationRhythm::IMMEDIATE,
-				$user->getDiscussionEmailRhythm(),
-				'Assert nobody sees their current behaviour change without asking'
+				NotificationLevel::IMMEDIATE,
+				$membership->getNotificationLevel( NotificationCategory::DISCUSSIONS ),
+				'Assert the case #40 was asked for: this commission message by message…'
+		);
+		$this->assertEquals(
+				NotificationLevel::WEEKLY,
+				$membership->getNotificationLevel( NotificationCategory::DOCUMENTS ),
+				'…and its documents once a week'
+		);
+		$this->assertEquals(
+				NotificationLevel::DAILY,
+				$membership->getNotificationLevel( NotificationCategory::PAGES ),
+				'Assert the categories that were left alone keep following the general setting'
 		);
 	}
 
-	public function testTheDiscussionRhythmCanBeChanged () {
+	/**
+	 * Ce qu'un compte réglé avant #40 devient. La règle : ceux qui avaient
+	 * choisi gardent leur choix, ceux qui n'avaient rien choisi basculent sur
+	 * le quotidien.
+	 */
+	public function testALegacyEmailLevelWithoutARhythmBecomesTheDailySummary () {
 		$user = new User();
-		$user->setDiscussionEmailRhythm( NotificationRhythm::DIGEST );
-
-		$this->assertEquals( NotificationRhythm::DIGEST, $user->getDiscussionEmailRhythm() );
-
-		$user->setDiscussionEmailRhythm( 'nonsense' );
+		$user->setNotificationsSettings( [
+				'categories' => [ NotificationCategory::PAGES => NotificationLevel::LEGACY_EMAIL ],
+		] );
 
 		$this->assertEquals(
-				NotificationRhythm::DIGEST,
-				$user->getDiscussionEmailRhythm(),
-				'Assert an unknown rhythm is refused rather than stored'
+				NotificationLevel::DAILY,
+				$user->getDefaultNotificationLevel( NotificationCategory::PAGES ),
+				'Assert somebody who never chose a rhythm is moved to the daily summary'
+		);
+	}
+
+	public function testALegacyImmediateRhythmIsKeptOnDiscussions () {
+		$user = new User();
+		$user->setNotificationsSettings( [
+				'discussionRhythm' => NotificationRhythm::IMMEDIATE,
+				'categories'       => array_fill_keys( NotificationCategory::all(), NotificationLevel::LEGACY_EMAIL ),
+		] );
+
+		$this->assertEquals(
+				NotificationLevel::IMMEDIATE,
+				$user->getDefaultNotificationLevel( NotificationCategory::DISCUSSIONS ),
+				'Assert a choice made on purpose survives the change'
+		);
+
+		$this->assertEquals(
+				NotificationLevel::DAILY,
+				$user->getDefaultNotificationLevel( NotificationCategory::PAGES ),
+				'Assert it is not extended to pages, which never left immediately before #40'
+		);
+	}
+
+	public function testALegacyWeeklyRhythmIsKeptEverywhere () {
+		$user = new User();
+		$user->setNotificationsSettings( [
+				'discussionRhythm' => NotificationRhythm::WEEKLY,
+				'categories'       => array_fill_keys( NotificationCategory::all(), NotificationLevel::LEGACY_EMAIL ),
+		] );
+
+		foreach ( NotificationCategory::all() as $category ) {
+			$this->assertEquals(
+					NotificationLevel::WEEKLY,
+					$user->getDefaultNotificationLevel( $category ),
+					'Assert somebody who asked for one e-mail a week still gets one e-mail a week'
+			);
+		}
+	}
+
+	public function testALegacyDailyRhythmIsRead () {
+		$user = new User();
+		$user->setNotificationsSettings( [
+				'discussionRhythm' => NotificationRhythm::LEGACY_DIGEST,
+				'categories'       => [ NotificationCategory::PAGES => NotificationLevel::LEGACY_EMAIL ],
+		] );
+
+		$this->assertEquals(
+				NotificationLevel::DAILY,
+				$user->getDefaultNotificationLevel( NotificationCategory::PAGES ),
+				'Assert the old name of the daily summary is still understood'
+		);
+	}
+
+	public function testALegacyGroupSettingIsReadThroughTheMemberRhythm () {
+		$user = new User();
+		$user->setNotificationsSettings( [ 'discussionRhythm' => NotificationRhythm::WEEKLY ] );
+
+		$membership = $this->membership(
+				[ 'categories' => [ NotificationCategory::DOCUMENTS => NotificationLevel::LEGACY_EMAIL ] ],
+				$user
+		);
+
+		$this->assertEquals(
+				NotificationLevel::WEEKLY,
+				$membership->getOwnNotificationLevel( NotificationCategory::DOCUMENTS ),
+				'Assert a group set apart before #40 is read in the new vocabulary too'
+		);
+		$this->assertFalse(
+				$membership->followsGeneralSettings(),
+				'Assert it still counts as a group that says something of its own'
+		);
+	}
+
+	public function testTheOldEmailValueIsNoLongerAccepted () {
+		$user = new User();
+		$user->setDefaultNotificationLevel( NotificationCategory::PAGES, NotificationLevel::LEGACY_EMAIL );
+
+		$this->assertEquals(
+				NotificationLevel::DAILY,
+				$user->getDefaultNotificationLevel( NotificationCategory::PAGES ),
+				'Assert a form cannot write back a value that no longer says its rhythm'
+		);
+	}
+
+	public function testTheNoticeIsShownOnceAndOnlyToThoseTheChangeCrossed () {
+		$newcomer = new User();
+
+		$this->assertFalse(
+				$newcomer->awaitsNotificationsNotice(),
+				'Assert somebody who joined after the change is not told about it'
+		);
+
+		$before = new User();
+		$before->setNotificationsSettings( [ 'noticePending' => TRUE ] );
+
+		$this->assertTrue( $before->awaitsNotificationsNotice() );
+
+		$before->markNotificationsNoticeSeen( new DateTime( '2026-08-21 09:00:00' ) );
+
+		$this->assertFalse(
+				$before->awaitsNotificationsNotice(),
+				'Assert the notice does not come back page after page'
 		);
 	}
 }

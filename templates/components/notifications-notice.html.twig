@@ -1,0 +1,31 @@
+{# L'annonce du changement de notifications. (#40)
+
+   Elle ne s'adresse qu'aux comptes que la bascule a traversés — c'est la
+   migration qui pose le drapeau, personne d'autre — et elle disparaît dès
+   qu'on la referme ou qu'on ouvre la page des réglages, où elle envoie.
+
+   Un formulaire plutôt qu'un bouton JavaScript : sans scripts, le bandeau se
+   referme quand même. #}
+
+{% if app.user and app.user.awaitsNotificationsNotice %}
+    <div class="notifications-notice" role="status">
+        <div class="notifications-notice--text">
+            <strong>{{ 'pages.user.notifications_notice.title'|trans }}</strong>
+            <p>{{ 'pages.user.notifications_notice.body'|trans }}</p>
+        </div>
+
+        <div class="notifications-notice--actions">
+            <a class="cta" href="{{ path('user_parameters_edit') }}#notifications-settings">
+                {{ 'pages.user.notifications_notice.settings'|trans }}
+            </a>
+
+            <form method="post" action="{{ path('user_notifications_notice') }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('notifications-notice') }}">
+                <input type="hidden" name="back" value="{{ app.request.requestUri }}">
+                <button type="submit" class="cta__inverted">
+                    {{ 'pages.user.notifications_notice.dismiss'|trans }}
+                </button>
+            </form>
+        </div>
+    </div>
+{% endif %}

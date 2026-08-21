@@ -189,15 +189,45 @@ nothing intercepts clicks, and the page stays usable during the tour.
 It launches by itself while `User::$tourSeenAt` is null, and afterwards only
 through the settings link (`?tour=1`). Closing it counts as having seen it.
 
-### Notification settings (#34)
+### Notification settings (#34, #40)
 What a member hears about is read from **two sources, in this order**: what
 the group itself says (`UsergroupMembership::getOwnNotificationLevel` — which
 reads a pre-#34 `unsubscribed` flag as « aucune notification » on all four
 categories, so the settings page shows a muted group as muted), then the
 member's general setting (`User::getDefaultNotificationLevel`, stored in the
-same `notificationsSettings` JSON as `emails` and `discussionRhythm` — no
-column of its own). Get that order wrong and you either resubscribe people who
-had opted out, or silently override a choice they made on purpose.
+`notificationsSettings` JSON alongside `emails` — no column of its own). Get
+that order wrong and you either resubscribe people who had opted out, or
+silently override a choice they made on purpose.
+
+**Le rythme est dans le niveau, pas à côté (#40).** `NotificationLevel` porte
+cinq valeurs — `none`, `app`, `immediate`, `daily`, `weekly` — de sorte qu'une
+seule liste dit à la fois s'il y a un e-mail et quand il part, catégorie par
+catégorie et groupe par groupe. Le défaut est `daily`. Avant #40, la valeur
+valait `email` et le rythme vivait à part sur le membre, dans
+`discussionRhythm`, pour les seules discussions ; cette valeur n'est plus
+écrite mais elle est encore lue, par `NotificationLevel::fromLegacy()`, qui la
+croise avec l'ancien rythme du membre — ceux qui avaient choisi gardent leur
+choix, ceux qui n'avaient rien choisi basculent sur le quotidien. **Ne pas
+réécrire ces réglages en base :** la traduction se fait à la lecture, et une
+migration qui figerait l'ancien vocabulaire ferait mentir la page.
+
+Le rythme retenu est copié sur chaque `Notification` (`setRhythm`) au moment
+où elle est créée, et c'est lui que `app:notifications:digest` lit : deux
+notifications d'une même personne ne partent plus forcément le même jour, et
+un lundi ramasse le quotidien et l'hebdomadaire dans un seul e-mail.
+
+**Trois chemins d'e-mail, pas deux.** Le résumé (`EmailSender`), le message de
+discussion à chaud (`DiscussionSender`, avec son `Reply-To`), et depuis #40 le
+contenu à chaud — page, actualité, document — par `ContentSender`, qui emprunte
+le même transport en lot que les discussions mais l'adresse d'expédition de la
+plateforme. `NotificationSender` marque `emailedAt` sur ce qui vient de partir
+pour que le résumé ne le reprenne pas ; si le transport refuse, rien n'est
+marqué et le résumé rattrape.
+
+Le changement de défaut ne se voit pas tout seul : la migration pose
+`noticePending` sur les comptes existants, `components/notifications-notice`
+l'annonce une fois, et personne ne repose le drapeau — les inscrits d'après ne
+lisent jamais l'annonce d'un changement qu'ils n'ont pas connu.
 
 The general setting is what makes the settings page usable for somebody
 sitting in thirty groups: the choice is made once, and a group is only written

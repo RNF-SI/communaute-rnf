@@ -89,7 +89,7 @@ class GuidedTour {
 					'target' => '.main__user-page__notifications .panel',
 			],
 			[ 'key' => 'settings', 'route' => 'user_parameters_edit', 'target' => '.notifications-settings' ],
-			[ 'key' => 'rhythm', 'route' => 'user_parameters_edit', 'target' => '#discussion-rhythm' ],
+			[ 'key' => 'rhythm', 'route' => 'user_parameters_edit', 'target' => '#notif-default-discussions' ],
 			[ 'key' => 'replay', 'route' => 'user_parameters_edit', 'target' => '.tour-replay' ],
 			[ 'key' => 'end', 'route' => 'user_parameters_edit' ],
 	];

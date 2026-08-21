@@ -1,0 +1,49 @@
+/**************************************************
+* NOTIFICATIONS NOTICE
+**************************************************/
+
+/**
+ * L'annonce du changement de notifications. (#40)
+ *
+ * Sous l'en-tête, en travers de la page : ce qu'elle dit — « ce que vous
+ * receviez a changé » — ne se remarquerait pas dans un coin. Elle ne se montre
+ * qu'aux comptes que la bascule a traversés, et une seule fois : elle a le
+ * droit de prendre de la place.
+ */
+
+.notifications-notice {
+	@include content-container;
+
+	display:          flex;
+	flex-wrap:        wrap;
+	align-items:      center;
+	justify-content:  space-between;
+	gap:              rem(12px) rem(24px);
+
+	padding-top:      rem(16px);
+	padding-bottom:   rem(16px);
+
+	background-color: $color_grey_lighter;
+	border-bottom:    rem(3px) solid $color_primary;
+
+	.notifications-notice--text {
+		flex:      1 1 rem(320px);
+
+		font-size: rem(14px);
+
+		p {
+			margin: rem(4px) 0 0;
+		}
+	}
+
+	.notifications-notice--actions {
+		display:     flex;
+		flex-wrap:   wrap;
+		align-items: center;
+		gap:         rem(10px);
+
+		form {
+			margin: 0;
+		}
+	}
+}

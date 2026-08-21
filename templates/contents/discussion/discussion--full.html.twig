@@ -24,7 +24,7 @@
 							<a class="cta__inverted" href="{{ path('group_discussion_follow', {
 								'groupSlug': group.slug,
 								'discussionUuid': discussion.uuid,
-								'level': 'email'
+								'level': membership.followLevel
 							}) }}">{{ 'pages.discussion.follow.follow'|trans }}</a>
 						{% else %}
 							<a class="cta__inverted" href="{{ path('group_discussion_follow', {

@@ -73,9 +73,15 @@ Voir [`delivrabilite-emails.md`](delivrabilite-emails.md) et
 ### `app:notifications:digest`
 
 Envoie le résumé des notifications en attente. **À lancer une fois par jour,
-tous les jours** — c'est la commande qui sait qui est abonné à quoi : elle sert
-les abonnés au quotidien chaque matin et passe les abonnés hebdomadaires six
-jours sur sept, pour ne les servir que le lundi.
+tous les jours** — c'est la commande qui décide du jour : elle emporte chaque
+matin ce qui est réglé sur le quotidien, et attend le lundi pour ce qui est
+réglé sur l'hebdomadaire.
+
+Depuis #40, le rythme est porté par **chaque notification**, et non plus par
+son destinataire : une même personne peut suivre une commission au quotidien
+et ses documents à la semaine. Un lundi, les deux tiennent dans le même
+e-mail. Ce qui est réglé sur l'e-mail immédiat ne passe pas par ici : c'est
+parti au moment de la publication.
 
 ```bash
 php bin/console app:notifications:digest --dry-run

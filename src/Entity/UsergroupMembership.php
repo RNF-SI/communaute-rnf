@@ -175,9 +175,16 @@ class UsergroupMembership {
 	 */
 	public function getOwnNotificationLevel ( $category ) {
 		$settings = $this->getNotificationsSettings() ?: [];
-		$level    = isset( $settings[ 'categories' ][ $category ] ) ? $settings[ 'categories' ][ $category ] : NULL;
+		$stored   = isset( $settings[ 'categories' ][ $category ] ) ? $settings[ 'categories' ][ $category ] : NULL;
 
-		if ( NotificationLevel::exists( $level ) ) {
+		$user  = $this->getUser();
+		$level = NotificationLevel::fromLegacy(
+				$stored,
+				$user instanceof User ? $user->getLegacyDiscussionRhythm() : NULL,
+				$category
+		);
+
+		if ( $level !== NULL ) {
 			return $level;
 		}
 
@@ -288,7 +295,13 @@ class UsergroupMembership {
 				? $settings[ 'discussions' ][ $discussionUuid ]
 				: NULL;
 
-		return NotificationLevel::exists( $override ) ? $override : NULL;
+		$user = $this->getUser();
+
+		return NotificationLevel::fromLegacy(
+				$override,
+				$user instanceof User ? $user->getLegacyDiscussionRhythm() : NULL,
+				NotificationCategory::DISCUSSIONS
+		);
 	}
 
 	/**
@@ -313,6 +326,22 @@ class UsergroupMembership {
 		$settings[ 'discussions' ][ $discussionUuid ] = $level;
 
 		return $this->setNotificationsSettings( $settings );
+	}
+
+	/**
+	 * Ce que « suivre cette discussion » veut dire pour ce membre-là.
+	 *
+	 * Depuis #40 il n'y a plus un seul niveau « par e-mail » : il faut dire
+	 * lequel. On reprend ce que le membre a demandé sur les discussions de ce
+	 * groupe quand cela porte un e-mail — suivre une discussion ne doit pas
+	 * lui imposer un rythme qu'il a écarté — et le résumé quotidien sinon.
+	 *
+	 * @return string one of NotificationLevel
+	 */
+	public function getFollowLevel () {
+		$level = $this->getNotificationLevel( NotificationCategory::DISCUSSIONS );
+
+		return NotificationLevel::sendsEmail( $level ) ? $level : NotificationLevel::DEFAULT_LEVEL;
 	}
 
 	/**

@@ -10,7 +10,6 @@ use App\Entity\Usergroup;
 use App\Entity\UsergroupMembership;
 use App\Notification\NotificationCategory;
 use App\Notification\NotificationLevel;
-use App\Notification\NotificationRhythm;
 use App\Service\NotificationSender;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
@@ -236,7 +235,8 @@ class DiscussionMentionTest extends KernelTestCase {
 		$author = $this->user( 'Paul Marais' );
 		$jeanne = $this->user( 'Jeanne Reserve' );
 
-		$jeanne->setDiscussionEmailRhythm( NotificationRhythm::IMMEDIATE );
+		$this->membershipOf( $jeanne )
+			 ->setNotificationLevel( NotificationCategory::DISCUSSIONS, NotificationLevel::IMMEDIATE );
 		$this->manager->flush();
 
 		$this->post( $author, '<p>@Jeanne Reserve ?</p>' );

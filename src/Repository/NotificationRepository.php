@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Notification;
 use App\Entity\User;
+use App\Notification\NotificationRhythm;
 use DateTimeInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query\Expr\Join;
@@ -90,19 +91,36 @@ class NotificationRepository extends ServiceEntityRepository {
 	}
 
 	/**
-	 * @param \App\Entity\User $user
+	 * Ce qui attend un résumé pour ce membre, et qui part ce jour-là.
+	 *
+	 * Depuis #40 le rythme est porté par la notification, pas par le membre :
+	 * un lundi ramasse le quotidien et l'hebdomadaire dans le même e-mail, les
+	 * autres jours ne prennent que le quotidien. Le tri se fait ici plutôt
+	 * qu'en SQL — la règle du lundi vit dans NotificationRhythm, et une seule
+	 * personne à la fois est concernée.
+	 *
+	 * @param \App\Entity\User        $user
+	 * @param \DateTimeInterface|null $day the day the summary leaves
 	 *
 	 * @return Notification[]
 	 */
-	public function findAwaitingDigestFor ( User $user ) {
-		return $this->createQueryBuilder( 'n' )
-					->andWhere( 'n.recipient = :user' )
-					->andWhere( 'n.byEmail = :byEmail' )
-					->andWhere( 'n.emailedAt IS NULL' )
-					->setParameter( 'byEmail', TRUE )
-					->setParameter( 'user', $user )
-					->orderBy( 'n.createdAt', 'ASC' )
-					->getQuery()
-					->getResult();
+	public function findAwaitingDigestFor ( User $user, DateTimeInterface $day = NULL ) {
+		$waiting = $this->createQueryBuilder( 'n' )
+						->andWhere( 'n.recipient = :user' )
+						->andWhere( 'n.byEmail = :byEmail' )
+						->andWhere( 'n.emailedAt IS NULL' )
+						->setParameter( 'byEmail', TRUE )
+						->setParameter( 'user', $user )
+						->orderBy( 'n.createdAt', 'ASC' )
+						->getQuery()
+						->getResult();
+
+		if ( !$day ) {
+			return $waiting;
+		}
+
+		return array_values( array_filter( $waiting, function ( Notification $notification ) use ( $day ) {
+			return NotificationRhythm::sendsOn( $notification->getRhythm(), $day );
+		} ) );
 	}
 }
