@@ -30,6 +30,14 @@
 * GROUP TREE
 **************************************************/
 
+// Le décalage d'un niveau vaut $tree_indent + $tree_branch : la marge place
+// la verticale sous la carte parente, la branche mène de cette verticale au
+// bord de la carte enfant.
+$tree_indent: rem(18px);
+$tree_branch: rem(20px);
+$tree_gap: rem(12px);
+$tree_line_color: $color_grey_light;
+
 // La liste des groupes suit la hiérarchie commission > pôle > atelier. Une
 // grille en trois colonnes ne dit rien de cette dépendance : l'arborescence
 // s'affiche donc en pleine largeur, chaque niveau décalé sous son parent. (#22)
@@ -51,21 +59,60 @@
 		}
 	}
 
+	// Un filet continu le long de la colonne ne disait pas *à quoi* chaque
+	// carte se rattache : le décalage se lisait comme un défaut d'alignement.
+	// Le trait est donc dessiné par les enfants eux-mêmes — une verticale qui
+	// traverse les intervalles, une horizontale qui rejoint la carte — et il
+	// s'arrête au dernier enfant au lieu de pendre sous lui.
 	.groups-tree--children {
-		margin:     0 0 0 rem(18px);
-		padding:    0 0 0 rem(18px);
+		margin:     0 0 0 $tree_indent;
+		padding:    $tree_gap 0 0 $tree_branch;
 		list-style: none;
 
-		border-left: 2px solid $color_grey_border;
-
 		> li {
+			position:    relative;
 			width:       100%;
 			margin-left: 0;
+
+			// La verticale déborde en haut et en bas de la carte pour couvrir
+			// l'intervalle qui la sépare de la précédente et de la suivante.
+			&::before {
+				content:     '';
+				position:    absolute;
+				left:        - $tree_branch;
+				top:         - $tree_gap;
+				bottom:      - $tree_gap;
+				border-left: 2px solid $tree_line_color;
+			}
+
+			// Rien à relier sous la dernière carte : la verticale s'arrête à
+			// son coude.
+			&:last-child::before {
+				bottom: auto;
+				height: calc(50% + #{$tree_gap});
+			}
+
+			// Le coude, à mi-hauteur de la carte quelle que soit sa taille.
+			&::after {
+				content:    '';
+				position:   absolute;
+				left:       - $tree_branch;
+				top:        50%;
+				width:      $tree_branch;
+				border-top: 2px solid $tree_line_color;
+			}
 		}
 	}
 
 	.groups-tree--node {
-		margin-bottom: rem(12px);
+		margin-bottom: $tree_gap;
+	}
+
+	// Une commission et ses groupes forment un bloc : sans un intervalle plus
+	// large entre les blocs, le premier groupe d'une commission se confondait
+	// avec le dernier de la précédente.
+	> ul > .groups-tree--node:not(:last-child) {
+		margin-bottom: rem(32px);
 	}
 
 	// Sur toute la largeur, la vignette verticale devenait une bannière de
