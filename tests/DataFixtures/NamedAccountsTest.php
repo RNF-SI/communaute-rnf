@@ -166,6 +166,24 @@ class NamedAccountsTest extends TestCase {
 		}
 	}
 
+	/**
+	 * Les catégories sont indexées par **nom de commission**, plus par un
+	 * numéro d'ordre. Le jour où c'est passé de l'un à l'autre, un appel est
+	 * resté en arrière : « Undefined offset: 0 », au milieu du chargement, la
+	 * base à moitié remplie.
+	 *
+	 * Rien dans le langage ne signale ce genre d'oubli — d'où ce contrôle.
+	 */
+	public function testTheFixturesReadCategoriesByName () {
+		$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/src/DataFixtures/AppFixtures.php' );
+
+		$this->assertSame(
+				0,
+				preg_match( '/\$categories\s*\[\s*\d+\s*\]/', $source ),
+				'Assert no leftover numeric access: the categories are keyed by commission name'
+		);
+	}
+
 	public function testEveryGroupBelongsToACommissionThatExists () {
 		foreach ( NetworkContent::GROUPS as $group ) {
 			$this->assertArrayHasKey(

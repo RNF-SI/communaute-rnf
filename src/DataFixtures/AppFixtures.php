@@ -701,7 +701,14 @@ class AppFixtures extends Fixture {
 			$manager->persist( $group );
 			$manager->flush();
 
-			$group->addCategory( $categories[ 0 ] );
+			// Les catégories sont indexées par nom de commission depuis que le
+			// contenu est celui du réseau : les groupes de référence relèvent
+			// de la première, quelle qu'elle soit.
+			$firstCommission = reset( $categories );
+
+			if ( $firstCommission ) {
+				$group->addCategory( $firstCommission );
+			}
 
 			foreach ( self::NAMED_ACCOUNTS as $email => $account ) {
 				if ( $account[ 'role' ] === 'none' ) {
