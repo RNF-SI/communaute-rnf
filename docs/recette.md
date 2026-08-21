@@ -6,6 +6,10 @@ l'ordre, et **ce qui doit se passer**. Les données de test sont faites pour
 
 Numéros d'issues entre parenthèses.
 
+> Pour **transmettre la recette à quelqu'un d'autre**, il y a
+> [`recette-a-transmettre.md`](recette-a-transmettre.md) : même contenu, sans
+> les numéros d'issues ni les commandes serveur, et avec de quoi se connecter.
+
 ---
 
 ## 0. Deux préalables, sans quoi la recette est faussée
