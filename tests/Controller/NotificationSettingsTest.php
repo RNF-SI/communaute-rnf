@@ -18,6 +18,12 @@ use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 
 /**
  * Issue #34 — the screens where a member states what they want to hear about.
+ *
+ * The page is also what keeps somebody who sits in thirty groups from having
+ * to copy the same choice thirty times: the general setting at the top is the
+ * one that applies, and a group only appears further down to say how it
+ * differs. Sending a group — or every group — back under that setting has to
+ * work from the form, otherwise the copying comes back through the window.
  */
 class NotificationSettingsTest extends WebTestCase {
 	private const FIREWALL = 'main';
@@ -163,6 +169,99 @@ class NotificationSettingsTest extends WebTestCase {
 				NotificationLevel::EMAIL,
 				$membership->getNotificationLevel( NotificationCategory::DOCUMENTS ),
 				'Assert the other categories are untouched'
+		);
+	}
+
+	public function testTheGeneralSettingIsOfferedForEveryCategory () {
+		$crawler = $this->openSettings();
+
+		foreach ( NotificationCategory::all() as $category ) {
+			$this->assertEquals(
+					1,
+					$crawler->filter( '#notif-default-' . $category )->count(),
+					sprintf( 'Assert "%s" can be set once for every group', $category )
+			);
+		}
+	}
+
+	public function testTheGeneralSettingReachesAGroupThatSaysNothing () {
+		$crawler = $this->openSettings();
+		$form    = $crawler->filter( '.notifications-settings form' )->form();
+
+		$form[ 'notifications[defaults][' . NotificationCategory::PAGES . ']' ]->select( NotificationLevel::NONE );
+
+		$this->client->submit( $form );
+
+		$membership = $this->reloadMembership();
+
+		$this->assertEquals(
+				NotificationLevel::NONE,
+				$membership->getNotificationLevel( NotificationCategory::PAGES ),
+				'Assert the group follows without anything being written on it'
+		);
+		$this->assertNull(
+				$membership->getOwnNotificationLevel( NotificationCategory::PAGES ),
+				'Assert the choice is not copied onto every group, which is the whole point'
+		);
+	}
+
+	public function testAGroupCanBeSentBackToTheGeneralSetting () {
+		$this->membership->setNotificationLevel( NotificationCategory::PAGES, NotificationLevel::NONE );
+		$this->manager->flush();
+
+		$crawler = $this->openSettings();
+		$form    = $crawler->filter( '.notifications-settings form' )->form();
+
+		$form[ 'notifications[groups][' . $this->group->getId() . '][' . NotificationCategory::PAGES . ']' ]
+				->select( '' );
+
+		$this->client->submit( $form );
+
+		$this->assertNull(
+				$this->reloadMembership()->getOwnNotificationLevel( NotificationCategory::PAGES ),
+				'Assert « comme le réglage général » really lets go of the group setting'
+		);
+	}
+
+	public function testEveryGroupCanBeSentBackAtOnce () {
+		foreach ( NotificationCategory::all() as $category ) {
+			$this->membership->setNotificationLevel( $category, NotificationLevel::NONE );
+		}
+
+		$this->manager->flush();
+
+		$crawler = $this->openSettings();
+
+		// Le bouton porte son propre nom : c'est lui, et non « Enregistrer »,
+		// qui déclenche la remise à zéro.
+		$this->client->submit( $crawler->filter( 'button[name="reset-groups"]' )->form() );
+
+		$this->assertTrue(
+				$this->reloadMembership()->followsGeneralSettings(),
+				'Assert thirty groups set one by one can be taken back in one gesture'
+		);
+	}
+
+	public function testTheSettingsSayWhetherAGroupFollowsOrNot () {
+		$crawler = $this->openSettings();
+
+		$this->assertStringNotContainsString(
+				'notifications-settings--group-state__apart',
+				$crawler->filter( '.notifications-settings--group .notifications-settings--group-state' )
+						->attr( 'class' ),
+				'Assert a group is announced as following before anything is said about it'
+		);
+
+		$this->membership->setNotificationLevel( NotificationCategory::PAGES, NotificationLevel::NONE );
+		$this->manager->flush();
+
+		$crawler = $this->openSettings();
+
+		$this->assertStringContainsString(
+				'notifications-settings--group-state__apart',
+				$crawler->filter( '.notifications-settings--group .notifications-settings--group-state' )
+						->attr( 'class' ),
+				'Assert a group that differs is the one that catches the eye'
 		);
 	}
 

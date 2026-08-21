@@ -134,27 +134,122 @@ class UsergroupMembership {
 	 * How far notifications of a given kind of content go, for this member in
 	 * this group.
 	 *
-	 * Settings written before #34 only knew a single `unsubscribed` flag for
-	 * the whole group. They are read as they were meant: someone who opted out
-	 * stays opted out on every category. Nobody is resubscribed by the change.
+	 * Two sources: what was said about this group — the legacy opt-out
+	 * included, see below — then the member's general setting. Someone who
+	 * opted out before #34 stays opted out on every category, and nobody is
+	 * resubscribed by a general setting made afterwards; saying « suivre le
+	 * réglage général » on the group is what drops that flag, and it is an
+	 * explicit gesture.
 	 *
 	 * @param string $category
 	 *
 	 * @return string one of NotificationLevel
 	 */
 	public function getNotificationLevel ( $category ) {
-		$settings = $this->getNotificationsSettings() ?: [];
+		$own = $this->getOwnNotificationLevel( $category );
 
-		if ( isset( $settings[ 'categories' ][ $category ] )
-			 && NotificationLevel::exists( $settings[ 'categories' ][ $category ] ) ) {
-			return $settings[ 'categories' ][ $category ];
+		if ( $own !== NULL ) {
+			return $own;
 		}
 
-		if ( !empty( $settings[ 'unsubscribed' ] ) ) {
+		$user = $this->getUser();
+
+		return $user instanceof User
+				? $user->getDefaultNotificationLevel( $category )
+				: NotificationLevel::DEFAULT_LEVEL;
+	}
+
+	/**
+	 * Ce que ce groupe dit de lui-même, ou rien du tout — auquel cas il suit
+	 * le réglage général.
+	 *
+	 * Un désabonnement d'avant #34 est lu comme ce qu'il est : un « aucune
+	 * notification » sur les quatre catégories. C'est le seul moyen que la
+	 * page des paramètres montre la vérité — elle afficherait sinon « comme le
+	 * réglage général » sur un groupe qui, lui, reste muet — et enregistrer
+	 * une fois suffit alors à convertir l'ancien drapeau en choix explicites.
+	 *
+	 * @param string $category
+	 *
+	 * @return string|null one of NotificationLevel, or NULL
+	 */
+	public function getOwnNotificationLevel ( $category ) {
+		$settings = $this->getNotificationsSettings() ?: [];
+		$level    = isset( $settings[ 'categories' ][ $category ] ) ? $settings[ 'categories' ][ $category ] : NULL;
+
+		if ( NotificationLevel::exists( $level ) ) {
+			return $level;
+		}
+
+		if ( !empty( $settings[ 'unsubscribed' ] ) && NotificationCategory::exists( $category ) ) {
 			return NotificationLevel::NONE;
 		}
 
-		return NotificationLevel::DEFAULT_LEVEL;
+		return NULL;
+	}
+
+	/**
+	 * Ce que ce groupe dit de lui-même, catégorie par catégorie, dans l'ordre
+	 * des catégories : de quoi le résumer en une ligne sans le déplier.
+	 *
+	 * @return array [ 'discussions' => 'none' ]
+	 */
+	public function getOwnNotificationLevels () {
+		$levels = [];
+
+		foreach ( NotificationCategory::all() as $category ) {
+			$level = $this->getOwnNotificationLevel( $category );
+
+			if ( $level !== NULL ) {
+				$levels[ $category ] = $level;
+			}
+		}
+
+		return $levels;
+	}
+
+	/**
+	 * Ce groupe suit-il le réglage général, sans rien dire de particulier ?
+	 * Un désabonnement d'avant #34 compte comme un réglage à lui.
+	 *
+	 * @return bool
+	 */
+	public function followsGeneralSettings () {
+		return empty( $this->getOwnNotificationLevels() );
+	}
+
+	/**
+	 * Ne plus rien dire de particulier sur une catégorie : elle repasse sous
+	 * le réglage général.
+	 *
+	 * @param string $category
+	 *
+	 * @return $this
+	 */
+	public function clearNotificationLevel ( $category ) {
+		$settings = $this->getNotificationsSettings() ?: [];
+
+		unset( $settings[ 'categories' ][ $category ] );
+
+		if ( isset( $settings[ 'categories' ] ) && empty( $settings[ 'categories' ] ) ) {
+			unset( $settings[ 'categories' ] );
+		}
+
+		return $this->setNotificationsSettings( $settings );
+	}
+
+	/**
+	 * Tout remettre sous le réglage général, y compris un désabonnement
+	 * d'avant #34 : le demander est un geste explicite.
+	 *
+	 * @return $this
+	 */
+	public function followGeneralSettings () {
+		$settings = $this->getNotificationsSettings() ?: [];
+
+		unset( $settings[ 'categories' ], $settings[ 'unsubscribed' ] );
+
+		return $this->setNotificationsSettings( $settings );
 	}
 
 	/**

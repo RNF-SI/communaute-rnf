@@ -190,7 +190,12 @@ C'est la partie qui demande deux comptes — deux comptes de test dans deux navi
 |---|---|
 | Notifications de Manon Membre | Une **mention non lue** et une notification **déjà lue**, visuellement distinctes (#34, #37) |
 | L'autre personne crée une page dans un groupe commun | Vous êtes notifié, **elle ne l'est pas** (#34) |
-| Régler une catégorie sur « aucune », l'autre publie | Plus de notification pour cette catégorie |
+| Mes paramètres → **Pour tous mes groupes** | Quatre listes, une par type de contenu : c'est le réglage qui s'applique partout |
+| Régler « Pages » sur « aucune » **en haut**, sans toucher aux groupes | Plus aucune notification de page, dans **tous** les groupes — rien n'a été recopié groupe par groupe |
+| Déplier un groupe, y régler « Discussions » sur « aucune » | Son résumé, replié, annonce « Discussions : aucune notification » et se détache du reste |
+| Dans ce groupe, « Tout remettre au réglage général » puis enregistrer | Il annonce de nouveau « comme le réglage général » |
+| Avec beaucoup de groupes : taper un nom dans **Chercher un groupe** | La liste se réduit, le compte suit ; accents et majuscules sont ignorés |
+| « Remettre tous mes groupes au réglage général » | Confirmation demandée, puis tous les groupes suivent de nouveau |
 | Couper la catégorie discussions, puis « suivre » une discussion | Notifié de celle-là seulement (#17) |
 | Mes paramètres → rythme | **Trois choix** : à chaque message, résumé quotidien, **résumé hebdomadaire le lundi** (#38) |
 | L'autre personne vous mentionne dans une discussion **mise en sourdine** | Vous êtes quand même notifié (#37) |

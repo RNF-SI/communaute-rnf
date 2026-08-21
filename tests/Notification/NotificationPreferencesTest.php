@@ -12,6 +12,13 @@ use PHPUnit\Framework\TestCase;
 /**
  * Issue #34 — what a member is warned about, group by group and category by
  * category, plus the choice that can be made on a single discussion.
+ *
+ * Since then, a group that says nothing of its own follows the member's
+ * general setting: somebody sitting in thirty groups states their choice once
+ * instead of copying it thirty times. What follows pins the order in which
+ * the three sources are read — the group, the legacy opt-out, the general
+ * setting — because getting it wrong either resubscribes people who had
+ * unsubscribed, or silently overrides a choice they made on purpose.
  */
 class NotificationPreferencesTest extends TestCase {
 	/**
@@ -19,12 +26,33 @@ class NotificationPreferencesTest extends TestCase {
 	 *
 	 * @return \App\Entity\UsergroupMembership
 	 */
-	private function membership ( $settings = [] ) {
+	private function membership ( $settings = [], User $user = NULL ) {
 		$membership = new UsergroupMembership();
 		$membership->setStatus( UsergroupMembership::STATUS_MEMBER );
 		$membership->setNotificationsSettings( $settings );
 
+		if ( $user ) {
+			$membership->setUser( $user );
+		}
+
 		return $membership;
+	}
+
+	/**
+	 * @param string|null $level applied to every category
+	 *
+	 * @return \App\Entity\User
+	 */
+	private function member ( $level = NULL ) {
+		$user = new User();
+
+		if ( $level !== NULL ) {
+			foreach ( NotificationCategory::all() as $category ) {
+				$user->setDefaultNotificationLevel( $category, $level );
+			}
+		}
+
+		return $user;
 	}
 
 	public function testEveryCategoryIsFollowedByDefault () {
@@ -77,6 +105,121 @@ class NotificationPreferencesTest extends TestCase {
 				$membership->getNotificationLevel( NotificationCategory::DOCUMENTS ),
 				'Assert the old flag stops applying once the member states a choice'
 		);
+	}
+
+	public function testAGroupThatSaysNothingFollowsTheGeneralSetting () {
+		$membership = $this->membership( [], $this->member( NotificationLevel::APP ) );
+
+		foreach ( NotificationCategory::all() as $category ) {
+			$this->assertEquals(
+					NotificationLevel::APP,
+					$membership->getNotificationLevel( $category ),
+					sprintf( 'Assert "%s" follows the general setting rather than the built-in default', $category )
+			);
+		}
+
+		$this->assertTrue( $membership->followsGeneralSettings() );
+	}
+
+	public function testTheGeneralSettingDoesNotOverrideAGroupSetOnPurpose () {
+		$membership = $this->membership( [], $this->member( NotificationLevel::NONE ) );
+		$membership->setNotificationLevel( NotificationCategory::DISCUSSIONS, NotificationLevel::EMAIL );
+
+		$this->assertEquals(
+				NotificationLevel::EMAIL,
+				$membership->getNotificationLevel( NotificationCategory::DISCUSSIONS ),
+				'Assert what was said about this group wins'
+		);
+		$this->assertEquals(
+				NotificationLevel::NONE,
+				$membership->getNotificationLevel( NotificationCategory::PAGES ),
+				'Assert the rest still follows the general setting'
+		);
+		$this->assertFalse( $membership->followsGeneralSettings() );
+	}
+
+	public function testACategoryCanBeSentBackToTheGeneralSetting () {
+		$membership = $this->membership( [], $this->member( NotificationLevel::APP ) );
+		$membership->setNotificationLevel( NotificationCategory::PAGES, NotificationLevel::NONE );
+		$membership->clearNotificationLevel( NotificationCategory::PAGES );
+
+		$this->assertNull( $membership->getOwnNotificationLevel( NotificationCategory::PAGES ) );
+		$this->assertEquals(
+				NotificationLevel::APP,
+				$membership->getNotificationLevel( NotificationCategory::PAGES ),
+				'Assert the group goes back under the general setting instead of keeping a copy of it'
+		);
+		$this->assertTrue( $membership->followsGeneralSettings() );
+	}
+
+	public function testAWholeGroupCanBeSentBackInOneGo () {
+		$membership = $this->membership( [], $this->member( NotificationLevel::EMAIL ) );
+
+		foreach ( NotificationCategory::all() as $category ) {
+			$membership->setNotificationLevel( $category, NotificationLevel::NONE );
+		}
+
+		$membership->followGeneralSettings();
+
+		$this->assertTrue( $membership->followsGeneralSettings() );
+
+		foreach ( NotificationCategory::all() as $category ) {
+			$this->assertEquals( NotificationLevel::EMAIL, $membership->getNotificationLevel( $category ) );
+		}
+	}
+
+	public function testALegacyOptOutIsNotUndoneByAGeneralSetting () {
+		$membership = $this->membership( [ 'unsubscribed' => TRUE ], $this->member( NotificationLevel::EMAIL ) );
+
+		foreach ( NotificationCategory::all() as $category ) {
+			$this->assertEquals(
+					NotificationLevel::NONE,
+					$membership->getNotificationLevel( $category ),
+					'Assert somebody who had unsubscribed is not resubscribed by a setting made elsewhere'
+			);
+		}
+
+		$this->assertFalse(
+				$membership->followsGeneralSettings(),
+				'Assert the settings page shows such a group as set apart, not as following'
+		);
+	}
+
+	public function testALegacyOptOutIsShownAsWhatItIs () {
+		$membership = $this->membership( [ 'unsubscribed' => TRUE ], $this->member( NotificationLevel::EMAIL ) );
+
+		$this->assertEquals(
+				array_fill_keys( NotificationCategory::all(), NotificationLevel::NONE ),
+				$membership->getOwnNotificationLevels(),
+				'Assert the settings page can show a muted group as muted, not as following a setting it ignores'
+		);
+	}
+
+	public function testAskingAGroupToFollowDropsTheLegacyOptOut () {
+		$membership = $this->membership( [ 'unsubscribed' => TRUE ], $this->member( NotificationLevel::EMAIL ) );
+		$membership->followGeneralSettings();
+
+		$this->assertEquals(
+				NotificationLevel::EMAIL,
+				$membership->getNotificationLevel( NotificationCategory::PAGES ),
+				'Assert asking for it explicitly does what it says'
+		);
+	}
+
+	public function testAMemberWithoutAGeneralSettingKeepsTheBuiltInDefault () {
+		$user = new User();
+
+		foreach ( NotificationCategory::all() as $category ) {
+			$this->assertEquals( NotificationLevel::EMAIL, $user->getDefaultNotificationLevel( $category ) );
+		}
+	}
+
+	public function testAnUnknownCategoryOrLevelIsRefusedAsAGeneralSetting () {
+		$user = new User();
+		$user->setDefaultNotificationLevel( 'nonsense', NotificationLevel::NONE );
+		$user->setDefaultNotificationLevel( NotificationCategory::PAGES, 'nonsense' );
+
+		$this->assertEquals( NotificationLevel::EMAIL, $user->getDefaultNotificationLevel( NotificationCategory::PAGES ) );
 	}
 
 	public function testAnUnknownCategoryOrLevelIsRefused () {

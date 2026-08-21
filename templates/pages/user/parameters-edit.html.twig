@@ -43,35 +43,95 @@
                             <div class="hint">{{ 'pages.user.notifications_settings.rhythm_hint'|trans }}</div>
                         </div>
 
+                        {# Le réglage général : ce que vaut un groupe qui ne
+                           dit rien de particulier. Quelqu'un qui siège dans
+                           trente groupes le règle une fois ici au lieu de le
+                           recopier trente fois plus bas. #}
+                        <h3 class="h3">{{ 'pages.user.notifications_settings.general'|trans }}</h3>
+                        <p class="hint">{{ 'pages.user.notifications_settings.general_hint'|trans }}</p>
+
+                        <div class="notifications-settings--defaults">
+                            {% for category in categories %}
+                                <div class="form-row form-row__field">
+                                    <label for="notif-default-{{ category }}">
+                                        {{ ('pages.user.notifications_settings.categories.' ~ category)|trans }}
+                                    </label>
+                                    <select id="notif-default-{{ category }}"
+                                            name="notifications[defaults][{{ category }}]">
+                                        {% for level in levels %}
+                                            <option value="{{ level }}"
+                                                    {{ user.getDefaultNotificationLevel(category) == level ? 'selected' : '' }}>
+                                                {{ ('pages.user.notifications_settings.levels.' ~ level)|trans }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            {% endfor %}
+                        </div>
+
                         <h3 class="h3">{{ 'pages.user.notifications_settings.groups'|trans }}</h3>
+                        <p class="hint">{{ 'pages.user.notifications_settings.groups_hint'|trans }}</p>
 
-                        {% for membership in user.usergroupMemberships %}
-                            {% if membership.usergroup and membership.usergroup.isActive %}
-                                <fieldset class="notifications-settings--group">
-                                    <legend>{{ membership.usergroup.name }}</legend>
+                        <div class="notifications-settings--list"
+                             data-filter-label="{{ 'pages.user.notifications_settings.filter'|trans }}"
+                             data-count-label="{{ 'pages.user.notifications_settings.count'|trans }}"
+                             data-follow-label="{{ 'pages.user.notifications_settings.follow_this_group'|trans }}"
+                             data-follows-label="{{ 'pages.user.notifications_settings.follows_general'|trans }}"
+                             data-empty-label="{{ 'pages.user.notifications_settings.no_match'|trans }}">
+                            {% for membership in user.usergroupMemberships %}
+                                {% if membership.usergroup and membership.usergroup.isActive %}
+                                    {% set group = membership.usergroup %}
+                                    {# Ce que le groupe dit de lui-même, calculé côté PHP :
+                                       accumuler dans une boucle Twig ne survivrait pas à
+                                       la boucle. #}
+                                    {% set apart = membership.ownNotificationLevels %}
 
-                                    {% for category in categories %}
-                                        <div class="form-row form-row__field">
-                                            <label for="notif-{{ membership.usergroup.id }}-{{ category }}">
-                                                {{ ('pages.user.notifications_settings.categories.' ~ category)|trans }}
-                                            </label>
-                                            <select id="notif-{{ membership.usergroup.id }}-{{ category }}"
-                                                    name="notifications[groups][{{ membership.usergroup.id }}][{{ category }}]">
-                                                {% for level in levels %}
-                                                    <option value="{{ level }}"
-                                                            {{ membership.getNotificationLevel(category) == level ? 'selected' : '' }}>
-                                                        {{ ('pages.user.notifications_settings.levels.' ~ level)|trans }}
-                                                    </option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                    {% endfor %}
-                                </fieldset>
-                            {% endif %}
-                        {% endfor %}
+                                    <details class="notifications-settings--group" data-name="{{ group.name }}">
+                                        <summary>
+                                            <span class="notifications-settings--group-name">{{ group.name }}</span>
+                                            <span class="notifications-settings--group-state{{ membership.followsGeneralSettings ? '' : ' notifications-settings--group-state__apart' }}">
+                                                {%- if apart is empty -%}
+                                                    {{ 'pages.user.notifications_settings.follows_general'|trans }}
+                                                {%- else -%}
+                                                    {%- for category, own in apart -%}
+                                                        {{- ('pages.user.notifications_settings.categories.' ~ category)|trans }} : {{ ('pages.user.notifications_settings.levels.' ~ own)|trans|lower -}}
+                                                        {{- loop.last ? '' : ' · ' -}}
+                                                    {%- endfor -%}
+                                                {%- endif -%}
+                                            </span>
+                                        </summary>
+
+                                        {% for category in categories %}
+                                            <div class="form-row form-row__field">
+                                                <label for="notif-{{ group.id }}-{{ category }}">
+                                                    {{ ('pages.user.notifications_settings.categories.' ~ category)|trans }}
+                                                </label>
+                                                <select id="notif-{{ group.id }}-{{ category }}"
+                                                        name="notifications[groups][{{ group.id }}][{{ category }}]">
+                                                    <option value="">{{ 'pages.user.notifications_settings.same_as_general'|trans }}</option>
+                                                    {% for level in levels %}
+                                                        <option value="{{ level }}"
+                                                                {{ membership.getOwnNotificationLevel(category) == level ? 'selected' : '' }}>
+                                                            {{ ('pages.user.notifications_settings.levels.' ~ level)|trans }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        {% endfor %}
+                                    </details>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
 
                         <div class="form-row form-row__submit">
                             <button type="submit" class="cta">{{ 'pages.user.notifications_settings.submit'|trans }}</button>
+                            {# Rattraper trente groupes réglés un par un : le
+                               seul geste que les listes ci-dessus ne savent
+                               pas faire d'un coup. #}
+                            <button type="submit" name="reset-groups" value="1" class="cta__inverted"
+                                    data-confirm-message="{{ 'pages.user.notifications_settings.reset_confirm'|trans }}">
+                                {{ 'pages.user.notifications_settings.reset'|trans }}
+                            </button>
                         </div>
                     </form>
                 </section>

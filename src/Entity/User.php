@@ -5,6 +5,8 @@ namespace App\Entity;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use App\Notification\NotificationCategory;
+use App\Notification\NotificationLevel;
 use App\Notification\NotificationRhythm;
 use Doctrine\ORM\Mapping as ORM;
 use JsonSerializable;
@@ -267,7 +269,12 @@ class User implements UserInterface, JsonSerializable {
 
 	/**
 	 * Choices that apply to every group at once: whether e-mails go out at
-	 * all, and at what rhythm discussion e-mails leave. (#34)
+	 * all, at what rhythm discussion e-mails leave (#34), and what a group
+	 * that says nothing of its own is worth, category by category.
+	 *
+	 * That last part is what keeps the settings page usable for somebody who
+	 * sits in thirty groups: the choice is made once here, and a group only
+	 * appears in the list to say how it differs.
 	 *
 	 * @ORM\Column(type="json", nullable=true)
 	 */
@@ -824,6 +831,40 @@ class User implements UserInterface, JsonSerializable {
 		$rhythm   = isset( $settings[ 'discussionRhythm' ] ) ? $settings[ 'discussionRhythm' ] : NULL;
 
 		return NotificationRhythm::exists( $rhythm ) ? $rhythm : NotificationRhythm::DEFAULT_RHYTHM;
+	}
+
+	/**
+	 * Ce qu'on reçoit d'un groupe qui n'a rien dit de particulier.
+	 *
+	 * @param string $category
+	 *
+	 * @return string one of NotificationLevel
+	 */
+	public function getDefaultNotificationLevel ( string $category ): string {
+		$settings = $this->notificationsSettings ?: [];
+		$level    = isset( $settings[ 'categories' ][ $category ] ) ? $settings[ 'categories' ][ $category ] : NULL;
+
+		return NotificationLevel::exists( $level ) ? $level : NotificationLevel::DEFAULT_LEVEL;
+	}
+
+	/**
+	 * @param string $category
+	 * @param string $level
+	 *
+	 * @return $this
+	 */
+	public function setDefaultNotificationLevel ( string $category, string $level ): self {
+		if ( !NotificationCategory::exists( $category ) || !NotificationLevel::exists( $level ) ) {
+			return $this;
+		}
+
+		$settings = $this->notificationsSettings ?: [];
+
+		$settings[ 'categories' ][ $category ] = $level;
+
+		$this->notificationsSettings = $settings;
+
+		return $this;
 	}
 
 	public function setDiscussionEmailRhythm ( string $rhythm ): self {

@@ -103,6 +103,125 @@
 }
 
 /**************************************************
+ * NOTIFICATIONS
+ *************************************************/
+
+/**
+ * Les réglages de notifications. Le point de départ est qu'on peut siéger
+ * dans trente groupes : la page montre d'abord le réglage général, puis la
+ * liste des groupes repliés, chacun annonçant en une ligne s'il suit ce
+ * réglage ou en quoi il s'en écarte. Déplier n'est utile que pour les
+ * quelques-uns qui doivent s'en écarter.
+ */
+
+.notifications-settings {
+	.notifications-settings--defaults {
+		padding:       padding_vertical('small') padding_horizontal('small');
+		margin-bottom: rem(30px);
+
+		background:    $color_grey_lighter;
+		border-radius: rem(4px);
+	}
+
+	.notifications-settings--filter {
+		display:       flex;
+		align-items:   center;
+		gap:           rem(12px);
+		flex-wrap:     wrap;
+
+		margin-bottom: rem(12px);
+	}
+
+	.notifications-settings--filter-field {
+		flex:      1 1 rem(240px);
+		min-width: rem(180px);
+	}
+
+	.notifications-settings--count,
+	.notifications-settings--empty {
+		margin:    0;
+
+		font-size: rem(13px);
+		color:     $color_grey_neutral;
+	}
+
+	.notifications-settings--empty {
+		padding: rem(12px) 0;
+	}
+
+	.notifications-settings--group {
+		border-bottom: 1px solid $color_grey_border;
+
+		&:first-of-type {
+			border-top: 1px solid $color_grey_border;
+		}
+
+		> summary {
+			display:         flex;
+			flex-wrap:       wrap;
+			align-items:     baseline;
+			gap:             rem(4px) rem(10px);
+			padding:         rem(12px) 0 rem(12px) rem(20px);
+			position:        relative;
+
+			cursor:          pointer;
+			list-style:      none;
+
+			&::-webkit-details-marker {
+				display: none;
+			}
+
+			&::before {
+				content:   '▸';
+				position:  absolute;
+				left:      0;
+
+				color:     $color_grey_neutral;
+				font-size: rem(12px);
+			}
+		}
+
+		&[open] > summary::before {
+			content: '▾';
+		}
+	}
+
+	.notifications-settings--group-name {
+		@include font_default_bold;
+	}
+
+	.notifications-settings--group-state {
+		font-size: rem(13px);
+		color:     $color_grey_neutral;
+	}
+
+	/**
+	 * Un groupe qui s'écarte du réglage général se remarque : c'est la seule
+	 * ligne de la liste qui demande à être lue.
+	 */
+	.notifications-settings--group-state__apart {
+		color: $color_action;
+	}
+
+	.notifications-settings--follow {
+		@include button-reset;
+
+		margin:          rem(4px) 0 rem(16px);
+
+		font-size:       rem(13px);
+		color:           $color_action;
+		text-decoration: underline;
+		cursor:          pointer;
+	}
+
+	.form-row__submit {
+		display:   flex;
+		flex-wrap: wrap;
+		gap:       rem(12px);
+	}
+}
+
+/**************************************************
  * USER DASHBOARD
  *************************************************/
 

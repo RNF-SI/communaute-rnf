@@ -189,6 +189,31 @@ nothing intercepts clicks, and the page stays usable during the tour.
 It launches by itself while `User::$tourSeenAt` is null, and afterwards only
 through the settings link (`?tour=1`). Closing it counts as having seen it.
 
+### Notification settings (#34)
+What a member hears about is read from **two sources, in this order**: what
+the group itself says (`UsergroupMembership::getOwnNotificationLevel` — which
+reads a pre-#34 `unsubscribed` flag as « aucune notification » on all four
+categories, so the settings page shows a muted group as muted), then the
+member's general setting (`User::getDefaultNotificationLevel`, stored in the
+same `notificationsSettings` JSON as `emails` and `discussionRhythm` — no
+column of its own). Get that order wrong and you either resubscribe people who
+had opted out, or silently override a choice they made on purpose.
+
+The general setting is what makes the settings page usable for somebody
+sitting in thirty groups: the choice is made once, and a group is only written
+to when it has to *differ*. `/user/parameters/edit` shows the general setting
+first, then one folded `<details>` per group whose summary says either « comme
+le réglage général » or the categories it departs on. Sending things back
+costs one gesture, never thirty: an empty value on a group's select clears
+that category, and the `reset-groups` submit button clears every group at
+once. `assets/js/user/notifications-settings.js` only adds comfort on top —
+the name filter, the live summary, the per-group « tout remettre » button; the
+page saves correctly with JavaScript off.
+
+Careful when adding a form field: the page's tests drive it through the real
+form (`#notif-<groupId>-<category>`, `notifications[groups][id][category]`,
+`notifications[defaults][category]`).
+
 ### Search (TNTSearch)
 Full-text search via `SearchEngineManager`. Indexes are stored under `public/media/cache/indexes/` (`INDEX_DIR` env var). Reindexing is triggered automatically via event subscribers in `src/EventSubscriber/`; rebuild manually with the `search:reindex*` commands.
 

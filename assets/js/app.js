@@ -48,5 +48,6 @@ import './ui/link-order-change';
 //
 import './user/profile';
 import './user/dashboard';
+import './user/notifications-settings';
 
 console.warn( 'Hello fellow developer, ENV is dev.\nDont\'t forget to compile in production mode before deploying.\nHappy coding ! Max.' );

@@ -206,21 +206,54 @@ class UserController extends AbstractController
 				$user->setDiscussionEmailRhythm($settings['discussionRhythm']);
 			}
 
+			// Le réglage général : ce que vaut un groupe qui ne dit rien.
+			foreach (NotificationCategory::all() as $category) {
+				if (!empty($settings['defaults'][$category])) {
+					$user->setDefaultNotificationLevel($category, $settings['defaults'][$category]);
+				}
+			}
+
+			// « Remettre tous mes groupes au réglage général » : un bouton à
+			// part, parce qu'il efface des choix — la seule façon, sinon, de
+			// rattraper trente groupes réglés un par un serait de les
+			// reprendre un par un.
+			$resetGroups = $request->request->has('reset-groups');
+
 			foreach ($user->getUsergroupMemberships() as $membership) {
 				$groupId = $membership->getUsergroup() ? $membership->getUsergroup()->getId() : NULL;
 
-				if (!$groupId || empty($settings['groups'][$groupId])) {
+				if (!$groupId) {
 					continue;
 				}
 
-				foreach ($settings['groups'][$groupId] as $category => $level) {
-					$membership->setNotificationLevel($category, $level);
+				if ($resetGroups) {
+					$membership->followGeneralSettings();
+
+					continue;
+				}
+
+				$chosen = isset($settings['groups'][$groupId]) ? $settings['groups'][$groupId] : [];
+
+				foreach (NotificationCategory::all() as $category) {
+					if (!isset($chosen[$category])) {
+						continue;
+					}
+
+					// Vide : la catégorie repasse sous le réglage général,
+					// elle n'est pas recopiée.
+					if ($chosen[$category] === '') {
+						$membership->clearNotificationLevel($category);
+
+						continue;
+					}
+
+					$membership->setNotificationLevel($category, $chosen[$category]);
 				}
 			}
 
 			$manager->flush();
 
-			$this->addFlash('notice', 'messages.user.notifications_updated');
+			$this->addFlash('notice', $resetGroups ? 'messages.user.notifications_reset' : 'messages.user.notifications_updated');
 
 			return $this->redirectToRoute('user_parameters_edit');
 		}
