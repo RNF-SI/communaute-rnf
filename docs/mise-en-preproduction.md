@@ -131,10 +131,101 @@ fichiers, et la présence des assets compilés — donc que `npm run build` n'a 
 Elle sort en erreur sur ce qui empêche l'application de fonctionner, et signale
 en « attention » ce qui la laisse tourner en silence.
 
-## 2. Déployer
+## 2. Mettre à jour une préproduction déjà en place
+
+Le cas courant, une fois le premier déploiement fait. Trois commandes, dans
+cet ordre :
+
+```bash
+cd /var/www/html/communaute
+git pull
+php bin/console doctrine:migrations:migrate --no-interaction
+php bin/console cache:clear
+```
+
+`git pull` apporte **aussi les assets** : `public/build/` est versionné, parce
+que node est absent des serveurs. Pas de `npm` à lancer.
+
+Pas de `composer install` non plus tant que `composer.lock` n'a pas changé —
+et il change rarement. Pour le savoir :
+
+```bash
+git diff --name-only HEAD@{1} HEAD -- composer.lock
+```
+
+### Savoir ce que la mise à jour demande, sans lire une liste périmée
+
+La liste des migrations plus bas vieillit à chaque commit. Ces commandes-là
+disent la vérité du moment :
+
+```bash
+# Ce qui reste à jouer, s'il reste quelque chose
+php bin/console doctrine:migrations:status | grep -i "new\|executed"
+
+# Ce que le dernier pull a changé, par nature
+git diff --name-only HEAD@{1} HEAD | sed 's|/.*||' | sort | uniq -c | sort -rn
+```
+
+Le second dit en une ligne s'il faut se soucier des migrations (`migrations/`),
+des traductions (`translations/`), du front (`public/build/`) ou seulement du
+code.
+
+### Quand faut-il recharger les données de test ?
+
+**Seulement si le contenu des fixtures a changé** et qu'on veut le voir.
+Une migration ne l'exige pas : elle transforme les données en place.
+
+```bash
+git diff --name-only HEAD@{1} HEAD -- src/DataFixtures/
+```
+
+Si cette commande ne renvoie rien, ne rechargez pas — vous perdriez les
+contenus créés à la main pendant la recette. Sinon :
+
+```bash
+# TEST_ACCOUNTS_EMAIL doit déjà être posée : c'est au chargement que les
+# adresses des comptes de test sont écrites.
+sed -i 's/^ALLOW_FIXTURES=.*/ALLOW_FIXTURES=1/' .env.local
+php bin/console doctrine:fixtures:load --no-interaction
+php bin/console search:reindex:all
+sed -i 's/^ALLOW_FIXTURES=.*/ALLOW_FIXTURES=0/' .env.local
+```
+
+⚠️ Le chargement **vide la base**. Les comptes GeoNature, eux, ne bougent pas :
+il suffit de se reconnecter par le SSO, et l'appariement par adresse redonne
+les droits que les fixtures ont écrits.
+
+### Réindexer, ou non
+
+Nécessaire uniquement quand les colonnes indexées changent — c'est rare et
+c'est signalé dans le message de commit. Dans le doute, la commande ne coûte
+que quelques secondes :
+
+```bash
+php bin/console search:reindex:all
+```
+
+### Vérifier que la mise à jour a pris
+
+```bash
+php bin/console app:preflight     # rien de bloquant ?
+php bin/console app:mail:check    # les deux domaines d'envoi
+```
+
+Puis ouvrir une page dans le navigateur. Une erreur ne s'affiche pas toujours :
+
+```bash
+tail -n 50 var/log/prod.log | grep -iE "CRITICAL|ERROR"
+```
+
+## 3. Déployer pour la première fois
 
 `clevercloud/post_build.sh` enchaîne migrations, cache, `import:skills` et build
 front. **Quinze migrations** vont s'appliquer :
+
+> Cette liste est celle d'une base vierge. Pour une préproduction déjà en
+> place, voir §2 — et `doctrine:migrations:status`, qui dit ce qui reste
+> réellement à jouer plutôt qu'une liste qui vieillit.
 
 | Migration | Effet |
 |---|---|
@@ -205,7 +296,7 @@ avant de décider :
 SELECT COUNT(*) FROM communaute_rnf_users WHERE bio IS NOT NULL AND bio <> '';
 ```
 
-## 3. Recette
+## 4. Recette
 
 > **Le script détaillé est dans [`recette.md`](recette.md)** : quoi regarder,
 > dans quel ordre, et ce qui doit se passer. La présente section garde les
@@ -279,7 +370,35 @@ php bin/console app:notifications:digest --day=2026-08-24 --dry-run
 échec, ou vers des adresses anonymisées, abîme la réputation de `rnfrance.org`
 bien au-delà de la plateforme.
 
-## 5. Retour d'expérience — ce qui a réellement coincé
+## 5. Si quelque chose ne va pas
+
+### Deux autres pièges de la préproduction
+
+- **Ne jamais planifier la tâche du résumé sur la préproduction.** Si les deux
+  environnements l'exécutent, les destinataires reçoivent tout en double. La
+  lancer à la main, avec `--dry-run` d'abord.
+- **Attention aux comptes conservés avec `--keep-email`.** Ce sont les seules
+  adresses réelles d'une copie anonymisée : elles passent le garde-fou et
+  recevront donc pour de bon ce que la préproduction envoie.
+- **Les six comptes de test ne reçoivent rien par défaut.** Leurs adresses en
+  `@example.org` ne mènent nulle part et sont refusées avant envoi. Pour
+  recetter les e-mails, renseigner `TEST_ACCOUNTS_EMAIL` dans le `.env.local` de
+  la préproduction puis recharger les fixtures : les comptes prennent alors une
+  adresse étiquetée sur une boîte réelle. Voir
+  [`donnees-reelles.md`](donnees-reelles.md).
+
+| Symptôme | Première chose à regarder |
+|---|---|
+| Aucun e-mail de discussion, aucune erreur | `POSTMARK_BULK_TOKEN` — vide, le transport ne fait rien silencieusement |
+| Aucune demande d'adhésion, aucune erreur | `POSTMARK_SENDER` et `POSTMARK_SERVER_TOKEN` — autre transport, autre jeton |
+| Liens des e-mails vers `localhost` | `SITE_HOST` absent du `.env.local` |
+| Les images ne s'affichent pas | permissions de `var/files`, voir `DEPLOYMENT_PERMISSIONS_FIX.md` |
+| « attempt to write a readonly database » à la connexion | index de recherche non inscriptibles par le serveur web. Voir ci-dessous |
+| Le build front échoue au déploiement | version de Node trop récente pour webpack 4 |
+| Les réponses par e-mail n'arrivent pas | l'URL `/ws/list/inbound/{clé}` doit être publiquement joignable |
+| Un compte de test ne reçoit rien en préproduction | son adresse est en `@example.org` : `MailGuard` la refuse. Renseigner `TEST_ACCOUNTS_EMAIL` et recharger les fixtures |
+
+## 6. Retour d'expérience — ce qui a réellement coincé
 
 Premier déploiement en préproduction, le 19 août 2026. Rien de ce qui suit
 n'était prévisible depuis un poste de développement ; tout se reproduira sur la
@@ -395,35 +514,7 @@ n'est jamais notifié de ses propres actions.
   erreur fatale — c'est ce qui rendait #3 visible aux membres. `app:preflight`
   le signale désormais.
 
-## 4. Si quelque chose ne va pas
-
-### Deux autres pièges de la préproduction
-
-- **Ne jamais planifier la tâche du résumé sur la préproduction.** Si les deux
-  environnements l'exécutent, les destinataires reçoivent tout en double. La
-  lancer à la main, avec `--dry-run` d'abord.
-- **Attention aux comptes conservés avec `--keep-email`.** Ce sont les seules
-  adresses réelles d'une copie anonymisée : elles passent le garde-fou et
-  recevront donc pour de bon ce que la préproduction envoie.
-- **Les six comptes de test ne reçoivent rien par défaut.** Leurs adresses en
-  `@example.org` ne mènent nulle part et sont refusées avant envoi. Pour
-  recetter les e-mails, renseigner `TEST_ACCOUNTS_EMAIL` dans le `.env.local` de
-  la préproduction puis recharger les fixtures : les comptes prennent alors une
-  adresse étiquetée sur une boîte réelle. Voir
-  [`donnees-reelles.md`](donnees-reelles.md).
-
-| Symptôme | Première chose à regarder |
-|---|---|
-| Aucun e-mail de discussion, aucune erreur | `POSTMARK_BULK_TOKEN` — vide, le transport ne fait rien silencieusement |
-| Aucune demande d'adhésion, aucune erreur | `POSTMARK_SENDER` et `POSTMARK_SERVER_TOKEN` — autre transport, autre jeton |
-| Liens des e-mails vers `localhost` | `SITE_HOST` absent du `.env.local` |
-| Les images ne s'affichent pas | permissions de `var/files`, voir `DEPLOYMENT_PERMISSIONS_FIX.md` |
-| « attempt to write a readonly database » à la connexion | index de recherche non inscriptibles par le serveur web. Voir ci-dessous |
-| Le build front échoue au déploiement | version de Node trop récente pour webpack 4 |
-| Les réponses par e-mail n'arrivent pas | l'URL `/ws/list/inbound/{clé}` doit être publiquement joignable |
-| Un compte de test ne reçoit rien en préproduction | son adresse est en `@example.org` : `MailGuard` la refuse. Renseigner `TEST_ACCOUNTS_EMAIL` et recharger les fixtures |
-
-## 6. Déployer en PRODUCTION — sans perdre de données
+## 7. Déployer en PRODUCTION — sans perdre de données
 
 ⚠️ **Les commandes des sections précédentes ne s'appliquent pas toutes.** La mise
 en préproduction repartait d'une base vide ; la production, elle, porte les
