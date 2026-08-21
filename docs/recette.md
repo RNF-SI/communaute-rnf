@@ -166,6 +166,7 @@ Aller dans **Groupe de test**.
 | Valider le dépôt **sans choisir de fichier** | Refusé, avec l'explication sous le champ ; aucune ligne n'apparaît dans la liste (#40) |
 | Déposer un fichier de **plus de 50 Mo** | Refusé avec un message en haut de page — pas une page vierge, pas un document vide (#40) |
 | Modifier un document sans redéposer son fichier | Accepté : le fichier reste celui d'avant (#40) |
+| Modifier un document **en choisissant un autre fichier** | Le téléchargement rend le **nouveau** fichier, et le titre choisi ne change pas (#41) |
 
 ---
 

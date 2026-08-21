@@ -428,9 +428,16 @@ class GroupDocumentsController extends AbstractController {
 			$document->setFolder( $folderResolver->resolve( $group, $folderTitle ) );
 
 			// File
-			$uploadFile = $form->get( 'filefile' )->getData();
+			//
+			// Le remplacement était désactivé par un « FALSE && » venu du dépôt
+			// d'origine : on choisissait un fichier, la plateforme répondait
+			// « Le document a été mis à jour », et l'ancien restait. Une panne
+			// qui affirme avoir réussi est pire que pas de fonctionnalité du
+			// tout. (#41)
+			$uploadFile   = $form->get( 'filefile' )->getData();
+			$replacedFile = NULL;
 
-			if ( FALSE && !empty( $uploadFile ) ) {
+			if ( !empty( $uploadFile ) ) {
 				/**
 				 * @var \App\Service\UsergroupFileManager $groupFileManager
 				 */
@@ -439,14 +446,27 @@ class GroupDocumentsController extends AbstractController {
 
 				$manager->persist( $file );
 
+				$replacedFile = $document->getFile();
+
 				$document->setFile( $file );
 
+				// Le titre ne prend le nom du fichier que s'il n'y en a pas :
+				// remplacer un fichier ne renomme pas un document que
+				// quelqu'un a pris la peine d'intituler.
 				if ( empty( $document->getTitle() ) ) {
 					$document->setTitle( pathinfo( $file->getName(), PATHINFO_FILENAME ) );
 				}
 			}
 
 			$manager->flush();
+
+			// L'ancien fichier n'est plus référencé par rien. Il n'est retiré
+			// qu'une fois le remplaçant enregistré : si l'enregistrement avait
+			// échoué, on aurait perdu les deux.
+			if ( !empty( $replacedFile ) ) {
+				$fileManager->deleteFile( $replacedFile );
+				$manager->remove( $replacedFile );
+			}
 
 			// Clean previous Folder
 
