@@ -453,10 +453,12 @@ cp .env.local config/platform/config.yaml ~/
 # 2. Récupérer le code
 git pull origin develop
 
-# 3. Migrations — elles ajoutent des colonnes et une table, sans rien supprimer
+# 3. Migrations — quinze, dont une qui retire une colonne jamais écrite
+#    et une qui pose un drapeau sur les comptes : voir le détail plus bas
 php bin/console doctrine:migrations:migrate --no-interaction
 
-# 4. Assets : compilés ailleurs puis copiés, ou npm run build si node est présent
+# 4. Assets : rien à faire, public/build est versionné et arrive avec le pull.
+#    Node est absent des serveurs, c'est précisément pourquoi il est commité.
 
 # 5. Finalisation
 php bin/console cache:clear
