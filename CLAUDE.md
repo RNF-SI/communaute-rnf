@@ -189,7 +189,7 @@ nothing intercepts clicks, and the page stays usable during the tour.
 It launches by itself while `User::$tourSeenAt` is null, and afterwards only
 through the settings link (`?tour=1`). Closing it counts as having seen it.
 
-### Notification settings (#34, #40)
+### Notification settings (#34, #38)
 What a member hears about is read from **two sources, in this order**: what
 the group itself says (`UsergroupMembership::getOwnNotificationLevel` — which
 reads a pre-#34 `unsubscribed` flag as « aucune notification » on all four
@@ -199,10 +199,10 @@ member's general setting (`User::getDefaultNotificationLevel`, stored in the
 that order wrong and you either resubscribe people who had opted out, or
 silently override a choice they made on purpose.
 
-**Le rythme est dans le niveau, pas à côté (#40).** `NotificationLevel` porte
+**Le rythme est dans le niveau, pas à côté (#38).** `NotificationLevel` porte
 cinq valeurs — `none`, `app`, `immediate`, `daily`, `weekly` — de sorte qu'une
 seule liste dit à la fois s'il y a un e-mail et quand il part, catégorie par
-catégorie et groupe par groupe. Le défaut est `daily`. Avant #40, la valeur
+catégorie et groupe par groupe. Le défaut est `daily`. Avant #38, la valeur
 valait `email` et le rythme vivait à part sur le membre, dans
 `discussionRhythm`, pour les seules discussions ; cette valeur n'est plus
 écrite mais elle est encore lue, par `NotificationLevel::fromLegacy()`, qui la
@@ -217,7 +217,7 @@ notifications d'une même personne ne partent plus forcément le même jour, et
 un lundi ramasse le quotidien et l'hebdomadaire dans un seul e-mail.
 
 **Trois chemins d'e-mail, pas deux.** Le résumé (`EmailSender`), le message de
-discussion à chaud (`DiscussionSender`, avec son `Reply-To`), et depuis #40 le
+discussion à chaud (`DiscussionSender`, avec son `Reply-To`), et depuis #38 le
 contenu à chaud — page, actualité, document — par `ContentSender`, qui emprunte
 le même transport en lot que les discussions mais l'adresse d'expédition de la
 plateforme. `NotificationSender` marque `emailedAt` sur ce qui vient de partir
