@@ -2,6 +2,7 @@
 
 namespace App\Tests\DataFixtures;
 
+use App\Entity\Article;
 use App\Entity\Discussion;
 use App\Entity\Document;
 use App\Entity\DocumentTag;
@@ -65,6 +66,83 @@ class SeedDataTest extends KernelTestCase {
 		}
 
 		return $group;
+	}
+
+	/**************************************************
+	 * LE GROUPE OÙ TOUT LE MONDE ARRIVE
+	 **************************************************/
+
+	/**
+	 * @return \App\Entity\Usergroup
+	 */
+	private function communityGroup () {
+		$group = $this->manager->getRepository( Usergroup::class )
+							   ->findOneBy( [ 'slug' => 'communaute' ] );
+
+		if ( !$group ) {
+			$this->markTestSkipped( 'Fixtures not loaded: community group' );
+		}
+
+		return $group;
+	}
+
+	public function testTheCommunityGroupHasPages () {
+		$this->assertNotEmpty(
+				$this->manager->getRepository( Page::class )->findBy( [ 'usergroup' => $this->communityGroup() ] ),
+				'Assert the group everybody lands on is not empty'
+		);
+	}
+
+	public function testTheCommunityGroupHasDiscussionsThatCarryMessages () {
+		$discussions = $this->manager->getRepository( Discussion::class )
+									 ->findBy( [ 'usergroup' => $this->communityGroup() ] );
+
+		$this->assertNotEmpty( $discussions );
+
+		$withMessages = 0;
+
+		foreach ( $discussions as $discussion ) {
+			if ( count( $discussion->getMessages() ) > 0 ) {
+				$withMessages++;
+			}
+		}
+
+		$this->assertGreaterThan( 0, $withMessages, 'Assert the threads are not empty shells' );
+	}
+
+	public function testTheCommunityGroupHasArticles () {
+		$this->assertNotEmpty(
+				$this->manager->getRepository( Article::class )->findBy( [ 'usergroup' => $this->communityGroup() ] )
+		);
+	}
+
+	public function testTheCommunityGroupHasDocuments () {
+		$this->assertNotEmpty(
+				$this->manager->getRepository( Document::class )->findBy( [ 'usergroup' => $this->communityGroup() ] )
+		);
+	}
+
+	public function testTheCommunityGroupOpensOnAHighlightedPage () {
+		$pages = $this->manager->getRepository( Page::class )
+							   ->findBy( [ 'usergroup' => $this->communityGroup() ] );
+
+		if ( empty( $pages ) ) {
+			$this->markTestSkipped( 'Fixtures not loaded: community pages' );
+		}
+
+		$highlighted = 0;
+
+		foreach ( $pages as $page ) {
+			if ( $page->getIsImportant() ) {
+				$highlighted++;
+			}
+		}
+
+		$this->assertGreaterThan(
+				0,
+				$highlighted,
+				'Assert somebody arriving finds what the platform is for, in front of them'
+		);
 	}
 
 	/**************************************************

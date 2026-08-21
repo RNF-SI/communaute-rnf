@@ -286,6 +286,55 @@ final class NetworkContent {
 							'**Valider les objectifs d’un plan de gestion avant d’avoir associé le comité consultatif.** On se retrouve à défendre des choix déjà écrits, et la confiance se perd pour la durée du plan.',
 					],
 			],
+			[
+					'title' => 'Calendrier des travaux et périodes sensibles',
+					'body'  => [
+							'Ce calendrier récapitule, mois par mois, ce qui peut être engagé sur les sites et ce qui doit attendre. Il vaut comme repère, pas comme autorisation : chaque chantier reste soumis à la réglementation du site.',
+							'**Mars à juillet.** Période de reproduction : aucun travaux lourds, aucune coupe, circulation d’engins limitée aux accès existants.',
+							'**Août à octobre.** Fenêtre principale pour les travaux de génie écologique, la fauche tardive et les chantiers de restauration.',
+							'**Novembre à février.** Travaux forestiers, entretien des équipements, gros entretien des sentiers. Attention aux gîtes d’hibernation.',
+					],
+			],
+			[
+					'title' => 'Sécurité sur le terrain',
+					'body'  => [
+							'Les règles rassemblées ici valent pour tous les agents et pour les bénévoles accompagnés. Elles ne remplacent pas le document unique de votre structure.',
+							'**Toujours.** Prévenir de sa zone d’intervention et de son heure de retour prévue. Emporter de quoi joindre quelqu’un, sachant qu’une partie des sites n’est pas couverte.',
+							'**En période de chasse.** Vêtements de signalisation, itinéraires connus, et contact préalable avec les responsables de battue.',
+							'**Travail isolé.** À éviter pour tout ce qui implique une tronçonneuse, une embarcation ou une échelle. Aucun suivi ne vaut un accident.',
+					],
+			],
+			[
+					'title' => 'Bilan des suivis de l’année',
+					'body'  => [
+							'Cette page résume ce que les suivis ont montré cette année, et surtout ce qu’ils n’ont pas permis de conclure.',
+							'**Ce qui se dégage.** La tendance observée sur les milieux ouverts se confirme pour la troisième année. Les effectifs sur les milieux humides restent trop variables pour qu’on puisse parler d’autre chose que de fluctuation.',
+							'**Ce qui manque.** Deux passages n’ont pas pu être réalisés faute de disponibilité, ce qui fragilise la comparaison avec les années précédentes. Cette lacune est signalée dans les données plutôt que comblée par une estimation.',
+					],
+			],
+			[
+					'title' => 'Accueillir un stagiaire ou un service civique',
+					'body'  => [
+							'Accueillir quelqu’un demande du temps d’encadrement qu’on sous-estime toujours : comptez une demi-journée par semaine, davantage au début.',
+							'**Ce qui marche.** Confier une mission qui a un début et une fin, dont le résultat servira réellement. Un inventaire qui finit dans un tiroir se sent, et se paie en démotivation.',
+							'**Ce qui ne marche pas.** Le stage « en observation », sans production attendue. Et confier le suivi le plus technique de la réserve à quelqu’un qui repart dans six mois.',
+					],
+			],
+			[
+					'title' => 'Relations avec les riverains',
+					'body'  => [
+							'La plupart des tensions naissent d’un manque d’information plutôt que d’un désaccord de fond. Prévenir avant un chantier coûte une heure et évite des mois de crispation.',
+							'**Ce qui aide.** Un point annuel ouvert à tous, sur le terrain plutôt qu’en salle. Expliquer ce qu’on fait *et* ce qu’on ne fera pas — les rumeurs prospèrent sur ce qui n’est pas dit.',
+							'**Ce qui n’aide pas.** Répondre à une inquiétude par un rappel réglementaire. C’est exact, et ça ne convainc personne.',
+					],
+			],
+			[
+					'title' => 'Où trouver les données du site',
+					'body'  => [
+							'Cette page recense où se trouve quoi : les couches SIG, les chroniques de suivi, les rapports d’étude, les photographies. Elle existe parce que la réponse était jusqu’ici dans la tête de deux personnes.',
+							'Chaque entrée indique le format, la date de dernière mise à jour et qui en est responsable. Quand une donnée change de main, c’est ici qu’on le note.',
+					],
+			],
 	];
 
 	/**
@@ -334,6 +383,48 @@ final class NetworkContent {
 					'body'  => [
 							'Deux réserves naturelles régionales ont rejoint le réseau ce trimestre. Leurs équipes sont invitées à se présenter dans le groupe des nouveaux conservateurs.',
 							'Un parrainage est proposé à chaque nouvelle équipe : un contact identifié dans une réserve comparable, à qui poser les questions qu’on n’ose pas poser en réunion.',
+					],
+			],
+			[
+					'title' => 'Un chantier de restauration achevé après trois saisons',
+					'body'  => [
+							'Le chantier de reméandrage engagé il y a trois ans est terminé. Huit cents mètres de cours d’eau ont retrouvé un tracé libre, et les premières observations montrent un retour de la faune benthique plus rapide qu’attendu.',
+							'Le retour d’expérience complet, coûts réels compris, sera présenté au prochain séminaire et déposé dans les documents du groupe.',
+					],
+			],
+			[
+					'title' => 'Formation « premiers secours en milieu isolé »',
+					'body'  => [
+							'Deux sessions sont programmées, chacune sur deux jours, avec une mise en situation sur le terrain. La formation s’adresse en priorité aux agents qui interviennent seuls ou loin d’un accès routier.',
+							'Les places sont limitées à douze par session. La prise en charge est assurée pour les structures adhérentes.',
+					],
+			],
+			[
+					'title' => 'Le suivi photographique passe en libre accès',
+					'body'  => [
+							'La série de photographies prises depuis les points fixes est désormais consultable par l’ensemble du réseau. Elle couvre quinze ans et donne à voir ce qu’aucun tableau de chiffres ne montre.',
+							'Les points de prise de vue et le protocole sont décrits dans les documents, pour qui voudrait mettre en place la même chose.',
+					],
+			],
+			[
+					'title' => 'Arrêté préfectoral : extension du périmètre',
+					'body'  => [
+							'L’extension du périmètre a été signée cet été. Elle porte sur une centaine d’hectares de milieux ouverts jusqu’ici hors réserve, et fait suite à huit ans de discussions avec les propriétaires.',
+							'La gestion effective de ces parcelles démarrera progressivement, à mesure que les conventions seront signées.',
+					],
+			],
+			[
+					'title' => 'Retour sur la journée d’échange entre gestionnaires',
+					'body'  => [
+							'Une trentaine de personnes se sont retrouvées sur le terrain pour une journée consacrée aux méthodes de suivi. Le format — une demi-journée de démonstration, une demi-journée de discussion — sera reconduit.',
+							'Ce qui est ressorti le plus nettement : l’envie de comparer les protocoles entre sites plutôt que de continuer chacun dans son coin.',
+					],
+			],
+			[
+					'title' => 'Un nouvel outil de saisie de terrain en test',
+					'body'  => [
+							'Trois réserves testent depuis le printemps une application de saisie fonctionnant hors connexion, avec synchronisation au retour au bureau.',
+							'Le bilan sera présenté à l’automne. Les retours des testeurs sont attendus dans la discussion du groupe, y compris — surtout — les difficultés rencontrées.',
 					],
 			],
 	];
@@ -408,6 +499,22 @@ final class NetworkContent {
 			[
 					'title'       => 'Inventaire des dendromicrohabitats',
 					'description' => 'Relevés sur les placettes permanentes, méthode Larrieu et Cabanettes.',
+			],
+			[
+					'title'       => 'Calendrier annuel des travaux',
+					'description' => 'Tableau mois par mois : ce qui peut être engagé, ce qui doit attendre, et pourquoi.',
+			],
+			[
+					'title'       => 'Document unique — volet terrain',
+					'description' => 'Évaluation des risques pour les interventions en extérieur. À adapter à votre site.',
+			],
+			[
+					'title'       => 'Rapport d’étude — reméandrage',
+					'description' => 'Bilan de trois saisons de travaux, avec les coûts réels et ce qui a été sous-estimé.',
+			],
+			[
+					'title'       => 'Série photographique des points fixes',
+					'description' => 'Quinze ans de prises de vue depuis les mêmes repères. Protocole inclus.',
 			],
 	];
 
@@ -517,6 +624,186 @@ final class NetworkContent {
 			'Milieux marins',
 			'Géologie',
 			'Animation de réseau',
+	];
+
+
+	/**
+	 * Le groupe « Communauté », celui où tout le monde arrive. Son contenu
+	 * n'est pas celui d'un groupe de travail : il parle du réseau entier et de
+	 * la plateforme elle-même, parce que c'est ce qu'on cherche en y arrivant.
+	 *
+	 * Il était vide jusqu'ici, ce qui donnait une première impression de
+	 * plateforme déserte.
+	 *
+	 * @var array<int, array{title: string, body: string[]}>
+	 */
+	public const COMMUNITY_PAGES = [
+			[
+					'title' => 'Bienvenue sur la Communauté RNF',
+					'body'  => [
+							'Cette plateforme est l’outil de travail commun du réseau des réserves naturelles. Elle sert à trois choses : échanger entre collègues qui rencontrent les mêmes questions, déposer les documents qui doivent rester accessibles, et retrouver qui fait quoi dans le réseau.',
+							'Elle ne remplace ni les réunions ni le téléphone. Elle évite en revanche que la réponse à une question posée en 2024 soit perdue en 2026, et qu’on cherche pendant une heure le protocole que quelqu’un a déjà écrit.',
+							'Vous êtes automatiquement membre de ce groupe général. Les autres, vous les rejoignez selon vos missions et vos centres d’intérêt.',
+					],
+			],
+			[
+					'title' => 'Comment s’organise le réseau',
+					'body'  => [
+							'Le réseau s’organise en **commissions** thématiques — scientifique, éducation, milieux aquatiques, forêt, police de la nature, et quelques autres. Chacune anime des **groupes de travail** plus resserrés, sur un sujet précis.',
+							'Sur la plateforme, cette organisation se retrouve dans la liste des groupes : un filtre par commission permet de voir ce qui relève de chacune.',
+							'Rien n’oblige à appartenir à la commission pour rejoindre un de ses groupes de travail. Si le sujet vous concerne, vous y avez votre place.',
+					],
+			],
+			[
+					'title' => 'Bien démarrer : les cinq premières minutes',
+					'body'  => [
+							'**Complétez votre fiche.** Fonction, structure, réserves suivies : c’est ce que vos collègues cherchent quand ils veulent savoir à qui s’adresser. Deux minutes suffisent.',
+							'**Rejoignez deux ou trois groupes.** Ceux qui correspondent à vos missions. Vous pouvez en partir à tout moment.',
+							'**Réglez vos notifications.** Par défaut vous recevez un courriel à chaque message des groupes que vous suivez. Si c’est trop, un résumé quotidien ou hebdomadaire existe.',
+					],
+			],
+			[
+					'title' => 'Ce qu’on attend des échanges',
+					'body'  => [
+							'Les discussions sont lues par des collègues qui font le même métier, dans d’autres structures et d’autres régions. On y pose des questions concrètes et on y répond de même.',
+							'**Ce qui aide.** Dire ce qu’on a déjà essayé et pourquoi ça n’a pas marché. Donner les chiffres réels — coûts, temps passé, surfaces. Signaler ses échecs autant que ses réussites : ce sont eux qui font gagner du temps aux autres.',
+							'**Ce qui aide moins.** Les questions auxquelles une recherche dans les documents répondrait, et les réponses qui commencent par « il suffit de ».',
+					],
+			],
+			[
+					'title' => 'Questions fréquentes',
+					'body'  => [
+							'**Puis-je répondre à un message depuis ma boîte mail ?** Oui. Les messages de discussion partent avec une adresse de réponse ; ce que vous écrivez revient dans le fil.',
+							'**Qui voit ce que j’écris ?** Ce qui est publié dans un groupe public est lisible par toute personne connectée, et par les visiteurs pour certains contenus. Dans un groupe privé, seuls les membres.',
+							'**Puis-je créer un groupe ?** Oui, n’importe quel membre peut en créer un. Vérifiez d’abord qu’il n’existe pas déjà sous un autre nom.',
+							'**Comment retirer mon adresse de l’annuaire ?** Dans votre profil, décochez « Afficher mon adresse e-mail ». Vos collègues pourront toujours vous joindre par les discussions.',
+					],
+			],
+	];
+
+	/**
+	 * Des échanges qui traversent le réseau, plutôt que le sujet d'un groupe.
+	 *
+	 * @var array<int, array{title: string, messages: string[]}>
+	 */
+	public const COMMUNITY_DISCUSSIONS = [
+			[
+					'title'    => 'Présentez-vous !',
+					'messages' => [
+							'Ce fil est là pour faire connaissance. Dites en quelques lignes qui vous êtes, sur quelle réserve vous travaillez et ce qui vous occupe en ce moment.</p><p>Je commence : conservatrice depuis huit ans, deux réserves de zones humides, et un plan de gestion à renouveler qui me tient éveillée la nuit.',
+							'Garde technicien sur un site forestier, arrivé il y a deux ans après dix ans en bureau d’études. Je découvre la gestion au quotidien et je pose beaucoup de questions — merci d’avance de votre patience.',
+							'Chargée de mission scientifique, je coordonne les suivis sur trois sites. Ce qui m’occupe : convaincre que saisir les données le soir même vaut mieux que de retrouver un carnet illisible six mois plus tard.',
+					],
+			],
+			[
+					'title'    => 'Qu’attendez-vous de cette plateforme ?',
+					'messages' => [
+							'Nous ouvrons ce fil pour recueillir vos attentes. Qu’est-ce qui vous ferait revenir ici plutôt que d’envoyer un courriel à trois collègues ?',
+							'Pouvoir retrouver une réponse donnée il y a deux ans. C’est exactement ce qu’un fil de courriels ne permet pas.',
+							'Un annuaire à jour. Aujourd’hui, quand je cherche qui s’occupe des chiroptères dans une autre région, je demande à quelqu’un qui demande à quelqu’un.',
+							'Que les documents ne soient pas éparpillés entre quinze boîtes mail. Le simple fait qu’un protocole ait une adresse à laquelle on peut renvoyer changerait beaucoup de choses.',
+					],
+			],
+			[
+					'title'    => 'Une question à poser au réseau : dans quel groupe ?',
+					'messages' => [
+							'Je ne sais jamais où poser une question qui touche à plusieurs sujets. Exemple : le pâturage d’une zone humide, est-ce agriculture ou milieux aquatiques ?',
+							'Dans le doute, ici. Quelqu’un vous orientera, et le fil pourra être repris dans le bon groupe.</p><p>L’erreur à éviter serait de ne pas poser la question du tout par peur de se tromper d’endroit.',
+					],
+			],
+			[
+					'title'    => 'Covoiturage pour le séminaire',
+					'messages' => [
+							'Comme chaque année, on organise le covoiturage dans ce fil. Indiquez votre point de départ, le nombre de places disponibles ou recherchées, et vos horaires.',
+							'Départ du Grand Est le lundi matin, trois places disponibles. Retour le mercredi en fin de journée.',
+					],
+			],
+			[
+					'title'    => 'Postes à pourvoir dans le réseau',
+					'messages' => [
+							'Ce fil rassemble les offres du réseau. Merci d’indiquer la structure, l’intitulé, le lieu et la date limite — et de signaler quand le poste est pourvu, pour éviter les candidatures dans le vide.',
+							'Poste de garde technicien à pourvoir au printemps, contrat de trois ans, sur un site de moyenne montagne. Le détail est dans les documents du groupe.',
+					],
+			],
+	];
+
+	/**
+	 * Les nouvelles qui concernent tout le réseau.
+	 *
+	 * @var array<int, array{title: string, body: string[]}>
+	 */
+	public const COMMUNITY_ARTICLES = [
+			[
+					'title' => 'La plateforme du réseau ouvre ses portes',
+					'body'  => [
+							'Après plusieurs mois de préparation, la plateforme est ouverte à l’ensemble du réseau. Elle rassemble les commissions, les groupes de travail et l’annuaire des personnes qui y travaillent.',
+							'Les premiers groupes sont en place et leurs animateurs vous y accueilleront. N’hésitez pas à signaler ce qui ne fonctionne pas comme vous l’attendiez : c’est ainsi que l’outil s’ajustera.',
+					],
+			],
+			[
+					'title' => 'Le programme du séminaire annuel est en ligne',
+					'body'  => [
+							'Trois jours, une trentaine d’ateliers, et une journée de terrain répartie sur quatre sites selon les inscriptions.',
+							'Les inscriptions sont ouvertes jusqu’à la fin du mois. Le covoiturage s’organise dans la discussion prévue à cet effet.',
+					],
+			],
+			[
+					'title' => 'Le rapport d’activité du réseau est disponible',
+					'body'  => [
+							'Le rapport annuel est déposé dans les documents de ce groupe. Il rassemble les chiffres du réseau, les faits marquants de l’année et les orientations retenues.',
+							'Les données de fréquentation et de suivi proviennent des rapports que vous avez transmis. Merci à celles et ceux qui les ont fournis dans les délais — c’est ce qui rend l’exercice possible.',
+					],
+			],
+			[
+					'title' => 'Deux nouvelles réserves rejoignent le réseau',
+					'body'  => [
+							'Deux réserves naturelles régionales ont rejoint le réseau ce trimestre, portant à plus de trois cents le nombre de sites représentés.',
+							'Leurs équipes sont invitées à se présenter dans le fil prévu à cet effet, et à rejoindre le groupe des nouveaux conservateurs où un parrainage est proposé.',
+					],
+			],
+			[
+					'title' => 'Appel à candidatures pour l’animation d’une commission',
+					'body'  => [
+							'L’animation de deux commissions sera renouvelée à l’automne. La fonction demande environ une journée par mois, prise sur le temps de travail avec l’accord de la structure employeuse.',
+							'Les candidatures sont à adresser avant l’été. Les animateurs actuels se tiennent à disposition de celles et ceux qui souhaitent savoir à quoi s’attendre.',
+					],
+			],
+	];
+
+	/**
+	 * Les documents de référence du réseau.
+	 *
+	 * @var array<int, array{title: string, description: string}>
+	 */
+	public const COMMUNITY_DOCUMENTS = [
+			[
+					'title'       => 'Annuaire des réserves du réseau',
+					'description' => 'Coordonnées des structures gestionnaires, par région. Mis à jour deux fois par an.',
+			],
+			[
+					'title'       => 'Rapport d’activité annuel du réseau',
+					'description' => 'Chiffres, faits marquants et orientations. Version validée par le conseil d’administration.',
+			],
+			[
+					'title'       => 'Guide de prise en main de la plateforme',
+					'description' => 'Douze pages illustrées : rejoindre un groupe, poster, déposer un document, régler ses notifications.',
+			],
+			[
+					'title'       => 'Programme du séminaire annuel',
+					'description' => 'Ateliers, horaires, plan d’accès et modalités d’inscription.',
+			],
+			[
+					'title'       => 'Charte graphique du réseau',
+					'description' => 'Logos, polices et gabarits pour les documents et les panneaux de terrain.',
+			],
+			[
+					'title'       => 'Statuts et règlement intérieur',
+					'description' => 'Version en vigueur, adoptée en assemblée générale.',
+			],
+			[
+					'title'       => 'Fiche de poste type — garde technicien',
+					'description' => 'Trame reprise par plusieurs structures, à adapter au site et à la convention collective.',
+			],
 	];
 
 	/**

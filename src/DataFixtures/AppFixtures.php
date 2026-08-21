@@ -455,7 +455,7 @@ class AppFixtures extends Fixture {
 				}
 			}
 
-			for ( $j = 0, $n = rand( 2, 4 ); $j < $n; $j++ ) {
+			for ( $j = 0, $n = rand( 3, 5 ); $j < $n; $j++ ) {
 				$definitionPage = NetworkContent::pick( NetworkContent::PAGES, $i + $j );
 
 				$page = new Page();
@@ -490,7 +490,7 @@ class AppFixtures extends Fixture {
 			/**
 			 * DISCUSSIONS
 			 */
-			for ( $j = 0, $n = rand( 2, 4 ); $j < $n; $j++ ) {
+			for ( $j = 0, $n = rand( 3, 5 ); $j < $n; $j++ ) {
 				$openedAt = $faker->dateTimeBetween( '-1 year', '-1 month' );
 				$thread   = NetworkContent::pick( NetworkContent::DISCUSSIONS, ( $i * 3 ) + $j );
 
@@ -531,7 +531,7 @@ class AppFixtures extends Fixture {
 			/**
 			 * ARTICLES
 			 */
-			for ( $j = 0, $n = rand( 1, 3 ); $j < $n; $j++ ) {
+			for ( $j = 0, $n = rand( 2, 4 ); $j < $n; $j++ ) {
 				$news = NetworkContent::pick( NetworkContent::ARTICLES, ( $i * 2 ) + $j );
 
 				$article = new Article();
@@ -568,7 +568,7 @@ class AppFixtures extends Fixture {
 
 			$manager->flush();
 
-			for ( $j = 0, $n = rand( 4, 8 ); $j < $n; $j++ ) {
+			for ( $j = 0, $n = rand( 5, 9 ); $j < $n; $j++ ) {
 				$reference = NetworkContent::pick( NetworkContent::DOCUMENTS, ( $i * 5 ) + $j );
 
 				$document = new Document();
@@ -618,7 +618,16 @@ class AppFixtures extends Fixture {
 		 * un compte fraîchement créé n'appartient à rien et découvre une page
 		 * « mes groupes » vide.
 		 */
-		$this->buildCommunityGroup( $manager, array_merge( $users, array_values( $named ) ) );
+		$this->buildCommunityGroup(
+				$manager,
+				array_merge( $users, array_values( $named ) ),
+				[
+						$named[ 'admin@example.org' ],
+						$named[ 'referent@example.org' ],
+						$named[ 'membre@example.org' ],
+				],
+				$documentTags
+		);
 
 		/**
 		 * REFERENCE GROUPS
@@ -635,7 +644,123 @@ class AppFixtures extends Fixture {
 	 * @param \Doctrine\Persistence\ObjectManager $manager
 	 * @param \App\Entity\User[]                  $members
 	 */
-	private function buildCommunityGroup ( ObjectManager $manager, array $members ) {
+	/**
+	 * @param \Doctrine\Persistence\ObjectManager $manager
+	 * @param \App\Entity\Usergroup               $group
+	 * @param \App\Entity\User[]                  $authors
+	 * @param \App\Entity\DocumentTag[]           $documentTags
+	 */
+	private function fillCommunityGroup ( ObjectManager $manager, Usergroup $group, array $authors, array $documentTags ) {
+		$authors = array_values( $authors );
+
+		if ( empty( $authors ) ) {
+			return;
+		}
+
+		/**
+		 * PAGES
+		 *
+		 * La première est mise en avant : c'est celle qu'on veut voir en
+		 * arrivant, et le seul endroit de la plateforme où l'on explique à
+		 * quoi elle sert.
+		 */
+		foreach ( NetworkContent::COMMUNITY_PAGES as $rank => $definition ) {
+			$page = new Page();
+			$page->setTitle( $definition[ 'title' ] );
+			$page->setSlug( $this->slugGenerator->generateSlug( $definition[ 'title' ], Page::class, 'slug' ) );
+			$page->setUsergroup( $group );
+			$page->setAuthor( $authors[ $rank % count( $authors ) ] );
+			$page->setBody( NetworkContent::body( $definition[ 'body' ] ) );
+			$page->setCreatedAt( new \DateTime( sprintf( '-%d days', 60 - $rank ) ) );
+			$page->setIsImportant( $rank === 0 );
+
+			$manager->persist( $page );
+		}
+
+		/**
+		 * DISCUSSIONS
+		 */
+		foreach ( NetworkContent::COMMUNITY_DISCUSSIONS as $rank => $thread ) {
+			$openedAt = new \DateTime( sprintf( '-%d days', 50 - ( $rank * 7 ) ) );
+
+			$discussion = new Discussion();
+			$discussion->setUuid( Uuid::uuid4() );
+			$discussion->setTitle( mb_substr( $thread[ 'title' ], 0, 100 ) );
+			$discussion->setUsergroup( $group );
+			$discussion->setAuthor( $authors[ $rank % count( $authors ) ] );
+			$discussion->setCreatedAt( $openedAt );
+
+			$manager->persist( $discussion );
+
+			$writtenAt = clone $openedAt;
+
+			foreach ( $thread[ 'messages' ] as $index => $written ) {
+				$writtenAt = ( clone $writtenAt )->modify( sprintf( '+%d hours', 6 + ( $index * 5 ) ) );
+
+				$message = new DiscussionMessage();
+				$message->setDiscussion( $discussion );
+				$message->setAuthor( $authors[ ( $rank + $index ) % count( $authors ) ] );
+				$message->setBody( '<p>' . $written . '</p>' );
+				$message->setCreatedAt( $writtenAt );
+
+				$manager->persist( $message );
+				$discussion->addMessage( $message );
+			}
+
+			$discussion->setActiveAt( $writtenAt );
+		}
+
+		/**
+		 * ACTUALITÉS
+		 */
+		foreach ( NetworkContent::COMMUNITY_ARTICLES as $rank => $news ) {
+			$article = new Article();
+			$article->setTitle( mb_substr( $news[ 'title' ], 0, 100 ) );
+			$article->setSlug( $this->slugGenerator->generateSlug( $news[ 'title' ], Article::class, 'slug' ) );
+			$article->setUsergroup( $group );
+			$article->setAuthor( $authors[ $rank % count( $authors ) ] );
+			$article->setBody( NetworkContent::body( $news[ 'body' ] ) );
+			$article->setCreatedAt( new \DateTime( sprintf( '-%d days', 40 - ( $rank * 6 ) ) ) );
+
+			$manager->persist( $article );
+		}
+
+		/**
+		 * DOCUMENTS
+		 */
+		$folder = new DocumentFolder();
+		$folder->setUsergroup( $group );
+		$folder->setTitle( 'Documents de référence' );
+		$manager->persist( $folder );
+
+		$manager->flush();
+
+		foreach ( NetworkContent::COMMUNITY_DOCUMENTS as $rank => $reference ) {
+			$document = new Document();
+			$document->setTitle( mb_substr( $reference[ 'title' ], 0, 100 ) );
+			$document->setSlug( $this->slugGenerator->generateSlug( $reference[ 'title' ], Document::class, 'slug' ) );
+			$document->setDescription( $reference[ 'description' ] );
+			$document->setUsergroup( $group );
+			$document->setUser( $authors[ $rank % count( $authors ) ] );
+			$document->setCreatedAt( new \DateTime( sprintf( '-%d days', 45 - ( $rank * 4 ) ) ) );
+
+			// Les deux premiers sont rangés et étiquetés : de quoi éprouver
+			// dossier et filtre dès le groupe où l'on arrive.
+			if ( $rank < 4 ) {
+				$document->setFolder( $folder );
+			}
+
+			if ( !empty( $documentTags ) && ( $rank % 2 === 0 ) ) {
+				$document->addTag( $documentTags[ $rank % count( $documentTags ) ] );
+			}
+
+			$manager->persist( $document );
+		}
+
+		$manager->flush();
+	}
+
+	private function buildCommunityGroup ( ObjectManager $manager, array $members, array $named = [], array $documentTags = [] ) {
 		$group = new Usergroup();
 		$group->setName( 'Communauté RNF' );
 		$group->setSlug( $this->communitySlug );
@@ -661,6 +786,16 @@ class AppFixtures extends Fixture {
 		}
 
 		$manager->flush();
+
+		// Le groupe où tout le monde arrive était vide, ce qui donnait une
+		// première impression de plateforme déserte. Les comptes nommés en
+		// sont les auteurs : on reconnaît qui a écrit quoi.
+		$this->fillCommunityGroup(
+				$manager,
+				$group,
+				!empty( $named ) ? $named : array_slice( $members, 0, 3 ),
+				$documentTags
+		);
 	}
 
 	/**
