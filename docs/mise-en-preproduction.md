@@ -134,7 +134,7 @@ en « attention » ce qui la laisse tourner en silence.
 ## 2. Déployer
 
 `clevercloud/post_build.sh` enchaîne migrations, cache, `import:skills` et build
-front. **Dix migrations** vont s'appliquer :
+front. **Quatorze migrations** vont s'appliquer :
 
 | Migration | Effet |
 |---|---|
@@ -143,11 +143,15 @@ front. **Dix migrations** vont s'appliquer :
 | `Version20260819073810` | `edited_at` sur les messages (#19) |
 | `Version20260819075409` | `notifications_settings` sur les comptes (#34) |
 | `Version20260819075543` | table `notifications` (#34) |
+| `Version20260819110800` | `deleted_at` sur les messages, `archived_at` sur les discussions (#19, #20) |
+| `Version20260819111534` | `is_important` sur les pages (#2) |
+| `Version20260819125414` | `parent_id` sur les dossiers de documents — les sous-dossiers (#8) |
 | `Version20260820085500` | `phone` et `email_visible` sur les comptes (#27) |
 | `Version20260820120000` | **retire** `edition_restricted` des pages — colonne jamais écrite (#33) |
 | `Version20260820130000` | `job_title`, `organisation`, `reserves` sur les comptes (#30) |
 | `Version20260820140000` | tables `document_tags` et `documents_tags` (#26) |
 | `Version20260820160000` | `tour_seen_at` sur les comptes (#39) |
+| `Version20260821090000` | `rhythm` sur les notifications, et le drapeau d'annonce du nouveau défaut (#38) |
 
 Après déploiement, une fois seulement :
 
@@ -437,9 +441,10 @@ php bin/console search:reindex:all     # reconstruit les index, ne touche pas au
 php bin/console app:preflight
 ```
 
-### Ce que font réellement les huit migrations
+### Ce que font réellement les quatorze migrations
 
-Aucune ne supprime de donnée. Elles ajoutent :
+Douze n'ajoutent que des colonnes ou des tables. Les deux autres méritent d'être
+lues avant de lancer :
 
 | Migration | Effet |
 |---|---|
@@ -451,6 +456,22 @@ Aucune ne supprime de donnée. Elles ajoutent :
 | `Version20260819110800` | colonnes `deleted_at` et `archived_at` |
 | `Version20260819111534` | colonne `is_important` sur les pages |
 | `Version20260819125414` | colonne `parent_id` sur les dossiers de documents |
+| `Version20260820085500` | colonnes `phone` et `email_visible` sur les comptes |
+| `Version20260820120000` | ⚠️ **retire** la colonne `edition_restricted` des pages |
+| `Version20260820130000` | colonnes `job_title`, `organisation`, `reserves` sur les comptes |
+| `Version20260820140000` | **tables** `document_tags` et `documents_tags` |
+| `Version20260820160000` | colonne `tour_seen_at` sur les comptes |
+| `Version20260821090000` | ⚠️ colonne `rhythm` sur les notifications, **et une écriture** sur les comptes |
+
+- `Version20260820120000` est la seule à supprimer quelque chose : la colonne
+  `edition_restricted` des pages, que l'application n'a jamais écrite (#33).
+  Vérifier avant, si l'on veut dormir : `SELECT COUNT(*) FROM
+  communaute_rnf_pages WHERE edition_restricted IS NOT NULL;` doit rendre 0.
+- `Version20260821090000` **écrit** dans les comptes actifs : elle pose le
+  drapeau `noticePending` dans le JSON des réglages, pour que le bandeau
+  annonçant le nouveau défaut (résumé quotidien) s'affiche une fois à chacun
+  (#38). Aucun réglage existant n'est modifié — le drapeau est une clé de plus,
+  et son retrait est prévu par le `down()`.
 
 Toutes réversibles par `doctrine:migrations:migrate prev`, mais **la sauvegarde
 reste le vrai filet** : un retour arrière de migration ne restitue pas une donnée
@@ -467,7 +488,8 @@ réécrite. Rien à annuler si l'on revient en arrière.
 
 L'ordre importe, et le dernier point est irréversible :
 
-1. les trois enregistrements DNS de [`delivrabilite-emails.md`](delivrabilite-emails.md) ;
+1. les trois enregistrements DNS de [`delivrabilite-emails.md`](delivrabilite-emails.md),
+   **sur chacun des deux domaines d'envoi** — voir [`dns-a-faire.md`](dns-a-faire.md) ;
 2. vérifier `POSTMARK_SENDER`, `POSTMARK_SERVER_TOKEN`, `POSTMARK_BULK_TOKEN` et
    `POSTMARK_INBOUND_KEY` — cette dernière était vide en préproduction ;
 3. `app:notifications:digest --dry-run` pour voir ce qui partirait ;
