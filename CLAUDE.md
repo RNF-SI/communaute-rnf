@@ -166,9 +166,28 @@ pre-filled discussion carrying the link back.
 touching code while adding a step does not. A step may name a CSS `target`: the
 tour outlines it and anchors the bubble to it, and falls back to a centred card
 when the element is absent from the current page — no step depends on where the
-tour was started. It launches by itself while `User::$tourSeenAt` is null, and
-afterwards only through the settings link (`?tour=1`). Closing it counts as
-having seen it.
+tour was started.
+
+**The tour walks the platform.** A step also names the `route` it is played on
+(and `group => TRUE` when that route needs a group slug); when the next step
+lives elsewhere, the button announces the destination — its `link` translation
+— and `assets/js/ui/tour.js` navigates there with `tour=on`, keeping its place
+in `sessionStorage` so it resumes on arrival. (`tour=on` and `tour=1` both
+reopen the tour server-side; only `tour=1` — the settings link — wipes the
+kept place and starts over.) Land somewhere the tour did not
+send you and it does *not* reopen: it offers a « Reprendre la visite » pill in
+the corner instead. `open` names a toggle to click first, which is how the
+account menu unfolds itself for its own step and folds back when you move on.
+
+Which group the group steps open depends on the person: their own first, the
+community group as a fallback, and if there is neither, those steps disappear
+rather than lead to a 404 — so the step count is not the same for everyone.
+
+The dimming is the spotlight's own `box-shadow`, not a layer over the page:
+nothing intercepts clicks, and the page stays usable during the tour.
+
+It launches by itself while `User::$tourSeenAt` is null, and afterwards only
+through the settings link (`?tour=1`). Closing it counts as having seen it.
 
 ### Search (TNTSearch)
 Full-text search via `SearchEngineManager`. Indexes are stored under `public/media/cache/indexes/` (`INDEX_DIR` env var). Reindexing is triggered automatically via event subscribers in `src/EventSubscriber/`; rebuild manually with the `search:reindex*` commands.

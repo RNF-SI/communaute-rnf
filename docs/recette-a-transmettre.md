@@ -31,8 +31,12 @@ Ce sont des comptes du **GeoNature de test**, pas de la production.
 > adresse — tu partiras alors d'un profil vide, ce qui est aussi un cas
 > intéressant à éprouver.
 
-**À la première connexion** : une visite guidée doit se lancer d'elle-même,
-dix étapes. C'est le premier point à valider.
+**À la première connexion** : une visite guidée doit se lancer d'elle-même.
+Elle ne reste pas sur place — elle traverse une vingtaine d'étapes et huit
+pages, entoure à chaque fois l'élément dont elle parle, et le bouton annonce
+où il emmène (« Voir tous les groupes », « Ouvrir la bibliothèque du
+groupe »…). C'est le premier point à valider : va jusqu'au bout, puis
+vérifie qu'elle ne se relance plus.
 
 ---
 

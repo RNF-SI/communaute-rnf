@@ -50,7 +50,9 @@ class TourExtension extends AbstractExtension {
 
 		// Une visite ne se rejoue pas pour quelqu'un qui n'est pas connecté :
 		// elle parle de groupes, de notifications et de réglages de compte.
-		return $user ? $this->tour->steps() : [];
+		// Les étapes dépendent de la personne : ce sont ses groupes à elle
+		// que la visite ouvre.
+		return $user ? $this->tour->steps( $user ) : [];
 	}
 
 	/**

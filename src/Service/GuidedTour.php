@@ -83,7 +83,11 @@ class GuidedTour {
 			[ 'key' => 'profile', 'route' => 'user_profile_edit', 'target' => '.profile-form' ],
 
 			// Ce qui vous arrive, et le robinet.
-			[ 'key' => 'notifications', 'route' => 'user_notifications', 'target' => '.panel' ],
+			[
+					'key'    => 'notifications',
+					'route'  => 'user_notifications',
+					'target' => '.main__user-page__notifications .panel',
+			],
 			[ 'key' => 'settings', 'route' => 'user_parameters_edit', 'target' => '.notifications-settings' ],
 			[ 'key' => 'rhythm', 'route' => 'user_parameters_edit', 'target' => '#discussion-rhythm' ],
 			[ 'key' => 'replay', 'route' => 'user_parameters_edit', 'target' => '.tour-replay' ],

@@ -3,26 +3,59 @@
 **************************************************/
 
 /**
- * La visite guidée : un voile, une bulle, et l'élément dont elle parle
- * entouré. (#39)
+ * La visite guidée : un halo autour de ce dont on parle, une bulle à côté,
+ * et le reste de la page dans l'ombre. (#39)
+ *
+ * L'ombre n'est pas un calque posé par-dessus la page : c'est celle du halo
+ * lui-même, qui déborde de tous les côtés. D'où deux propriétés qu'on ne
+ * voudrait pas perdre :
+ *
+ * - le trou est vraiment transparent, l'élément visé garde ses couleurs ;
+ * - rien n'intercepte les clics, la page reste utilisable pendant la visite.
+ *   Quelqu'un qui s'en va au milieu se verra proposer de reprendre.
+ *
+ * Les positions sont écrites en style en ligne par `assets/js/ui/tour.js` ;
+ * ici on ne décide que de l'allure et des transitions.
+ *
+ * L'élément visé reçoit par ailleurs la classe `tour-target` le temps de son
+ * étape. Rien ne s'y accroche ici — l'anneau, c'est le halo — mais elle reste
+ * le point d'attache si un jour un élément demande un traitement à lui.
  */
 
-.tour-overlay {
-	position:   fixed;
-	inset:      0;
-	z-index:    900;
+$tour_veil: rgba(black, .55);
+$tour_move: cubic-bezier(.4, 0, .2, 1);
 
-	background: rgba(0, 0, 0, .45);
+.tour-spotlight {
+	position:      fixed;
+	z-index:       900;
+	pointer-events: none;
+
+	border-radius: rem(6px);
+	box-shadow:    0 0 0 rem(3px) rgba($color_action, .9),
+				   0 0 0 rem(9px) rgba($color_action, .25),
+				   0 0 0 9999px $tour_veil;
+
+	transition:    top .3s $tour_move,
+				   left .3s $tour_move,
+				   width .3s $tour_move,
+				   height .3s $tour_move;
 }
 
-.tour-target {
-	position:      relative;
-	z-index:       901;
+/**
+ * Rien à montrer du doigt : le halo se referme au centre et il ne reste que
+ * son ombre, c'est-à-dire le voile.
+ */
+.tour-spotlight__closed {
+	box-shadow: 0 0 0 9999px $tour_veil;
+}
 
-	outline:       rem(3px) solid $color_action;
-	outline-offset: rem(4px);
-	border-radius: rem(3px);
-	background:    #fff;
+/**
+ * Pendant un défilement, le halo colle à l'élément : une transition le
+ * ferait traîner derrière lui.
+ */
+.tour-spotlight__still,
+.tour-bubble__still {
+	transition: none;
 }
 
 .tour-bubble {
@@ -30,17 +63,107 @@
 	z-index:       902;
 	max-width:     rem(420px);
 	width:         calc(100% - #{rem(32px)});
-	padding:       rem(20px) rem(24px);
+	padding:       rem(26px) rem(24px) rem(20px);
 
-	background:    #fff;
-	border-radius: rem(6px);
-	box-shadow:    0 rem(6px) rem(24px) rgba(0, 0, 0, .25);
+	background:    white;
+	border-radius: rem(8px);
+	box-shadow:    0 rem(10px) rem(30px) rgba(black, .3);
+
+	transition:    top .3s $tour_move,
+				   left .3s $tour_move;
+
+	animation:     tour-bubble-in .25s ease-out;
 }
 
+@keyframes tour-bubble-in {
+	from {
+		opacity:   0;
+		transform: translateY(#{rem(8px)});
+	}
+}
+
+/**
+ * Au centre, la bulle est placée par transformation : elle n'a alors ni à
+ * glisser ni à hériter de l'animation d'entrée en biais.
+ */
 .tour-bubble__center {
-	top:       50%;
-	left:      50%;
-	transform: translate(-50%, -50%);
+	top:        50%;
+	left:       50%;
+	transform:  translate(-50%, -50%);
+	animation:  tour-bubble-fade .25s ease-out;
+	transition: none;
+}
+
+@keyframes tour-bubble-fade {
+	from {
+		opacity: 0;
+	}
+}
+
+/**
+ * Le temps du changement de page, la bulle s'efface : ce qui vient ensuite
+ * est un chargement, pas un écran figé.
+ */
+.tour-bubble__leaving {
+	opacity:    .4;
+	transition: opacity .2s ease-out;
+}
+
+/**
+ * La flèche vers l'élément. La bulle est alignée sur son bord gauche, la
+ * flèche se pose donc un peu en retrait de ce bord.
+ */
+.tour-bubble[data-placement='below']::before,
+.tour-bubble[data-placement='above']::before {
+	content:    '';
+	position:   absolute;
+	left:       rem(28px);
+
+	border:     rem(9px) solid transparent;
+}
+
+.tour-bubble[data-placement='below']::before {
+	top:                 rem(-18px);
+	border-bottom-color: white;
+}
+
+.tour-bubble[data-placement='above']::before {
+	bottom:           rem(-18px);
+	border-top-color: white;
+}
+
+/**************************************************
+* AVANCEMENT
+**************************************************/
+
+.tour-bubble--gauge {
+	position:      absolute;
+	top:           0;
+	left:          0;
+	right:         0;
+	height:        rem(4px);
+	overflow:      hidden;
+
+	border-radius: rem(8px) rem(8px) 0 0;
+	background:    $color_grey_border;
+
+	span {
+		display:    block;
+		height:     100%;
+
+		background: $color_action;
+
+		transition: width .3s $tour_move;
+	}
+}
+
+.tour-bubble--progress {
+	margin:         0 rem(30px) rem(6px) 0;
+
+	font-size:      rem(12px);
+	letter-spacing: .04em;
+	text-transform: uppercase;
+	color:          $color_grey_neutral;
 }
 
 .tour-bubble--title {
@@ -48,57 +171,89 @@
 
 	font-size:   rem(20px);
 	line-height: 1.3;
+	color:       $color_action;
 }
 
 .tour-bubble--body {
-	margin:      0 0 rem(12px);
+	margin:      0 0 rem(16px);
 
 	font-size:   rem(15px);
 	line-height: 1.6;
 }
 
-.tour-bubble--link {
-	display:         inline-block;
-	margin-bottom:   rem(12px);
-
-	color:           $color_action;
-	text-decoration: underline;
-}
+/**************************************************
+* PIED DE BULLE
+**************************************************/
 
 .tour-bubble--footer {
 	display:     flex;
 	align-items: center;
-	gap:         rem(12px);
+	gap:         rem(10px);
 }
 
-.tour-bubble--progress {
-	margin-right: auto;
+.tour-bubble--skip {
+	margin-right:    auto;
+	padding:         0;
 
-	font-size:    rem(13px);
-	color:        $color_grey_neutral;
+	border:          none;
+	background:      none;
+
+	font-size:       rem(13px);
+	color:           $color_grey_neutral;
+	text-decoration: underline;
+	cursor:          pointer;
+
+	&:hover,
+	&:focus {
+		color: $color_default;
+	}
 }
 
 .tour-bubble--previous,
 .tour-bubble--next {
-	padding:       rem(6px) rem(16px);
+	padding:       rem(7px) rem(16px);
 
 	border:        1px solid $color_action;
-	border-radius: rem(3px);
-	background:    #fff;
+	border-radius: rem(4px);
+	background:    white;
 
 	font-size:     rem(15px);
 	color:         $color_action;
 	cursor:        pointer;
+
+	transition:    color .2s ease-in-out,
+				   background-color .2s ease-in-out;
 }
 
 .tour-bubble--next {
 	background: $color_action;
-	color:      #fff;
+	color:      white;
+
+	&:hover,
+	&:focus {
+		background: darken($color_action, 8%);
+	}
+}
+
+.tour-bubble--previous {
+	&:hover,
+	&:focus {
+		color:      white;
+		background: $color_action;
+	}
+}
+
+/**
+ * Le bouton qui change de page le dit : la flèche prévient qu'on s'en va.
+ */
+.tour-bubble--next__travels::after {
+	content:     ' →';
+	white-space: nowrap;
 }
 
 .tour-bubble--close {
 	position:    absolute;
-	top:         rem(8px);
+	top:         rem(10px);
 	right:       rem(10px);
 	padding:     0 rem(6px);
 
@@ -109,4 +264,101 @@
 	line-height: 1;
 	color:       $color_grey_neutral;
 	cursor:      pointer;
+
+	&:hover,
+	&:focus {
+		color: $color_default;
+	}
+}
+
+/**************************************************
+* REPRENDRE
+**************************************************/
+
+/**
+ * Proposée dans un coin quand la visite a été interrompue par une navigation
+ * qui n'était pas la sienne : on propose, on ne rouvre pas de force.
+ */
+.tour-resume {
+	position:      fixed;
+	z-index:       902;
+	right:         rem(16px);
+	bottom:        rem(16px);
+
+	display:       flex;
+	align-items:   stretch;
+	overflow:      hidden;
+
+	border-radius: rem(4px);
+	background:    $color_action;
+	box-shadow:    0 rem(4px) rem(16px) rgba(black, .3);
+
+	animation:     tour-resume-in .3s ease-out;
+}
+
+@keyframes tour-resume-in {
+	from {
+		opacity:   0;
+		transform: translateY(#{rem(12px)});
+	}
+}
+
+.tour-resume--go,
+.tour-resume--close {
+	padding:    rem(10px) rem(14px);
+
+	border:     none;
+	background: none;
+
+	font-size:  rem(14px);
+	color:      white;
+	cursor:     pointer;
+
+	&:hover,
+	&:focus {
+		background: rgba(black, .15);
+	}
+}
+
+.tour-resume--close {
+	padding:     0 rem(12px);
+
+	border-left: 1px solid rgba(white, .3);
+
+	font-size:   rem(20px);
+	line-height: 1;
+}
+
+/**************************************************
+* PETITS ÉCRANS
+**************************************************/
+
+/**
+ * En dessous de 600px, la bulle se pose en bas de l'écran plutôt que de
+ * poursuivre un élément qui prend déjà toute la largeur. Les positions
+ * calculées sont écrites en style en ligne, d'où les `!important` : c'est le
+ * seul endroit où la mise en page prend le pas sur le calcul.
+ */
+@include small-or-less {
+	.tour-bubble {
+		top:           auto !important;
+		bottom:        rem(8px);
+		left:          rem(8px) !important;
+		right:         rem(8px);
+
+		width:         auto;
+		max-width:     none;
+
+		transform:     none !important;
+
+		border-radius: rem(8px);
+
+		&::before {
+			display: none;
+		}
+	}
+
+	.tour-bubble--footer {
+		flex-wrap: wrap;
+	}
 }

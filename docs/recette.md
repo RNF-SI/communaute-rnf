@@ -102,7 +102,11 @@ php bin/console app:mail:check    # le DNS autorise-t-il l'envoi ?
 | À faire | Attendu |
 |---|---|
 | Se connecter | On arrive sur **Mes groupes**, pas sur le tableau de bord (#9) |
-| Première connexion | **La visite guidée se lance seule**, dix étapes (#39) |
+| Première connexion | **La visite guidée se lance seule** (#39) |
+| Avancer d'étape en étape | L'élément dont on parle est **entouré**, le reste de la page est dans l'ombre |
+| Continuer | Elle **change de page** toute seule — groupes, un de vos groupes, sa bibliothèque, l'annuaire, votre profil, vos notifications, vos réglages — et le bouton annonce chaque fois où il emmène |
+| À l'étape « Votre compte » | Le menu du compte **s'ouvre** pour montrer ce qu'il contient, et se referme en avançant |
+| Au milieu, cliquer un lien de la page | La visite ne rouvre pas de force : une pastille « Reprendre la visite » attend en bas à droite |
 | La fermer au 2ᵉ écran, naviguer | Elle ne se relance pas |
 | Mes paramètres → « Revoir la visite guidée » | Elle repart du début |
 

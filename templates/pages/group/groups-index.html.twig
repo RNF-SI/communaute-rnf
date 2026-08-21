@@ -19,7 +19,8 @@
 					<p>
 						<a class="cta__white" href="{{ path('homepage') }}">{{ 'ui.see_more'|trans }}</a>
 						{% if is_granted(constant('App\\Security\\GroupVoter::CREATE')) %}
-							<a class="cta__white" href="{{ path('group_new') }}">{{ 'pages.group.group_create.link'|trans }}</a>
+							{# La classe sert de point d'accroche à la visite guidée (#39) #}
+							<a class="cta__white groups-create-link" href="{{ path('group_new') }}">{{ 'pages.group.group_create.link'|trans }}</a>
 						{% endif %}
 					</p>
 				</div>

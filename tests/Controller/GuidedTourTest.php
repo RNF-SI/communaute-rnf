@@ -3,6 +3,8 @@
 namespace App\Tests\Controller;
 
 use App\Entity\User;
+use App\Entity\Usergroup;
+use App\Entity\UsergroupMembership;
 use App\Service\GuidedTour;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
@@ -16,7 +18,11 @@ use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
  *
  * Fermer vaut avoir vu : quelqu'un qui la referme au premier écran a dit ce
  * qu'il pensait de la proposition. La relancer à chaque page serait la
- * transformer en harcèlement — c'est la règle que ce test tient.
+ * transformer en harcèlement — c'est la première règle que ce test tient.
+ *
+ * La seconde est qu'elle se promène : elle traverse plusieurs pages, elle
+ * annonce chaque fois où elle emmène, et les étapes qui ouvrent un groupe
+ * ouvrent un groupe qui existe — celui de la personne.
  */
 class GuidedTourTest extends WebTestCase {
 	private const FIREWALL = 'main';
@@ -79,6 +85,39 @@ class GuidedTourTest extends WebTestCase {
 	}
 
 	/**
+	 * Un groupe dont la personne est membre : c'est celui que la visite doit
+	 * choisir d'ouvrir.
+	 *
+	 * @param \App\Entity\User $user
+	 *
+	 * @return \App\Entity\Usergroup
+	 */
+	private function groupOf ( User $user ) {
+		$group = new Usergroup();
+		$group->setSlug( 'visite-' . uniqid() );
+		$group->setName( 'Commission de test' );
+		$group->setVisibility( Usergroup::PUBLIC );
+		$group->setCreatedAt( new DateTime() );
+		$group->setIsActive( TRUE );
+
+		$membership = new UsergroupMembership();
+		$membership->setUser( $user );
+		$membership->setUsergroup( $group );
+		$membership->setStatus( UsergroupMembership::STATUS_MEMBER );
+		$membership->setRole( UsergroupMembership::ROLE_USER );
+		$membership->setJoinedAt( new DateTime() );
+
+		$group->addMember( $membership );
+		$user->addUsergroupMembership( $membership );
+
+		$this->manager->persist( $group );
+		$this->manager->persist( $membership );
+		$this->manager->flush();
+
+		return $group;
+	}
+
+	/**
 	 * @param string $url
 	 *
 	 * @return \Symfony\Component\DomCrawler\Crawler
@@ -131,6 +170,22 @@ class GuidedTourTest extends WebTestCase {
 		$this->assertNotEmpty(
 				$this->steps( $this->open( '/user/groups?tour=1' ) ),
 				'Assert the settings link can bring it back'
+		);
+	}
+
+	/**
+	 * La visite qui change de page se redemande elle-même en chemin, avec
+	 * `tour=on` : `tour=1` reste celui du lien des paramètres, qui repart du
+	 * début. Le serveur, lui, ne fait pas la différence — et c'est ce que ce
+	 * test tient, parce que la visite s'arrêterait à la deuxième page si
+	 * jamais il se mettait à la faire.
+	 */
+	public function testTheTourComesBackWhicheverWayItIsAsked () {
+		$this->user( new DateTime( '-1 day' ) );
+
+		$this->assertNotEmpty(
+				$this->steps( $this->open( '/user/groups?tour=on' ) ),
+				'Assert the tour can carry itself from one page to the next'
 		);
 	}
 
@@ -231,14 +286,88 @@ class GuidedTourTest extends WebTestCase {
 		}
 	}
 
-	public function testAStepThatSendsSomewhereSaysWhere () {
-		foreach ( self::$container->get( GuidedTour::class )->steps() as $step ) {
+	public function testAStepThatChangesPageSaysWhereItGoes () {
+		$previous = NULL;
+
+		foreach ( self::$container->get( GuidedTour::class )->steps( $this->user() ) as $step ) {
 			if ( !isset( $step[ 'url' ] ) ) {
 				continue;
 			}
 
-			$this->assertNotEmpty( $step[ 'label' ], sprintf( 'Assert the link of "%s" is labelled', $step[ 'key' ] ) );
 			$this->assertStringStartsWith( '/', $step[ 'url' ] );
+			$this->assertStringNotContainsString(
+					'{',
+					$step[ 'url' ],
+					sprintf( 'Assert the address of "%s" is filled in, not a pattern', $step[ 'key' ] )
+			);
+
+			// Le libellé est celui du bouton qui emmène : seules les étapes
+			// qui changent de page en ont besoin.
+			if ( $step[ 'url' ] !== $previous ) {
+				$this->assertNotEmpty(
+						$step[ 'label' ] ?? '',
+						sprintf( 'Assert the step "%s" says where it takes you', $step[ 'key' ] )
+				);
+				$this->assertStringNotContainsString( 'pages.tour.', $step[ 'label' ] );
+			}
+
+			$previous = $step[ 'url' ];
 		}
+	}
+
+	public function testTheTourWalksAcrossSeveralPages () {
+		$user = $this->user();
+		$this->groupOf( $user );
+
+		$pages = [];
+
+		foreach ( self::$container->get( GuidedTour::class )->steps( $user ) as $step ) {
+			if ( isset( $step[ 'url' ] ) ) {
+				$pages[ $step[ 'url' ] ] = TRUE;
+			}
+		}
+
+		$this->assertGreaterThanOrEqual(
+				6,
+				count( $pages ),
+				'Assert the tour shows more than the page it was started on'
+		);
+	}
+
+	public function testMostStepsPointAtSomethingOnThePage () {
+		$user  = $this->user();
+		$steps = self::$container->get( GuidedTour::class )->steps( $user );
+
+		$targeted = array_filter( $steps, function ( $step ) {
+			return !empty( $step[ 'target' ] );
+		} );
+
+		$this->assertGreaterThan(
+				count( $steps ) / 2,
+				count( $targeted ),
+				'Assert the tour outlines elements rather than reciting a leaflet'
+		);
+	}
+
+	public function testTheTourOpensAGroupThePersonBelongsTo () {
+		$user  = $this->user();
+		$group = $this->groupOf( $user );
+
+		$addresses = [];
+
+		foreach ( self::$container->get( GuidedTour::class )->steps( $user ) as $step ) {
+			if ( isset( $step[ 'url' ] ) ) {
+				$addresses[] = $step[ 'url' ];
+			}
+		}
+
+		$hers = array_filter( $addresses, function ( $url ) use ( $group ) {
+			return strpos( $url, '/' . $group->getSlug() ) !== FALSE;
+		} );
+
+		$this->assertNotEmpty(
+				$hers,
+				'Assert the tour opens one of her own groups rather than a stranger one'
+		);
 	}
 }

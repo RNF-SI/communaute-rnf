@@ -520,43 +520,88 @@ pages:
         previous: "Previous"
         close: "Close the tour"
         end: "Finish"
+        skip: "Skip the tour"
+        resume: "Resume the tour"
         progress: "Step %d of %d"
         replay: "Watch the guided tour again"
         steps:
             welcome:
                 title: "Welcome to Communauté RNF"
-                body: "In a few screens, here is what the platform does and where to find things. You can watch this again at any time from your settings."
+                body: "This tour walks you from one page to the next: at every step, the thing being described is outlined. You can stop it whenever you like and pick it up later from your settings."
+            search:
+                title: "Search first"
+                body: "This bar searches everything you are allowed to read: discussions, news, documents, pages and members. It is the shortest way to a report when you no longer remember which group it lives in."
+            account:
+                title: "Your account sits behind your name"
+                body: "Your profile, your groups, your discussions, your notifications and your settings: everything about you opens from this menu, on any page."
             groups:
-                title: "Everything happens in groups"
-                body: "One group per commission, topic or workshop. You join the ones that match your work; that is where the discussions, documents and pages that concern you live."
+                title: "The groups of the network"
+                body: "One group per commission, topic or workshop. Public groups are joined in one click; private ones need an animator to agree."
                 link: "See every group"
-            tabs:
-                title: "Four tabs in every group"
-                body: "Discussions to talk, News to announce, Documents to store and find files, Pages for what has to last: reference minutes, how-tos, contacts."
+            groups_graph:
+                title: "The groups seen as a network"
+                body: "This switch shows the same groups as a graph: which group hangs off which, what orbits a commission. Handy to place a group you had never heard of."
+            create_group:
+                title: "Create a group"
+                body: "A need with no space of its own yet? You can create a group yourself, open to everyone or subject to a join request. It shows up in the list once the RNF team has approved it."
+            my_groups:
+                title: "Your groups"
+                body: "The ones you have joined — and the page you land on every time you sign in. Joining a group means its discussions and its documents follow you."
+                link: "Go to my groups"
+            group:
+                title: "Inside a group"
+                body: "Here is one of your groups. At the top: what it is about, its animators, its members, and the button to join or leave."
+                link: "Step into a group"
+            group_search:
+                title: "Search this group only"
+                body: "The same search, kept to the group. When a commission has three years of archives, that is the difference between finding and digging."
             discussions:
                 title: "Discussions"
                 body: "A topic, then answers. Every message also goes out by e-mail to the members following the group, and you can answer straight from your mailbox. Writing « @ » followed by a name warns that person, even if they muted the topic."
+            articles:
+                title: "News"
+                body: "To announce: a meeting date, a call for contributions, a report just out. It is meant to be read; whatever needs debating belongs in the discussions."
             documents:
                 title: "Documents"
-                body: "Add a file, describe it in one sentence, file it in a folder and give it one or more tags. The description and the tags are what will let others find it six months from now."
+                body: "Add a file, describe it in one sentence, file it in a folder and give it tags. Every document has a page of its own, showing the discussions that mention it."
+            pages:
+                title: "Pages"
+                body: "For what has to last and be corrected over time: how-tos, contact lists, reference minutes. Every edit is kept."
+            members:
+                title: "The members of the group"
+                body: "Who is there, and who runs it. Animators are the group's referents: together with the author of a content, they are the only ones who may edit it."
+            documents_filters:
+                title: "Finding a document again"
+                body: "The filters, on the left: by file type and by tag. Tags are a vocabulary shared by the whole platform and kept by the RNF team — not free keywords that turn into synonyms within six months."
+                link: "Open the group library"
             rights:
                 title: "Who may edit what"
-                body: "Any member of a group may create a page, add a document, publish an article, open a topic. Everyone then edits what they wrote; the group animators may edit or remove any content. Discussions stay open to all."
-            create_group:
-                title: "Create a group"
-                body: "A need with no space of its own yet? You can create a group yourself, open to everyone or subject to a join request."
-                link: "Create a group"
+                body: "This sentence is repeated on every tab. Any member may create; everyone then edits what they added, and animators may correct or remove any content. Discussions stay open to all."
+            directory:
+                title: "The directory and the map"
+                body: "The members of the network, searchable by name, skill or territory, and placed on a map. This is where you find who, elsewhere, has already dealt with today's problem."
+                link: "See the directory"
+            profile:
+                title: "Your page"
+                body: "Job, organisation, reserves, phone: this is what others will see of you. An empty page makes you unfindable in the directory."
+                link: "Fill in my profile"
             notifications:
-                title: "Your notifications"
-                body: "The platform tells you what concerns you: new messages, pages, documents, and the times somebody named you. Everything in one place."
+                title: "What is waiting for you"
+                body: "New messages, pages, documents, and the times somebody named you: everything lands here, in one place."
                 link: "See my notifications"
             settings:
                 title: "You decide what you receive"
-                body: "Group by group and content type by content type, choose what is sent to you. And at what pace: one e-mail per message, a daily summary, or a weekly summary on Monday."
+                body: "Group by group and content type by content type, choose what gets sent to you by e-mail."
                 link: "Set up my notifications"
+            rhythm:
+                title: "At what pace"
+                body: "One e-mail per message, a daily summary, or a weekly summary on Monday. This setting decides whether the platform helps you or clutters you."
+            replay:
+                title: "Watching this tour again"
+                body: "This link starts it over, whenever you want. Once finished, it will not open by itself again."
             end:
                 title: "Over to you"
-                body: "That is the gist of it. This tour stays available from your settings if you want to watch it again."
+                body: "That is the gist of it. Join a group and introduce yourself in a discussion: that is the best way to start."
     event:
         list:
             title: "Activities"
