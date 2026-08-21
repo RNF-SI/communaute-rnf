@@ -12,13 +12,25 @@ Deux façons de remplir un environnement, selon le besoin.
 ## Données de test
 
 `doctrine:fixtures:load` construit un réseau complet : 40 compétences, une
-centaine de comptes avec compétences et biographies, 20 groupes publics et
-privés avec leurs adhésions, et pour chaque groupe des pages, des discussions
-avec leurs messages, des actualités et des documents — dont une partie décrits.
+centaine de comptes portant fonction, structure et réserves suivies, neuf
+commissions, dix-huit groupes de travail avec leurs adhésions, et pour chaque
+groupe des pages, des discussions avec leurs messages, des actualités et des
+documents rangés en dossiers et étiquetés.
+
+**Le contenu ressemble à celui du réseau.** Les groupes s'appellent « Atelier
+plans de gestion », « Réseau chiroptères », « Espèces exotiques envahissantes » ;
+les discussions posent de vraies questions de gestionnaires et portent de vraies
+réponses. Tout est **inventé mais plausible** — aucune donnée réelle, ni
+personne, ni compte rendu, ni décision. Le contenu vit dans
+`src/DataFixtures/NetworkContent.php`, séparé de la mécanique des fixtures.
+
+Ce choix n'est pas cosmétique : sur du faux latin, on vérifie qu'un titre
+s'affiche, on ne comprend pas à quoi la plateforme sert, et une recette ne
+ressemble à rien de ce que le réseau verra.
 
 Toutes les adresses sont en `@example.org`, domaine réservé par la RFC 2606 :
 rien envoyé là ne peut atteindre une vraie boîte, même si une préproduction se
-met à envoyer du courrier.
+met à envoyer du courrier. `TEST_ACCOUNTS_EMAIL` change cela, voir plus bas.
 
 ### Recharger
 
@@ -26,6 +38,11 @@ met à envoyer du courrier.
 php bin/console doctrine:fixtures:load
 php bin/console search:reindex:all
 ```
+
+⚠️ **Sur un serveur, poser `TEST_ACCOUNTS_EMAIL` AVANT de recharger.** C'est au
+chargement que les adresses des six comptes sont écrites : les changer après
+demande de tout recharger. Sans elle, les comptes repartent en `@example.org`,
+les comptes GeoNature de test ne les retrouvent plus, et aucun e-mail ne part.
 
 ⚠️ Si la base contient une copie de production, la purge des fixtures échoue sur
 les clés étrangères des fichiers, qu'elles ne gèrent pas. Il faut alors repartir
