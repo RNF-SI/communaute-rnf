@@ -5,7 +5,7 @@ namespace App\Notification;
 /**
  * Ce qu'un membre demande sur une catégorie de contenu : rien, la plateforme
  * seule, ou la plateforme et un e-mail — et, dans ce dernier cas, à quel
- * rythme cet e-mail part. (#40)
+ * rythme cet e-mail part. (#38)
  *
  * Une seule liste plutôt que deux réglages à croiser : « aucune notification »,
  * « sur la plateforme seulement », « e-mail immédiat », « résumé quotidien »,
@@ -14,7 +14,7 @@ namespace App\Notification;
  * fois par semaine est une demande courante, et elle était impossible tant que
  * le rythme était unique.
  *
- * Avant #40 la valeur stockée valait « email » et le rythme vivait à part, sur
+ * Avant #38 la valeur stockée valait « email » et le rythme vivait à part, sur
  * le membre, dans `discussionRhythm`. Cette valeur-là n'est plus écrite, mais
  * elle est encore lue : voir self::fromLegacy().
  */
@@ -45,7 +45,7 @@ final class NotificationLevel {
 	const WEEKLY = 'weekly';
 
 	/**
-	 * La valeur écrite avant #40, quand le niveau ne disait pas le rythme.
+	 * La valeur écrite avant #38, quand le niveau ne disait pas le rythme.
 	 * Jamais proposée, toujours lue.
 	 */
 	const LEGACY_EMAIL = 'email';
@@ -53,7 +53,7 @@ final class NotificationLevel {
 	/**
 	 * Ce qu'on reçoit sans avoir rien choisi : le résumé quotidien. Un e-mail
 	 * par jour prévient de tout sans remplir une boîte aux lettres — c'est le
-	 * défaut demandé en #40, là où #34 laissait l'immédiat.
+	 * défaut demandé en #38, là où #34 laissait l'immédiat.
 	 */
 	const DEFAULT_LEVEL = self::DAILY;
 
@@ -94,7 +94,7 @@ final class NotificationLevel {
 	 *
 	 * Le seul cas qui demande à réfléchir est l'ancien « email », qui ne dit
 	 * pas son rythme : on le lit dans le réglage que le membre avait à côté.
-	 * Et comme, avant #40, l'immédiat ne valait que pour les discussions — une
+	 * Et comme, avant #38, l'immédiat ne valait que pour les discussions — une
 	 * page, une actualité, un document partaient dans le résumé quel que soit
 	 * ce réglage — on ne le transpose que sur cette catégorie-là. Personne ne
 	 * se met ainsi à recevoir des e-mails qu'il ne recevait pas.
@@ -115,7 +115,7 @@ final class NotificationLevel {
 		}
 
 		// Rien de choisi à côté : le nouveau défaut s'applique, et c'est bien
-		// la bascule voulue en #40.
+		// la bascule voulue en #38.
 		if ( !NotificationRhythm::stored( $rhythm ) ) {
 			return self::DEFAULT_LEVEL;
 		}

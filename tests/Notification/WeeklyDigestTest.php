@@ -96,7 +96,7 @@ class WeeklyDigestTest extends KernelTestCase {
 	}
 
 	/**
-	 * Le rythme est porté par la notification depuis #40, et non plus par son
+	 * Le rythme est porté par la notification depuis #38, et non plus par son
 	 * destinataire.
 	 *
 	 * @param \App\Entity\User $recipient
@@ -213,9 +213,9 @@ class WeeklyDigestTest extends KernelTestCase {
 	}
 
 	/**
-	 * Depuis #40, un même membre peut avoir du quotidien et de l'hebdomadaire
+	 * Depuis #38, un même membre peut avoir du quotidien et de l'hebdomadaire
 	 * en attente. Le mardi n'emporte que le premier, et le lundi les deux —
-	 * dans le même e-mail. (#40)
+	 * dans le même e-mail. (#38)
 	 */
 	public function testTheSameMemberCanHaveBothRhythmsWaiting () {
 		$user = $this->user();

@@ -77,7 +77,7 @@ tous les jours** — c'est la commande qui décide du jour : elle emporte chaque
 matin ce qui est réglé sur le quotidien, et attend le lundi pour ce qui est
 réglé sur l'hebdomadaire.
 
-Depuis #40, le rythme est porté par **chaque notification**, et non plus par
+Depuis #38, le rythme est porté par **chaque notification**, et non plus par
 son destinataire : une même personne peut suivre une commission au quotidien
 et ses documents à la semaine. Un lundi, les deux tiennent dans le même
 e-mail. Ce qui est réglé sur l'e-mail immédiat ne passe pas par ici : c'est

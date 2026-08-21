@@ -6,7 +6,7 @@ namespace App\Notification;
  * Quand part l'e-mail que porte un niveau : tout de suite, tous les jours, ou
  * le lundi.
  *
- * Depuis #40 le rythme n'est plus un réglage à lui : il est la part e-mail
+ * Depuis #38 le rythme n'est plus un réglage à lui : il est la part e-mail
  * d'un NotificationLevel, et se choisit donc catégorie par catégorie et groupe
  * par groupe. Cette classe garde ce qui, lui, reste commun à toute la
  * plateforme — le jour où part l'hebdomadaire — et sait encore lire l'ancien
@@ -40,14 +40,14 @@ final class NotificationRhythm {
 	const WEEKLY = 'weekly';
 
 	/**
-	 * Le nom que portait le quotidien avant #40, dans le champ
+	 * Le nom que portait le quotidien avant #38, dans le champ
 	 * `discussionRhythm`. Jamais écrit, encore lu.
 	 */
 	const LEGACY_DIGEST = 'digest';
 
 	/**
 	 * Le rythme d'un e-mail dont personne n'a rien dit : une fois par jour.
-	 * (#40)
+	 * (#38)
 	 */
 	const DEFAULT_RHYTHM = self::DAILY;
 

@@ -79,10 +79,10 @@ class Notification {
 	/**
 	 * Le rythme du résumé qui l'emportera : quotidien ou hebdomadaire. Retenu
 	 * ici, et non relu sur le membre au moment de l'envoi, parce que depuis
-	 * #40 le rythme dépend de la catégorie et du groupe — deux notifications
+	 * #38 le rythme dépend de la catégorie et du groupe — deux notifications
 	 * du même membre ne partent plus forcément le même jour.
 	 *
-	 * NULL pour celles mises en file avant #40 : elles valent le quotidien.
+	 * NULL pour celles mises en file avant #38 : elles valent le quotidien.
 	 *
 	 * @ORM\Column(type="string", length=20, nullable=true)
 	 */

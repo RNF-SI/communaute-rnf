@@ -8,7 +8,7 @@ use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
 /**
- * Issue #40 — le rythme des e-mails se choisit catégorie par catégorie, et
+ * Issue #38 — le rythme des e-mails se choisit catégorie par catégorie, et
  * plus une fois pour toutes.
  *
  * Deux choses ici.
@@ -27,7 +27,7 @@ use Doctrine\Migrations\AbstractMigration;
  * liront jamais l'annonce d'un changement qu'ils n'ont pas connu.
  *
  * Ce qu'on ne fait pas : réécrire les réglages. Un « email » enregistré avant
- * #40 est relu à la volée avec l'ancien `discussionRhythm` du membre, si bien
+ * #38 est relu à la volée avec l'ancien `discussionRhythm` du membre, si bien
  * que ceux qui avaient choisi gardent leur choix, et que seuls ceux qui
  * n'avaient rien choisi changent — c'est exactement la bascule voulue. Voir
  * NotificationLevel::fromLegacy().

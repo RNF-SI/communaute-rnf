@@ -86,7 +86,7 @@ class DiscussionSender {
 	 *
 	 * Two things have to line up : que le membre veuille des e-mails, et que
 	 * le niveau qui s'applique à cette discussion-là soit l'immédiat. Depuis
-	 * #40 le rythme est dans ce niveau, il n'y a plus de réglage à croiser :
+	 * #38 le rythme est dans ce niveau, il n'y a plus de réglage à croiser :
 	 * qui est au résumé est servi plus tard par la commande, pas ici.
 	 *
 	 * @param \App\Entity\UsergroupMembership $membership

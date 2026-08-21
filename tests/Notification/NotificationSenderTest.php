@@ -260,14 +260,14 @@ class NotificationSenderTest extends KernelTestCase {
 
 		$this->assertTrue(
 				$this->notificationsFor( $reader->getUser() )[ 0 ]->isByEmail(),
-				'Assert the default is the daily summary, as asked in #40'
+				'Assert the default is the daily summary, as asked in #38'
 		);
 	}
 
 	/**
 	 * Le rythme est retenu sur la notification, et non relu sur le membre au
 	 * moment de l'envoi : c'est ce qui permet à deux notifications d'une même
-	 * personne de partir des jours différents. (#40)
+	 * personne de partir des jours différents. (#38)
 	 */
 	public function testTheNotificationRemembersWhenItsSummaryLeaves () {
 		$author = $this->member();
@@ -307,7 +307,7 @@ class NotificationSenderTest extends KernelTestCase {
 	 * Une page réglée sur l'immédiat part tout de suite : elle ne doit pas
 	 * repartir le soir dans le résumé. En test le jeton Postmark est vide,
 	 * l'envoi ne sort pas de la machine, mais la notification est marquée
-	 * comme partie — c'est cela qu'on vérifie. (#40)
+	 * comme partie — c'est cela qu'on vérifie. (#38)
 	 */
 	public function testAPageOnTheImmediateRhythmDoesNotAlsoJoinTheSummary () {
 		$author = $this->member();

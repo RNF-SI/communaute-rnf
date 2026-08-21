@@ -63,7 +63,7 @@ class NotificationPreferencesTest extends TestCase {
 			$this->assertEquals(
 					NotificationLevel::DAILY,
 					$membership->getNotificationLevel( $category ),
-					sprintf( 'Assert "%s" warns by default — dans le résumé quotidien depuis #40', $category )
+					sprintf( 'Assert "%s" warns by default — dans le résumé quotidien depuis #38', $category )
 			);
 		}
 	}
@@ -286,7 +286,7 @@ class NotificationPreferencesTest extends TestCase {
 			$this->assertEquals(
 					NotificationLevel::DAILY,
 					$user->getDefaultNotificationLevel( $category ),
-					sprintf( 'Assert "%s" lands in the daily summary, the default asked for in #40', $category )
+					sprintf( 'Assert "%s" lands in the daily summary, the default asked for in #38', $category )
 			);
 		}
 	}
@@ -299,7 +299,7 @@ class NotificationPreferencesTest extends TestCase {
 		$this->assertEquals(
 				NotificationLevel::IMMEDIATE,
 				$membership->getNotificationLevel( NotificationCategory::DISCUSSIONS ),
-				'Assert the case #40 was asked for: this commission message by message…'
+				'Assert the case #38 was asked for: this commission message by message…'
 		);
 		$this->assertEquals(
 				NotificationLevel::WEEKLY,
@@ -314,7 +314,7 @@ class NotificationPreferencesTest extends TestCase {
 	}
 
 	/**
-	 * Ce qu'un compte réglé avant #40 devient. La règle : ceux qui avaient
+	 * Ce qu'un compte réglé avant #38 devient. La règle : ceux qui avaient
 	 * choisi gardent leur choix, ceux qui n'avaient rien choisi basculent sur
 	 * le quotidien.
 	 */
@@ -347,7 +347,7 @@ class NotificationPreferencesTest extends TestCase {
 		$this->assertEquals(
 				NotificationLevel::DAILY,
 				$user->getDefaultNotificationLevel( NotificationCategory::PAGES ),
-				'Assert it is not extended to pages, which never left immediately before #40'
+				'Assert it is not extended to pages, which never left immediately before #38'
 		);
 	}
 
@@ -393,7 +393,7 @@ class NotificationPreferencesTest extends TestCase {
 		$this->assertEquals(
 				NotificationLevel::WEEKLY,
 				$membership->getOwnNotificationLevel( NotificationCategory::DOCUMENTS ),
-				'Assert a group set apart before #40 is read in the new vocabulary too'
+				'Assert a group set apart before #38 is read in the new vocabulary too'
 		);
 		$this->assertFalse(
 				$membership->followsGeneralSettings(),

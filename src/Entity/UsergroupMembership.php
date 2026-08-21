@@ -331,7 +331,7 @@ class UsergroupMembership {
 	/**
 	 * Ce que « suivre cette discussion » veut dire pour ce membre-là.
 	 *
-	 * Depuis #40 il n'y a plus un seul niveau « par e-mail » : il faut dire
+	 * Depuis #38 il n'y a plus un seul niveau « par e-mail » : il faut dire
 	 * lequel. On reprend ce que le membre a demandé sur les discussions de ce
 	 * groupe quand cela porte un e-mail — suivre une discussion ne doit pas
 	 * lui imposer un rythme qu'il a écarté — et le résumé quotidien sinon.

@@ -25,7 +25,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
  * A notification is always shown on the platform. Ce qui la suit dépend du
  * niveau choisi sur la catégorie : rien, le résumé quotidien, le résumé du
  * lundi, ou un e-mail tout de suite — celui-là part d'ici, par ContentSender.
- * (#40)
+ * (#38)
  */
 class NotificationSender {
 	private $manager;
@@ -377,7 +377,7 @@ class NotificationSender {
 	 * Ce qui part tout de suite ne rejoint pas le résumé : celui qui reçoit
 	 * le message à la seconde où il est posté n'a pas à le relire le soir.
 	 * Quotidien ou hebdomadaire, c'est le même résumé — seul le jour de départ
-	 * change, et il est retenu sur la notification. (#38, #40)
+	 * change, et il est retenu sur la notification. (#38)
 	 *
 	 * @param \App\Entity\User $recipient
 	 * @param string           $level

@@ -254,7 +254,7 @@ class UserController extends AbstractController
 		}
 
 		// Y venir, c'est avoir lu l'annonce : elle envoie ici, et la répéter
-		// ensuite ne dirait plus rien. (#40)
+		// ensuite ne dirait plus rien. (#38)
 		if ($user->awaitsNotificationsNotice()) {
 			$user->markNotificationsNoticeSeen(new DateTime());
 			$manager->flush();
@@ -409,7 +409,7 @@ class UserController extends AbstractController
 	}
 
 	/**
-	 * Refermer l'annonce du changement de notifications. (#40)
+	 * Refermer l'annonce du changement de notifications. (#38)
 	 *
 	 * Un formulaire, pas un appel JavaScript : le bandeau doit pouvoir se
 	 * refermer sans scripts, comme le reste de la page des paramètres.

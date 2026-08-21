@@ -824,7 +824,7 @@ class User implements UserInterface, JsonSerializable {
 	}
 
 	/**
-	 * @return string|null the rhythm this member chose before #40, when the
+	 * @return string|null the rhythm this member chose before #38, when the
 	 *                     rhythm was one setting for everything, or NULL if
 	 *                     they never chose one
 	 */
@@ -836,7 +836,7 @@ class User implements UserInterface, JsonSerializable {
 	}
 
 	/**
-	 * @deprecated depuis #40 : le rythme se lit dans le niveau de chaque
+	 * @deprecated depuis #38 : le rythme se lit dans le niveau de chaque
 	 *             catégorie. Ne subsiste que pour lire les comptes d'avant.
 	 *
 	 * @return string one of NotificationRhythm
@@ -886,7 +886,7 @@ class User implements UserInterface, JsonSerializable {
 	}
 
 	/**
-	 * @deprecated depuis #40. Accepte l'ancien vocabulaire — « digest » — pour
+	 * @deprecated depuis #38. Accepte l'ancien vocabulaire — « digest » — pour
 	 *             que les comptes d'avant se reconstituent tels quels.
 	 */
 	public function setDiscussionEmailRhythm ( string $rhythm ): self {
@@ -904,7 +904,7 @@ class User implements UserInterface, JsonSerializable {
 
 	/**
 	 * Le JSON tel quel. Écrire par ici court-circuite les validations : c'est
-	 * fait pour reconstituer un compte d'avant #40, pas pour enregistrer un
+	 * fait pour reconstituer un compte d'avant #38, pas pour enregistrer un
 	 * choix.
 	 *
 	 * @return array
@@ -921,7 +921,7 @@ class User implements UserInterface, JsonSerializable {
 
 	/**
 	 * Reste-t-il à prévenir ce membre que les notifications ont changé de
-	 * fonctionnement ? (#40)
+	 * fonctionnement ? (#38)
 	 *
 	 * Le changement de défaut ne se voit pas : quelqu'un qui recevait un
 	 * e-mail par message de discussion se retrouve avec un résumé quotidien

@@ -277,7 +277,7 @@ class NotificationSettingsTest extends WebTestCase {
 
 	/**
 	 * Le rythme se choisit dans la même liste que le reste, catégorie par
-	 * catégorie : il n'y a plus de réglage séparé. (#40)
+	 * catégorie : il n'y a plus de réglage séparé. (#38)
 	 */
 	public function testTheRhythmIsChosenCategoryByCategory () {
 		$crawler = $this->openSettings();
@@ -393,7 +393,7 @@ class NotificationSettingsTest extends WebTestCase {
 	/**
 	 * « Suivre » doit dire un rythme, maintenant qu'il y en a trois. Il
 	 * reprend celui que le membre a choisi sur les discussions du groupe
-	 * plutôt que de lui en imposer un. (#40)
+	 * plutôt que de lui en imposer un. (#38)
 	 */
 	public function testFollowingADiscussionKeepsTheRhythmTheMemberChose () {
 		$this->membership->setNotificationLevel( NotificationCategory::DISCUSSIONS, NotificationLevel::WEEKLY );

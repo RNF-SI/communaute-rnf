@@ -13,7 +13,7 @@ use Twig\Environment;
 /**
  * L'e-mail qui part au moment où une page, une actualité ou un document
  * paraît, pour les membres qui ont demandé l'immédiat sur cette catégorie.
- * (#40)
+ * (#38)
  *
  * Les messages de discussion ont leur propre chemin, DiscussionSender : ils
  * portent un Reply-To qui permet de répondre depuis une boîte aux lettres, et

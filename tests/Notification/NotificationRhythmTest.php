@@ -69,7 +69,7 @@ class NotificationRhythmTest extends TestCase {
 		);
 		$this->assertTrue(
 				NotificationRhythm::stored( NotificationRhythm::LEGACY_DIGEST ),
-				'Assert an account settled before #40 is still readable'
+				'Assert an account settled before #38 is still readable'
 		);
 	}
 
@@ -87,7 +87,7 @@ class NotificationRhythmTest extends TestCase {
 		$this->assertEquals(
 				NotificationRhythm::DAILY,
 				NotificationRhythm::DEFAULT_RHYTHM,
-				'Assert an e-mail nobody said anything about goes out once a day, as asked in #40'
+				'Assert an e-mail nobody said anything about goes out once a day, as asked in #38'
 		);
 	}
 

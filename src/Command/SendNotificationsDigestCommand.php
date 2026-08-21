@@ -25,7 +25,7 @@ use Twig\Environment;
  * Meant to be run **once a day, every day**. Ce qui est réglé sur
  * l'hebdomadaire est passé six jours sur sept ; ces notifications-là attendent
  * plutôt que d'être perdues, et le lundi les emporte — avec le quotidien du
- * jour, dans le même e-mail. (#38, #40)
+ * jour, dans le même e-mail. (#38)
  *
  * Nothing is sent to somebody who has nothing waiting, so a quiet day sends
  * no e-mail at all.
@@ -111,9 +111,9 @@ class SendNotificationsDigestCommand extends Command {
 		foreach ( $recipients as $recipient ) {
 			// Le rythme hebdomadaire se joue ici : rien n'est marqué comme
 			// envoyé, les notifications restent en attente jusqu'à lundi.
-			// Depuis #40 le rythme se lit sur chaque notification, si bien
+			// Depuis #38 le rythme se lit sur chaque notification, si bien
 			// qu'un même membre peut avoir du quotidien qui part aujourd'hui
-			// et de l'hebdomadaire qui attend. (#38, #40)
+			// et de l'hebdomadaire qui attend. (#38)
 			$notifications = $repository->findAwaitingDigestFor( $recipient, $day );
 
 			if ( empty( $notifications ) ) {

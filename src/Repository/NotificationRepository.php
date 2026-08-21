@@ -93,7 +93,7 @@ class NotificationRepository extends ServiceEntityRepository {
 	/**
 	 * Ce qui attend un résumé pour ce membre, et qui part ce jour-là.
 	 *
-	 * Depuis #40 le rythme est porté par la notification, pas par le membre :
+	 * Depuis #38 le rythme est porté par la notification, pas par le membre :
 	 * un lundi ramasse le quotidien et l'hebdomadaire dans le même e-mail, les
 	 * autres jours ne prennent que le quotidien. Le tri se fait ici plutôt
 	 * qu'en SQL — la règle du lundi vit dans NotificationRhythm, et une seule
