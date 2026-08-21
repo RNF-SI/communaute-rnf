@@ -286,28 +286,20 @@ class AppFixtures extends Fixture {
 				$user->addSkill( $skills[ $j ] );
 			}
 
-			$user->setPresentation( mb_substr( $faker->sentence( 3 ), 0, 32 ) );
+			$user->setPresentation( mb_substr( NetworkContent::pick( NetworkContent::PRESENTATIONS, $i ), 0, 32 ) );
 			$user->setCity( $faker->city() );
 
 			// Ce que l'annuaire montre d'abord : sans ces trois champs, les
 			// fiches se ressemblent toutes et on ne voit pas ce qu'ils
 			// apportent. (#30)
-			$user->setJobTitle( $faker->randomElement( [
-					'Conservateur de réserve naturelle',
-					'Conservatrice de réserve naturelle',
-					'Garde technicien',
-					'Chargée de mission scientifique',
-					'Animateur nature',
-					'Responsable de pôle',
-			] ) );
-			$user->setOrganisation( $faker->randomElement( [
-					'Conservatoire d\'espaces naturels',
-					'Parc naturel régional',
-					'Ligue pour la protection des oiseaux',
-					'Office national des forêts',
-					'Syndicat mixte de gestion',
-			] ) );
-			$user->setReserves( 'RN ' . $faker->city() );
+			$user->setJobTitle( NetworkContent::pick( NetworkContent::JOB_TITLES, $i ) );
+			$user->setOrganisation( NetworkContent::pick( NetworkContent::ORGANISATIONS, $i ) );
+
+			// Une personne sur trois suit deux réserves : c'est fréquent dans
+			// le réseau, et ça éprouve l'affichage d'une liste.
+			$user->setReserves( ( $i % 3 === 0 )
+					? NetworkContent::pick( NetworkContent::RESERVES, $i ) . ', ' . NetworkContent::pick( NetworkContent::RESERVES, $i + 7 )
+					: NetworkContent::pick( NetworkContent::RESERVES, $i ) );
 
 			// Un annuaire où tout le monde publie tout ne montre pas ce que
 			// le choix change. Un compte sur trois donne son téléphone, un
@@ -383,29 +375,37 @@ class AppFixtures extends Fixture {
 		 * CATEGORIES
 		 */
 		$categories = [];
-		for ( $i = 0; $i < 10; $i++ ) {
+		foreach ( NetworkContent::COMMISSIONS as $name => $description ) {
 			$category = new Category();
-			$category->setName( $faker->sentence( 2 ) );
-			$category->setDescription( $faker->sentence( 30 ) );
+			$category->setName( $name );
+			$category->setDescription( $description );
 
 			$manager->persist( $category );
-			$manager->flush();
 
-			$categories[] = $category;
+			$categories[ $name ] = $category;
 		}
+		$manager->flush();
 
 		/**
 		 * GROUPS
 		 */
 		$groups = [];
-		for ( $i = 0; $i < 20; $i++ ) {
+		foreach ( NetworkContent::GROUPS as $i => $definition ) {
 			$group = new Usergroup();
-			$group->setName( mb_convert_case( implode( ' ', $faker->words( rand( 1, 3 ) ) ), MB_CASE_TITLE ) );
+			$group->setName( $definition[ 'name' ] );
 
 			$group->setSlug( $this->slugGenerator->generateSlug( $group->getName(), Usergroup::class, 'slug' ) );
-			$group->setDescription( $faker->sentence( 30 ) );
-			$group->setPresentation( '<p>' . implode( '</p><p>', $faker->paragraphs( 10 ) ) . '</p>' );
-			$group->setVisibility( empty( rand( 0, 1 ) ) ? Usergroup::PRIVATE : Usergroup::PUBLIC );
+			$group->setDescription( $definition[ 'description' ] );
+			$group->setPresentation( NetworkContent::body( [
+					$definition[ 'description' ],
+					'Ce groupe est ouvert à toute personne du réseau que le sujet concerne, quelle que soit sa structure. Les échanges se font dans l’onglet Discussions ; ce qui doit rester accessible dans deux ans a sa place dans une page ou dans les documents.',
+					'Les documents de référence sont rangés par dossier et portent des étiquettes, ce qui permet de les retrouver depuis n’importe quel groupe.',
+			] ) );
+
+			// Un groupe sur quatre est privé : assez pour éprouver les
+			// demandes d'adhésion, assez peu pour qu'un visiteur non connecté
+			// voie tout de même de quoi se faire une idée.
+			$group->setVisibility( ( $i % 4 === 3 ) ? Usergroup::PRIVATE : Usergroup::PUBLIC );
 			$group->setCreatedAt( new \DateTime() );
 			$group->setIsActive(true);
 
@@ -423,8 +423,10 @@ class AppFixtures extends Fixture {
 			$manager->persist( $log );
 			$manager->flush();
 
-			for ( $j = 0, $n = rand( 1, 3 ); $j < $n; $j++ ) {
-				$group->addCategory( $categories[ rand( 0, count( $categories ) - 1 ) ] );
+			// La commission dont relève ce groupe, pas une au hasard : le
+			// filtre par commission doit ramener quelque chose de cohérent.
+			if ( isset( $categories[ $definition[ 'commission' ] ] ) ) {
+				$group->addCategory( $categories[ $definition[ 'commission' ] ] );
 			}
 
 			$groupUsers = [];
@@ -453,14 +455,16 @@ class AppFixtures extends Fixture {
 				}
 			}
 
-			for ( $j = 0, $n = rand( 3, 10 ); $j < $n; $j++ ) {
+			for ( $j = 0, $n = rand( 2, 4 ); $j < $n; $j++ ) {
+				$definitionPage = NetworkContent::pick( NetworkContent::PAGES, $i + $j );
+
 				$page = new Page();
-				$page->setTitle( $faker->sentence( rand( 3, 10 ) ) );
-				$page->setSlug( $this->slugGenerator->generateSlug( $page->getTitle() ) );
+				$page->setTitle( $definitionPage[ 'title' ] );
+				$page->setSlug( $this->slugGenerator->generateSlug( $page->getTitle(), Page::class, 'slug' ) );
 
 				$page->setUsergroup( $group );
 				$page->setAuthor( $users[ rand( 0, count( $users ) - 1 ) ] );
-				$page->setBody( '<p>' . implode( '</p><p>', $faker->paragraphs( rand( 3, 10 ), FALSE ) ) . '</p>' );
+				$page->setBody( NetworkContent::body( $definitionPage[ 'body' ] ) );
 
 				$page->setCreatedAt( new \DateTime() );
 
@@ -486,12 +490,13 @@ class AppFixtures extends Fixture {
 			/**
 			 * DISCUSSIONS
 			 */
-			for ( $j = 0, $n = rand( 2, 5 ); $j < $n; $j++ ) {
+			for ( $j = 0, $n = rand( 2, 4 ); $j < $n; $j++ ) {
 				$openedAt = $faker->dateTimeBetween( '-1 year', '-1 month' );
+				$thread   = NetworkContent::pick( NetworkContent::DISCUSSIONS, ( $i * 3 ) + $j );
 
 				$discussion = new Discussion();
 				$discussion->setUuid( Uuid::uuid4() );
-				$discussion->setTitle( mb_substr( $faker->sentence( rand( 3, 8 ) ), 0, 100 ) );
+				$discussion->setTitle( mb_substr( $thread[ 'title' ], 0, 100 ) );
 				$discussion->setUsergroup( $group );
 				$discussion->setAuthor( $members[ array_rand( $members ) ] );
 				$discussion->setCreatedAt( $openedAt );
@@ -500,13 +505,15 @@ class AppFixtures extends Fixture {
 
 				$lastMessageAt = $openedAt;
 
-				for ( $k = 0, $messages = rand( 1, 8 ); $k < $messages; $k++ ) {
+				// Une question, puis les réponses des collègues : les auteurs
+				// tournent, sans quoi on croirait à un monologue.
+				foreach ( $thread[ 'messages' ] as $k => $written ) {
 					$lastMessageAt = $faker->dateTimeBetween( $lastMessageAt, 'now' );
 
 					$message = new DiscussionMessage();
 					$message->setDiscussion( $discussion );
-					$message->setAuthor( $members[ array_rand( $members ) ] );
-					$message->setBody( '<p>' . implode( '</p><p>', $faker->paragraphs( rand( 1, 3 ), FALSE ) ) . '</p>' );
+					$message->setAuthor( $members[ ( $j + $k ) % count( $members ) ] );
+					$message->setBody( '<p>' . $written . '</p>' );
 					$message->setCreatedAt( $lastMessageAt );
 
 					$manager->persist( $message );
@@ -524,13 +531,15 @@ class AppFixtures extends Fixture {
 			/**
 			 * ARTICLES
 			 */
-			for ( $j = 0, $n = rand( 1, 4 ); $j < $n; $j++ ) {
+			for ( $j = 0, $n = rand( 1, 3 ); $j < $n; $j++ ) {
+				$news = NetworkContent::pick( NetworkContent::ARTICLES, ( $i * 2 ) + $j );
+
 				$article = new Article();
-				$article->setTitle( mb_substr( $faker->sentence( rand( 3, 8 ) ), 0, 100 ) );
+				$article->setTitle( mb_substr( $news[ 'title' ], 0, 100 ) );
 				$article->setSlug( $this->slugGenerator->generateSlug( $article->getTitle(), Article::class, 'slug' ) );
 				$article->setUsergroup( $group );
 				$article->setAuthor( $members[ array_rand( $members ) ] );
-				$article->setBody( '<p>' . implode( '</p><p>', $faker->paragraphs( rand( 3, 8 ), FALSE ) ) . '</p>' );
+				$article->setBody( NetworkContent::body( $news[ 'body' ] ) );
 				$article->setCreatedAt( $faker->dateTimeBetween( '-1 year', 'now' ) );
 
 				$manager->persist( $article );
@@ -544,9 +553,32 @@ class AppFixtures extends Fixture {
 			 * Titles and descriptions are enough to try out the listings, the
 			 * search and the descriptions of #7.
 			 */
-			for ( $j = 0, $n = rand( 3, 10 ); $j < $n; $j++ ) {
+			// Deux dossiers par groupe, pour que la liste ne soit pas un tas.
+			$folders = [];
+
+			foreach ( [ 0, 1 ] as $rank ) {
+				$folder = new DocumentFolder();
+				$folder->setUsergroup( $group );
+				$folder->setTitle( NetworkContent::pick( NetworkContent::FOLDERS, $i + $rank ) );
+
+				$manager->persist( $folder );
+
+				$folders[] = $folder;
+			}
+
+			$manager->flush();
+
+			for ( $j = 0, $n = rand( 4, 8 ); $j < $n; $j++ ) {
+				$reference = NetworkContent::pick( NetworkContent::DOCUMENTS, ( $i * 5 ) + $j );
+
 				$document = new Document();
-				$document->setTitle( mb_substr( $faker->sentence( rand( 2, 6 ) ), 0, 100 ) );
+				$document->setTitle( mb_substr( $reference[ 'title' ], 0, 100 ) );
+
+				// Une partie seulement est rangée : un dossier vaut mieux
+				// qu'aucun, mais tout ranger ne ressemble à aucune réalité.
+				if ( $j % 3 !== 2 ) {
+					$document->setFolder( $folders[ $j % count( $folders ) ] );
+				}
 
 				// Une partie des documents est étiquetée : un filtre dont tout
 				// répond ne se voit pas plus qu'un filtre dont rien ne répond.
@@ -563,8 +595,8 @@ class AppFixtures extends Fixture {
 
 				// Not every document is described, that is the point of the
 				// field being optional.
-				if ( rand( 0, 2 ) > 0 ) {
-					$document->setDescription( $faker->sentence( rand( 8, 20 ) ) );
+				if ( $j % 4 !== 3 ) {
+					$document->setDescription( $reference[ 'description' ] );
 				}
 
 				$manager->persist( $document );
@@ -753,9 +785,9 @@ class AppFixtures extends Fixture {
 		// d'avance, on ne voit ni le lien vers l'annuaire ni la notification
 		// qu'elle déclenche. (#37)
 		$bodies = [
-				'<p>' . $faker->sentence( 12 ) . '</p>',
-				'<p>@' . $member->getName() . ' peux-tu regarder ce point ?</p>',
-				'<p>' . $faker->sentence( 12 ) . '</p>',
+				'<p>Bonjour à tous,</p><p>Nous préparons la rencontre annuelle et il nous manque deux retours d’expérience pour boucler le programme. Si vous avez mené un chantier qui n’a pas donné ce que vous attendiez, c’est exactement ce qui intéresse les collègues.</p>',
+				'<p>@' . $member->getName() . ' peux-tu regarder ce point ? Tu avais suivi le dossier l’an dernier.</p>',
+				'<p>Je peux présenter notre chantier de restauration de mare : trois ans, deux échecs, et ce qu’on a fini par comprendre. Une demi-heure suffirait.</p>',
 		];
 
 		foreach ( [ $referent, $referent, $member ] as $index => $author ) {
@@ -820,7 +852,10 @@ class AppFixtures extends Fixture {
 		$important->setSlug( $this->slugGenerator->generateSlug( 'Page importante de test ' . $group->getSlug() ) );
 		$important->setUsergroup( $group );
 		$important->setAuthor( $referent );
-		$important->setBody( '<p>' . $faker->sentence( 12 ) . '</p>' );
+		$important->setBody( NetworkContent::body( [
+				'Cette page rassemble ce qu’il faut savoir avant de participer aux échanges du groupe : à qui s’adresser, où déposer un document, et ce qui relève d’une discussion plutôt que d’une page.',
+				'Elle est mise en avant par les animateurs, ce qui la place en tête de la liste des pages. C’est le moyen de faire ressortir l’information qui compte au milieu des autres.',
+		] ) );
 		$important->setCreatedAt( new \DateTime() );
 		$important->setIsImportant( TRUE );
 		$manager->persist( $important );
@@ -830,7 +865,7 @@ class AppFixtures extends Fixture {
 		$page->setSlug( $this->slugGenerator->generateSlug( 'Page de test ' . $group->getSlug() ) );
 		$page->setUsergroup( $group );
 		$page->setAuthor( $referent );
-		$page->setBody( '<p>' . implode( '</p><p>', $faker->paragraphs( 3, FALSE ) ) . '</p>' );
+		$page->setBody( NetworkContent::body( NetworkContent::pick( NetworkContent::PAGES, 1 )[ 'body' ] ) );
 		$page->setCreatedAt( new \DateTime() );
 		$manager->persist( $page );
 
@@ -842,7 +877,10 @@ class AppFixtures extends Fixture {
 		$deMembre->setSlug( $this->slugGenerator->generateSlug( 'Page redigee par un membre ' . $group->getSlug() ) );
 		$deMembre->setUsergroup( $group );
 		$deMembre->setAuthor( $member );
-		$deMembre->setBody( '<p>' . $faker->sentence( 12 ) . '</p>' );
+		$deMembre->setBody( NetworkContent::body( [
+				'Je note ici ce que j’ai retenu de la formation de la semaine dernière, tant que c’est frais.',
+				'Le point qui m’a le plus servi : commencer par écrire ce qu’on veut pouvoir dire dans dix ans, et seulement ensuite choisir le protocole. Nous faisions l’inverse.',
+		] ) );
 		$deMembre->setCreatedAt( new \DateTime() );
 		$manager->persist( $deMembre );
 
@@ -851,7 +889,7 @@ class AppFixtures extends Fixture {
 		$article->setSlug( $this->slugGenerator->generateSlug( 'Actualite de test ' . $group->getSlug(), Article::class, 'slug' ) );
 		$article->setUsergroup( $group );
 		$article->setAuthor( $referent );
-		$article->setBody( '<p>' . implode( '</p><p>', $faker->paragraphs( 3, FALSE ) ) . '</p>' );
+		$article->setBody( NetworkContent::body( NetworkContent::pick( NetworkContent::ARTICLES, 0 )[ 'body' ] ) );
 		$article->setCreatedAt( new \DateTime() );
 		$manager->persist( $article );
 
@@ -913,7 +951,7 @@ class AppFixtures extends Fixture {
 
 		$page->setBody( sprintf(
 				'<p>%s</p><p>Le détail se trouve dans <a href="%s">%s</a>.</p>',
-				$faker->sentence( 12 ),
+				'Le compte rendu de la dernière réunion est en ligne, avec les décisions prises et les points laissés ouverts.',
 				$lien,
 				$classe->getTitle()
 		) );

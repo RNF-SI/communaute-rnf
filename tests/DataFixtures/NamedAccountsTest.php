@@ -3,6 +3,7 @@
 namespace App\Tests\DataFixtures;
 
 use App\DataFixtures\AppFixtures;
+use App\DataFixtures\NetworkContent;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
@@ -145,6 +146,78 @@ class NamedAccountsTest extends TestCase {
 				$fromSso,
 				'Assert a plain local account is seeded too, the one that still writes its own profile'
 		);
+	}
+
+	/**
+	 * Le contenu inventé se relit ; le faux latin se contente de remplir. Une
+	 * plateforme d'essai remplie de « Aut quia rerum » permet de vérifier
+	 * qu'un titre s'affiche, pas de comprendre à quoi elle sert — et une
+	 * recette faite là-dessus ne ressemble à rien de ce que le réseau verra.
+	 */
+	public function testTheFixturesGenerateNoLoremIpsum () {
+		$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/src/DataFixtures/AppFixtures.php' );
+
+		foreach ( [ 'faker->sentence', 'faker->paragraphs', 'faker->words', 'faker->text' ] as $call ) {
+			$this->assertStringNotContainsString(
+					$call,
+					$source,
+					sprintf( 'Assert "%s" is not back: content comes from NetworkContent', $call )
+			);
+		}
+	}
+
+	public function testEveryGroupBelongsToACommissionThatExists () {
+		foreach ( NetworkContent::GROUPS as $group ) {
+			$this->assertArrayHasKey(
+					$group[ 'commission' ],
+					NetworkContent::COMMISSIONS,
+					sprintf( 'Assert the commission filter finds something coherent for "%s"', $group[ 'name' ] )
+			);
+		}
+	}
+
+	public function testTheContentFitsInItsColumns () {
+		foreach ( [ NetworkContent::PAGES, NetworkContent::ARTICLES, NetworkContent::DOCUMENTS, NetworkContent::DISCUSSIONS ] as $list ) {
+			foreach ( $list as $entry ) {
+				$this->assertLessThanOrEqual(
+						100,
+						mb_strlen( $entry[ 'title' ] ),
+						sprintf( 'Assert "%s" is not silently truncated on save', $entry[ 'title' ] )
+				);
+			}
+		}
+
+		foreach ( NetworkContent::PRESENTATIONS as $presentation ) {
+			$this->assertLessThanOrEqual( 32, mb_strlen( $presentation ) );
+		}
+	}
+
+	public function testADiscussionReadsAsAConversation () {
+		$withAnswers = 0;
+
+		foreach ( NetworkContent::DISCUSSIONS as $thread ) {
+			$this->assertNotEmpty( $thread[ 'messages' ], sprintf( '"%s" has nothing in it', $thread[ 'title' ] ) );
+
+			if ( count( $thread[ 'messages' ] ) > 1 ) {
+				$withAnswers++;
+			}
+		}
+
+		$this->assertGreaterThan(
+				count( NetworkContent::DISCUSSIONS ) / 2,
+				$withAnswers,
+				'Assert most threads carry answers: a wall of unanswered questions teaches nothing'
+		);
+	}
+
+	public function testTheContentCyclesWithoutRunningOut () {
+		foreach ( [ 0, 1, 17, 99, 1000 ] as $index ) {
+			$this->assertArrayHasKey(
+					'name',
+					NetworkContent::pick( NetworkContent::GROUPS, $index ),
+					'Assert walking past the end of a list starts over rather than failing'
+			);
+		}
 	}
 
 	public function testTheJobFieldsStayWithinTheColumnWidths () {
