@@ -17,6 +17,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\File;
+use Symfony\Component\Validator\Constraints\NotNull;
 
 class DocumentType extends AbstractType {
 	private $fileManager;
@@ -41,23 +42,34 @@ class DocumentType extends AbstractType {
 		 */
 		$document = $builder->getData();
 
+		// Un document sans fichier n'a pas de raison d'être : au dépôt, le
+		// fichier est exigé. À la modification, son absence veut dire « garde
+		// celui qui est déjà là », et rien d'autre. (#40)
+		$fileConstraints = [
+				new File( [
+						'maxSize'          => $maxFileSize,
+						'mimeTypes'        => array_merge(
+								FileMimeManager::getMimes( FileMimeManager::DOCUMENTS ),
+								FileMimeManager::getMimes( FileMimeManager::PDF ),
+								FileMimeManager::getMimes( FileMimeManager::IMAGES ),
+								FileMimeManager::getMimes( FileMimeManager::ARCHIVES )
+								),
+						'mimeTypesMessage' => 'filetype_incorrect',
+				] ),
+		];
+
+		if ( $options[ 'require_file' ] ) {
+			// L'attribut HTML ne suffit pas : il ne tient que dans le
+			// navigateur, et une requête vidée par PHP n'en porte pas trace.
+			$fileConstraints[] = new NotNull( [ 'message' => 'file_required' ] );
+		}
+
 		$builder
 				->add( 'filefile', FileType::class, [
-						'required'    => FALSE,
+						'required'    => (bool) $options[ 'require_file' ],
 						'mapped'      => FALSE,
 						'attr'        => [ 'data-max-size' => $this->fileManager->formatSize( $maxFileSize ) ],
-						'constraints' => [
-								new File( [
-										'maxSize'          => $maxFileSize,
-										'mimeTypes'        => array_merge(
-												FileMimeManager::getMimes( FileMimeManager::DOCUMENTS ),
-												FileMimeManager::getMimes( FileMimeManager::PDF ),
-												FileMimeManager::getMimes( FileMimeManager::IMAGES ),
-												FileMimeManager::getMimes( FileMimeManager::ARCHIVES )
-										),
-										'mimeTypesMessage' => 'filetype_incorrect',
-								] ),
-						],
+						'constraints' => $fileConstraints,
 				] )
 				->add( 'folderTitle', TextType::class, [
 						// Le chemin complet, pour qu'un sous-dossier soit
@@ -101,9 +113,11 @@ class DocumentType extends AbstractType {
 	 */
 	public function configureOptions ( OptionsResolver $resolver ) {
 		$resolver->setDefaults( [
-				'attr'       => [],
-				'data_class' => Document::class,
-				'folders'    => '',
+				'attr'         => [],
+				'data_class'   => Document::class,
+				'folders'      => '',
+				'require_file' => FALSE,
 		] );
+		$resolver->setAllowedTypes( 'require_file', 'bool' );
 	}
 }

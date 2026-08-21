@@ -169,6 +169,25 @@ php bin/console search:reindex:all
 - **Renseigner `RNF_EXPORT_TOKEN`** si l'on veut que les réserves suivies
   viennent de GeoNature (#28). Sans jeton, le champ reste saisi à la main.
 
+### Compter les documents restés sans fichier
+
+Le dépôt exigeait le fichier trop tard : le document était enregistré avant, et
+un envoi refusé par le serveur — trop lourd — laissait une entrée vide qui
+faisait ensuite tomber la page des documents du groupe (#6, #40). Le dépôt
+refuse désormais, mais les entrées déjà créées sont toujours là :
+
+```sql
+SELECT d.id, d.title, g.name AS groupe, d.created_at
+FROM communaute_rnf_document d
+LEFT JOIN communaute_rnf_usergroups g ON g.id = d.usergroup_id
+WHERE d.file_id IS NULL
+ORDER BY d.created_at DESC;
+```
+
+Ne rien supprimer sans regarder : le titre et la description ont été écrits par
+quelqu'un, et disent parfois ce que le fichier devait être. Le plus honnête est
+de prévenir le groupe, puis de retirer ce que personne ne réclame.
+
 ### Avant de supprimer la colonne `bio`
 
 Elle est retirée du profil et de la fiche annuaire (#30) mais reste en base :

@@ -163,6 +163,9 @@ Aller dans **Groupe de test**.
 | Deux étiquettes cochées | Les documents portant **l'une ou l'autre** remontent |
 | Déposer un document | Description et étiquettes proposées ; la description apparaît dans la liste (#7) |
 | Déposer un fichier de plus de 10 Mo | Accepté (#25) |
+| Valider le dépôt **sans choisir de fichier** | Refusé, avec l'explication sous le champ ; aucune ligne n'apparaît dans la liste (#40) |
+| Déposer un fichier de **plus de 50 Mo** | Refusé avec un message en haut de page — pas une page vierge, pas un document vide (#40) |
+| Modifier un document sans redéposer son fichier | Accepté : le fichier reste celui d'avant (#40) |
 
 ---
 

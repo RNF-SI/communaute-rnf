@@ -717,6 +717,7 @@ messages:
         document_created: "The document has been added"
         document_updated: "The document has been updated"
         document_deleted: "The document has been deleted"
+        upload_discarded: "Your upload exceeded the size the server accepts (%size%): it was refused before arriving, and nothing was saved. Pick a lighter file, or store it elsewhere and give the link in the description."
         tag_created: "The tag has been added"
         tag_deleted: "The tag has been removed, and with it the classification of the documents carrying it"
         tag_exists: "This tag already exists"

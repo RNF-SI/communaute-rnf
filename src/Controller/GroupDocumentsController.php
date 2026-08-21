@@ -28,6 +28,7 @@ use Symfony\Component\Form\Extension\Core\Type\SearchType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class GroupDocumentsController extends AbstractController {
 	/**
@@ -253,7 +254,8 @@ class GroupDocumentsController extends AbstractController {
             EntityManagerInterface $manager,
 			FileManager $fileManager,
 			NotificationSender $notificationSender,
-			DocumentFolderResolver $folderResolver
+			DocumentFolderResolver $folderResolver,
+			TranslatorInterface $translator
 	) {
 		/**
 		 * @var $group \App\Entity\Usergroup
@@ -276,7 +278,20 @@ class GroupDocumentsController extends AbstractController {
 								   ->findForGroup( $group );
 
 		$document = new Document();
-		$form     = $this->createForm( DocumentType::class, $document, [ 'folders' => $existingFolders ] );
+		$form     = $this->createForm( DocumentType::class, $document, [
+				'folders'      => $existingFolders,
+				'require_file' => TRUE,
+		] );
+
+		// Un fichier trop lourd pour `post_max_size` fait jeter la requête
+		// entière par PHP : le formulaire ne se voit pas soumis et se
+		// réafficherait vierge, sans un mot. (#40)
+		if ( $fileManager->requestWasDiscarded( $request ) ) {
+			$this->addFlash( 'error', $translator->trans( 'messages.document.upload_discarded', [
+					'%size%' => $fileManager->formatSize( $fileManager->fileUploadMaxSize( '50M' ) ),
+			] ) );
+		}
+
 		$form->handleRequest( $request );
 
 		if ( $form->isSubmitted() && $form->isValid() ) {
@@ -358,7 +373,8 @@ class GroupDocumentsController extends AbstractController {
 			Request $request,
             EntityManagerInterface $manager,
 			FileManager $fileManager,
-			DocumentFolderResolver $folderResolver
+			DocumentFolderResolver $folderResolver,
+			TranslatorInterface $translator
 	) {
 		/**
 		 * @var  \App\Entity\Usergroup $group
@@ -395,6 +411,15 @@ class GroupDocumentsController extends AbstractController {
 								   ->findForGroup( $group );
 
 		$form = $this->createForm( DocumentType::class, $document, [ 'folders' => $existingFolders ] );
+
+		// Ici aussi, un fichier trop lourd emporte toute la modification sans
+		// rien dire — description et étiquettes comprises. (#40)
+		if ( $fileManager->requestWasDiscarded( $request ) ) {
+			$this->addFlash( 'error', $translator->trans( 'messages.document.upload_discarded', [
+					'%size%' => $fileManager->formatSize( $fileManager->fileUploadMaxSize( '50M' ) ),
+			] ) );
+		}
+
 		$form->handleRequest( $request );
 
 		if ( $form->isSubmitted() && $form->isValid() ) {

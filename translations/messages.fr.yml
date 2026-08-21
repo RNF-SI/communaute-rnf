@@ -909,6 +909,7 @@ messages:
         document_created: "Le document a été ajouté"
         document_updated: "Le document a été mis à jour"
         document_deleted: "Le document a été supprimé"
+        upload_discarded: "Votre envoi a dépassé la taille acceptée par le serveur (%size%) : il a été refusé avant d’arriver, et rien n’a été enregistré. Choisissez un fichier plus léger, ou déposez-le ailleurs et donnez le lien dans la description."
         tag_created: "L’étiquette a été ajoutée"
         tag_deleted: "L’étiquette a été retirée, et avec elle le classement des documents qui la portaient"
         tag_exists: "Cette étiquette existe déjà"

@@ -1,2 +1,3 @@
 # validators.fr.yaml
 filetype_incorrect: "Type de fichier incorrect"
+file_required: "Choisissez un fichier : un document sans fichier ne servirait à personne."

@@ -5,7 +5,9 @@
 		{{ form_label(form.filefile, 'forms.document.file.label') }}
 		<div class="hint">{{ 'forms.document.file.hint'|trans|format(form.filefile.vars.attr['data-max-size']) }}</div>
 		{{ form_widget(form.filefile, { 'attr': {'data-prefill': '#document_title'} }) }}
-		{{ form_label(form.filefile, 'forms.document.file.button', {'label_attr': {'class': 'submit-style submit-style__inverted'}}) }}
+		{# Le même label sert de bouton « Parcourir » : l'astérisque des champs
+		   obligatoires n'a rien à y faire. (#40) #}
+		{{ form_label(form.filefile, 'forms.document.file.button', {'required': false, 'label_attr': {'class': 'submit-style submit-style__inverted'}}) }}
 		<div class="form_errors">{{ form_errors(form.filefile) }}</div>
 	</div>
 	<div class="columns__66-33">

@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\File;
 use Liip\ImagineBundle\Imagine\Cache\CacheManager;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
@@ -83,6 +84,30 @@ class FileManager {
 		$bytes /= pow( 1024, $pow );
 
 		return round( $bytes, $precision ) . ' ' . $units[ $pow ];
+	}
+
+	/**
+	 * PHP jette le corps d'une requête qui dépasse `post_max_size`, avant que
+	 * Symfony la voie : $_POST et $_FILES arrivent vides alors que le
+	 * navigateur a bien envoyé quelque chose. Le formulaire ne se croit donc
+	 * pas soumis, la page se réaffiche vierge, et rien n'est dit — c'est ce
+	 * qui laissait déposer un document sans fichier. (#40)
+	 *
+	 * @param \Symfony\Component\HttpFoundation\Request $request
+	 *
+	 * @return bool
+	 */
+	public function requestWasDiscarded ( Request $request ): bool {
+		if ( !$request->isMethod( 'POST' ) ) {
+			return FALSE;
+		}
+
+		// Un POST qui a porté quelque chose jusqu'ici n'a pas été jeté.
+		if ( ( $request->request->count() > 0 ) || ( $request->files->count() > 0 ) ) {
+			return FALSE;
+		}
+
+		return (int) $request->server->get( 'CONTENT_LENGTH', 0 ) > 0;
 	}
 
 	/**
