@@ -40,10 +40,22 @@ canal**, et le canal change selon l'environnement.
 
 Ce qui se joue derrière :
 
-- En **production**, deux transports coexistent avec **deux jetons Postmark
-  différents**. L'un peut fonctionner pendant que l'autre est muet — c'est
-  exactement ce qui s'est produit dans #4, où les e-mails de discussion
-  arrivaient alors que les demandes d'adhésion ne partaient pas.
+- En **production**, deux transports coexistent, chacun avec **son jeton**.
+  L'un peut fonctionner pendant que l'autre est muet — c'est exactement ce qui
+  s'est produit dans #4, où les e-mails de discussion arrivaient alors que les
+  demandes d'adhésion ne partaient pas.
+
+  ⚠️ **`POSTMARK_BULK_TOKEN` est un jeton de *serveur* Postmark, comme
+  `POSTMARK_SERVER_TOKEN`** — pas un jeton d'un autre type qu'il faudrait aller
+  chercher ailleurs. `BulkTransport` l'envoie dans l'en-tête
+  `X-Postmark-Server-Token`, et choisit le flux par
+  `X-PM-Message-Stream: broadcast`.
+
+  **Les deux variables peuvent donc porter la même valeur**, dès lors que le
+  serveur Postmark a un flux *Broadcast* — c'est le cas par défaut de tout
+  serveur. Deux serveurs distincts se justifient si l'on veut isoler la
+  réputation des envois de masse de celle des e-mails transactionnels ; sur une
+  préproduction, le même jeton suffit et évite un aller-retour.
 - En **dev et en test**, `postmark_bulk` est remplacé par
   `App\Postmark\LocalBulkTransport` (voir `config/services_dev.yaml` et
   `config/services_test.yaml`), qui remet les messages au mailer configuré. Sans
