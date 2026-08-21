@@ -2,8 +2,10 @@
 
 namespace App\Controller;
 
+use App\Entity\Category;
 use App\Entity\DocumentTag;
 use App\Form\AdminPlatformType;
+use App\Form\CategoryType;
 use App\Form\DocumentTagType;
 use App\Form\AdminHomeType;
 use App\Form\AdminGroupsType;
@@ -369,6 +371,109 @@ class AdminController extends AbstractController {
 		$this->addFlash( 'notice', 'messages.document.tag_deleted' );
 
 		return $this->redirectToRoute( 'administration_document_tags' );
+	}
+
+	/**
+	 * Le vocabulaire des thématiques de groupe : le créer, en retirer une
+	 * entrée. (#23)
+	 *
+	 * Même forme que les étiquettes de documents, et pour la même raison :
+	 * saisies librement à la création d'un groupe, les thématiques se
+	 * dédoubleraient en synonymes et le filtre cesserait de trier quoi que ce
+	 * soit.
+	 *
+	 * @Route("/administration/group-categories", name="administration_group_categories")
+	 *
+	 * @param \Symfony\Component\HttpFoundation\Request $request
+	 * @param \Doctrine\ORM\EntityManagerInterface      $manager
+	 * @param \App\Service\SlugGenerator               $slugGenerator
+	 *
+	 * @return \Symfony\Component\HttpFoundation\Response
+	 */
+	public function adminGroupCategories (
+			Request $request,
+			EntityManagerInterface $manager,
+			SlugGenerator $slugGenerator
+	) {
+		$communauteGroup = $manager->getRepository( Usergroup::class )
+								   ->findOneBy( [ 'slug' => 'communaute' ] );
+
+		$this->denyAccessUnlessGranted( GroupVoter::ADMIN, $communauteGroup );
+
+		$repository = $manager->getRepository( Category::class );
+
+		$form = $this->createForm( CategoryType::class );
+		$form->handleRequest( $request );
+
+		if ( $form->isSubmitted() && $form->isValid() ) {
+			$name = trim( (string) $form->get( 'name' )->getData() );
+			$slug = SlugGenerator::slugify( $name );
+
+			if ( $name === '' ) {
+				$this->addFlash( 'warning', 'messages.group.category_empty' );
+			}
+			elseif ( $repository->findOneBy( [ 'slug' => $slug ] ) ) {
+				$this->addFlash( 'warning', 'messages.group.category_exists' );
+			}
+			else {
+				$category = new Category();
+				$category->setName( $name );
+				$category->setSlug( $slugGenerator->generateSlug( $name, Category::class ) );
+
+				$manager->persist( $category );
+				$manager->flush();
+
+				$this->addFlash( 'notice', 'messages.group.category_created' );
+			}
+
+			return $this->redirectToRoute( 'administration_group_categories' );
+		}
+
+		return $this->render( 'pages/user/admin-edit.html.twig', [
+				'tab'        => 'group-categories',
+				'form'       => $form->createView(),
+				'categories' => $repository->findBy( [], [ 'name' => 'ASC' ] ),
+		] );
+	}
+
+	/**
+	 * Retirer une thématique. Les groupes qui la portaient la perdent : ce qui
+	 * n'est plus dans le vocabulaire ne classe plus rien. (#23)
+	 *
+	 * @Route("/administration/group-categories/{categoryId}/delete", name="administration_group_category_delete", methods={"POST"})
+	 *
+	 * @param                                            $categoryId
+	 * @param \Symfony\Component\HttpFoundation\Request $request
+	 * @param \Doctrine\ORM\EntityManagerInterface      $manager
+	 *
+	 * @return \Symfony\Component\HttpFoundation\Response
+	 */
+	public function adminGroupCategoryDelete (
+			$categoryId,
+			Request $request,
+			EntityManagerInterface $manager
+	) {
+		$communauteGroup = $manager->getRepository( Usergroup::class )
+								   ->findOneBy( [ 'slug' => 'communaute' ] );
+
+		$this->denyAccessUnlessGranted( GroupVoter::ADMIN, $communauteGroup );
+
+		if ( !$this->isCsrfTokenValid( 'delete-group-category', $request->request->get( '_token' ) ) ) {
+			throw $this->createAccessDeniedException( 'Invalid token' );
+		}
+
+		$category = $manager->getRepository( Category::class )->find( $categoryId );
+
+		if ( !$category ) {
+			throw $this->createNotFoundException( 'The category does not exist' );
+		}
+
+		$manager->remove( $category );
+		$manager->flush();
+
+		$this->addFlash( 'notice', 'messages.group.category_deleted' );
+
+		return $this->redirectToRoute( 'administration_group_categories' );
 	}
 
 	public function adminAdministratorsEdit (

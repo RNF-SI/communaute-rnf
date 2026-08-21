@@ -140,6 +140,9 @@ forms:
             label: "Présentation"
             hint: "Présentez votre groupe. La présentation sera affichée sur la page du groupe."
             placeholder: "Présentation du groupe, ses objectifs…"
+        categories:
+            label: "Thématiques"
+            hint: "De quoi ce groupe parle. Choisissez dans la liste tenue par les administrateurs ; un groupe peut relever de plusieurs thématiques. La commission dit de qui le groupe dépend, la thématique de quoi il traite."
         parents:
             label: "Groupes parents"
             hint: "Sélectionnez les groupes parents de ce groupe (visible aux administrateurs uniquement)"
@@ -214,6 +217,14 @@ forms:
             button: "Ajouter l’étiquette"
             empty: "Aucune étiquette pour l’instant. Tant que la liste est vide, aucun filtre n’est proposé sur les documents."
             used: "%count% document(s)"
+        group_categories:
+            name: "Thématiques des groupes"
+            introduction: "Ces thématiques servent à trier la liste des groupes, à côté de la commission dont ils dépendent. La liste est volontairement fermée : chacun y choisit, personne n’y ajoute au passage, pour qu’une même notion ne finisse pas écrite de trois façons."
+            label: "Nouvelle thématique"
+            placeholder: "Exemple : Gestion des milieux"
+            button: "Ajouter la thématique"
+            empty: "Aucune thématique pour l’instant. Tant que la liste est vide, le champ n’apparaît pas sur les groupes et aucun filtre n’est proposé."
+            used: "%count% groupe(s)"
         platform:
             name: "Plateforme"
             introduction: "Ici vous pouvez modifier les paramètres principaux de la plateforme"
@@ -469,6 +480,8 @@ pages:
             filter:
                 label: "Filtrer par commission"
                 all: "Toutes les commissions"
+                theme_label: "Filtrer par thématique"
+                theme_all: "Toutes les thématiques"
                 submit: "Filtrer"
             list:
                 all: "Groupes"
@@ -685,7 +698,7 @@ pages:
                 body: "Votre profil, vos groupes, vos discussions, vos notifications et vos réglages : tout ce qui vous concerne s’ouvre depuis ce menu, sur n’importe quelle page."
             groups:
                 title: "Les groupes du réseau"
-                body: "Un groupe par commission, par thématique ou par atelier. Les groupes publics se rejoignent d’un clic ; les groupes privés demandent l’accord d’un animateur."
+                body: "Un groupe par commission, par thématique ou par atelier. Deux listes, au-dessus, réduisent l’affichage : la commission dont un groupe dépend, et la thématique dont il traite. Les groupes publics se rejoignent d’un clic ; les groupes privés demandent l’accord d’un animateur."
                 link: "Voir tous les groupes"
             groups_graph:
                 title: "Les groupes vus comme un réseau"
@@ -777,6 +790,10 @@ pages:
                 title: "Étiquettes"
                 name: "Étiquettes"
                 introduction: "Tenez la liste des étiquettes qui classent les documents"
+            group_categories:
+                title: "Thématiques"
+                name: "Thématiques"
+                introduction: "Tenez la liste des thématiques qui trient les groupes"
             admin:
                 title: "Administrateurs"
                 name: "Administrateurs"
@@ -874,6 +891,10 @@ messages:
         group_activated: "Le groupe a été activé"
         group_updated: "Les informations du groupe ont été mises à jour"
         group_deleted: "Le groupe a été supprimé"
+        category_created: "La thématique a été ajoutée"
+        category_deleted: "La thématique a été retirée, et avec elle le classement des groupes qui la portaient"
+        category_exists: "Cette thématique existe déjà"
+        category_empty: "Le nom de la thématique ne peut pas être vide"
 
     page:
         page_created: "La page a été créée"

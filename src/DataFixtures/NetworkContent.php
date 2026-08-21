@@ -19,8 +19,9 @@ namespace App\DataFixtures;
  */
 final class NetworkContent {
 	/**
-	 * Les thématiques qui structurent le réseau. Servent de catégories, donc
-	 * de filtre sur la liste des groupes.
+	 * Les commissions qui structurent le réseau : elles chapeautent les
+	 * groupes de travail, et forment la hiérarchie sur laquelle porte le
+	 * premier filtre de la liste des groupes.
 	 *
 	 * @var array<string, string> nom => description
 	 */
@@ -34,6 +35,26 @@ final class NetworkContent {
 			'Commission forêt'                 => 'Réserves forestières, îlots de sénescence, dendromicrohabitats, sylviculture et libre évolution.',
 			'Commission police de la nature'   => 'Missions de police, commissionnement des agents, relations avec l’OFB et les parquets.',
 			'Commission communication'         => 'Communication du réseau, éditions, réseaux sociaux, relations presse.',
+	];
+
+	/**
+	 * Les thématiques : de quoi un groupe parle, indépendamment de la
+	 * commission dont il relève. (#23)
+	 *
+	 * Elles traversent délibérément la hiérarchie — « Espèces exotiques
+	 * envahissantes » intéresse la commission scientifique comme celle de
+	 * l'agriculture — sans quoi le second filtre ne ferait que répéter le
+	 * premier, et il n'y aurait aucune raison de l'avoir.
+	 *
+	 * @var array<string, string> nom => description
+	 */
+	public const THEMES = [
+			'Suivis et protocoles'    => 'Protocoles naturalistes, bancarisation, analyse et valorisation des données.',
+			'Gestion des milieux'     => 'Fauche, pâturage, restauration hydraulique, libre évolution : ce que l’on fait sur le terrain.',
+			'Espèces envahissantes'   => 'Veille, chantiers de lutte, retours d’expérience.',
+			'Accueil du public'       => 'Sentiers, signalétique, médiation, conciliation des usages.',
+			'Changement climatique'   => 'Adaptation des plans de gestion, suivis phénologiques, méthodologie Natur’Adapt.',
+			'Réglementation et police' => 'Textes, commissionnement, relations avec l’OFB et les parquets.',
 	];
 
 	/**

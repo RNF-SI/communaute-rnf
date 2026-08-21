@@ -373,11 +373,17 @@ class AppFixtures extends Fixture {
 
 		/**
 		 * CATEGORIES
+		 *
+		 * Les thématiques, et non plus les commissions : une catégorie qui
+		 * répète la commission ne trie rien de plus que la hiérarchie, et le
+		 * second filtre de la liste des groupes n'aurait aucune raison
+		 * d'exister. (#23)
 		 */
 		$categories = [];
-		foreach ( NetworkContent::COMMISSIONS as $name => $description ) {
+		foreach ( NetworkContent::THEMES as $name => $description ) {
 			$category = new Category();
 			$category->setName( $name );
+			$category->setSlug( $this->slugGenerator->generateSlug( $name, Category::class, 'slug' ) );
 			$category->setDescription( $description );
 
 			$manager->persist( $category );
@@ -385,6 +391,8 @@ class AppFixtures extends Fixture {
 			$categories[ $name ] = $category;
 		}
 		$manager->flush();
+
+		$themes = array_values( $categories );
 
 		/**
 		 * GROUPS
@@ -423,10 +431,17 @@ class AppFixtures extends Fixture {
 			$manager->persist( $log );
 			$manager->flush();
 
-			// La commission dont relève ce groupe, pas une au hasard : le
-			// filtre par commission doit ramener quelque chose de cohérent.
-			if ( isset( $categories[ $definition[ 'commission' ] ] ) ) {
-				$group->addCategory( $categories[ $definition[ 'commission' ] ] );
+			// Une thématique par groupe, distribuée sans hasard pour que le
+			// filtre ramène toujours la même chose d'un chargement à l'autre.
+			// Un groupe sur trois en porte une seconde : c'est le cas qu'il
+			// faut pouvoir éprouver, un groupe qui relève de deux sujets sans
+			// pour autant changer de commission. (#23)
+			if ( !empty( $themes ) ) {
+				$group->addCategory( $themes[ $i % count( $themes ) ] );
+
+				if ( ( $i % 3 ) === 0 ) {
+					$group->addCategory( $themes[ ( $i + 2 ) % count( $themes ) ] );
+				}
 			}
 
 			$groupUsers = [];
@@ -836,13 +851,13 @@ class AppFixtures extends Fixture {
 			$manager->persist( $group );
 			$manager->flush();
 
-			// Les catégories sont indexées par nom de commission depuis que le
-			// contenu est celui du réseau : les groupes de référence relèvent
-			// de la première, quelle qu'elle soit.
-			$firstCommission = reset( $categories );
+			// Les groupes de référence portent la première thématique, quelle
+			// qu'elle soit : la recette a besoin d'un groupe dont la
+			// thématique ne change pas d'un chargement à l'autre.
+			$firstTheme = reset( $categories );
 
-			if ( $firstCommission ) {
-				$group->addCategory( $firstCommission );
+			if ( $firstTheme ) {
+				$group->addCategory( $firstTheme );
 			}
 
 			foreach ( self::NAMED_ACCOUNTS as $email => $account ) {

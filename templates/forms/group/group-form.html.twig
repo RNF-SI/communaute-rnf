@@ -53,7 +53,19 @@
 		<div class="hint">{{ 'forms.group.presentation.hint'|trans }}</div>
 		{{ form_widget(form.presentation, {'attr': {'placeholder': 'forms.group.presentation.placeholder'}}) }}
 	</div>
-	
+	{# Le vocabulaire est tenu par les administrateurs : tant qu'il est vide,
+	   il n'y a rien à proposer ici. (#23) #}
+	{% if form.categories|length > 0 %}
+		<div class="form-row form-row__field">
+			{{ form_label(form.categories, 'forms.group.categories.label') }}
+			<div class="hint">{{ 'forms.group.categories.hint'|trans }}</div>
+			<div class="form-row__checkboxes checkboxes-autocomplete">
+				{{ form_widget(form.categories) }}
+			</div>
+			<div class="form_errors">{{ form_errors(form.categories) }}</div>
+		</div>
+	{% endif %}
+
 	{# Afficher les champs parents/children uniquement s'ils existent dans le formulaire #}
 	{% for child in form %}
 		{% if child.vars.name == 'parents' %}

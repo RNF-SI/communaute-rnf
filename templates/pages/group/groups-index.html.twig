@@ -75,16 +75,34 @@
 				<div id="search-container" class="group-search-bar">
 					{{ form_widget(form.groups_search_bar, {'attr': {'placeholder': 'Rechercher'}}) }}
 
-					{% if parents is defined and parents is not empty %}
+					{% if (parents is defined and parents is not empty)
+						or (categories is defined and categories is not empty) %}
 						<form method="get" class="groups-filter" id="groups-filter">
-							<label for="groups-filter-commission">{{ 'pages.group.groups.filter.label'|trans }}</label>
-							<select id="groups-filter-commission" name="commission">
-								<option value="">{{ 'pages.group.groups.filter.all'|trans }}</option>
-								{% for parent in parents %}
-									<option value="{{ parent.slug }}"
-											{{ selectedCommission == parent.slug ? 'selected' : '' }}>{{ parent.name }}</option>
-								{% endfor %}
-							</select>
+							{% if parents is defined and parents is not empty %}
+								<label for="groups-filter-commission">{{ 'pages.group.groups.filter.label'|trans }}</label>
+								<select id="groups-filter-commission" name="commission">
+									<option value="">{{ 'pages.group.groups.filter.all'|trans }}</option>
+									{% for parent in parents %}
+										<option value="{{ parent.slug }}"
+												{{ selectedCommission == parent.slug ? 'selected' : '' }}>{{ parent.name }}</option>
+									{% endfor %}
+								</select>
+							{% endif %}
+
+							{# Le second axe : de quoi le groupe parle, quelle que soit la
+							   commission dont il dépend. Absent tant qu'aucun groupe n'est
+							   classé. (#23) #}
+							{% if categories is defined and categories is not empty %}
+								<label for="groups-filter-theme">{{ 'pages.group.groups.filter.theme_label'|trans }}</label>
+								<select id="groups-filter-theme" name="theme">
+									<option value="">{{ 'pages.group.groups.filter.theme_all'|trans }}</option>
+									{% for category in categories %}
+										<option value="{{ category.slug }}"
+												{{ selectedTheme == category.slug ? 'selected' : '' }}>{{ category.name }}</option>
+									{% endfor %}
+								</select>
+							{% endif %}
+
 							<noscript><button type="submit">{{ 'pages.group.groups.filter.submit'|trans }}</button></noscript>
 						</form>
 					{% endif %}

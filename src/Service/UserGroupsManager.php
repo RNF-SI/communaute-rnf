@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Service\Community;
+use App\Entity\Category;
 use App\Entity\Usergroup;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -83,9 +84,10 @@ class UserGroupsManager {
 	/**
 	 * Les groupes qui en chapeautent d'autres : commissions, pôles, collectifs.
 	 *
-	 * C'est la seule donnée dont on dispose réellement pour trier les groupes.
-	 * Les catégories n'ont jamais été renseignées, et un groupe ne porte aucune
-	 * information géographique. (#23)
+	 * Le premier des deux axes de tri : de qui un groupe dépend. Le second est
+	 * la thématique, de quoi il parle. Un groupe ne porte en revanche aucune
+	 * information géographique, et le filtre par périmètre a été écarté faute
+	 * de donnée à filtrer. (#23)
 	 *
 	 * @return \App\Entity\Usergroup[]
 	 */
@@ -103,6 +105,72 @@ class UserGroupsManager {
 		});
 
 		return $parents;
+	}
+
+	/**
+	 * Les thématiques qui classent réellement au moins un groupe. (#23)
+	 *
+	 * Une entrée du vocabulaire que personne n'a encore attribuée ne serait
+	 * qu'un choix qui vide la liste : elle n'est proposée qu'une fois portée.
+	 *
+	 * @return \App\Entity\Category[]
+	 */
+	public function getCategories(): array {
+		$categories = [];
+
+		foreach ($this->getGroups() as $group) {
+			foreach ($group->getCategories() as $category) {
+				$categories[$category->getId()] = $category;
+			}
+		}
+
+		$categories = array_values($categories);
+
+		usort($categories, function (Category $a, Category $b) {
+			return strcoll((string) $a->getName(), (string) $b->getName());
+		});
+
+		return $categories;
+	}
+
+	/**
+	 * @param string $slug
+	 *
+	 * @return \App\Entity\Category|null
+	 */
+	public function getCategoryBySlug(string $slug): ?Category {
+		foreach ($this->getCategories() as $category) {
+			if ($category->getSlug() === $slug) {
+				return $category;
+			}
+		}
+
+		return NULL;
+	}
+
+	/**
+	 * Ne garder d'une liste que les groupes portant cette thématique. (#23)
+	 *
+	 * Le tri se fait sur une liste déjà constituée plutôt que par une requête,
+	 * de sorte que thématique et commission se cumulent : les deux filtres
+	 * répondent à deux questions différentes, et l'on peut vouloir poser les
+	 * deux.
+	 *
+	 * @param \App\Entity\Usergroup[] $groups
+	 * @param \App\Entity\Category    $category
+	 *
+	 * @return \App\Entity\Usergroup[]
+	 */
+	public function keepWithCategory(array $groups, Category $category): array {
+		return array_values(array_filter($groups, function (Usergroup $group) use ($category) {
+			foreach ($group->getCategories() as $held) {
+				if ($held->getId() === $category->getId()) {
+					return TRUE;
+				}
+			}
+
+			return FALSE;
+		}));
 	}
 
 	/**

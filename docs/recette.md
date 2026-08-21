@@ -146,6 +146,10 @@ Aller dans **Groupe de test**.
 | Page « Page rédigée par un membre » | Modifiable par son auteur et par un animateur ; **pas** par un autre membre (#33) |
 | Onglet Pages | « Page importante de test » est mise en avant, en tête et repérée (#2) |
 | Liste des groupes | Hiérarchie commission → groupes (#22), filtre par commission (#23) |
+| Liste **Filtrer par thématique** | Réduit la liste ; un groupe hors de la thématique disparaît (#23) |
+| Les deux listes en même temps | Elles se cumulent : une commission **et** une thématique qu'aucun de ses groupes ne porte donne une liste vide, pas l'un des deux ignoré (#23) |
+| Taper une lettre dans la recherche, filtre posé | Le filtre tient : la recherche ne ramène pas les 58 groupes (#23) |
+| Administration → **Thématiques** | Créer une thématique, la retrouver sur le formulaire d'un groupe, la retirer : les groupes restent, déclassés (#23) |
 | Description d'un groupe | Visible de ses membres (#5) |
 
 ---

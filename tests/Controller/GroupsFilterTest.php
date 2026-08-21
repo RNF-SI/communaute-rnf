@@ -12,10 +12,11 @@ use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
  * Issue #23 — filtering a list of 58 groups so that somebody arriving on the
  * platform is not handed everything at once.
  *
- * The filter relies on the hierarchy that already exists in production:
- * commissions, then groups and pôles, then ateliers. It is the only data that
- * actually sorts the groups — the categories have never been filled in, and a
- * group carries no geographic information at all.
+ * This first filter relies on the hierarchy that already exists in production:
+ * commissions, then groups and pôles, then ateliers. The second one, on
+ * themes, is covered by GroupsThemeFilterTest. The geographic filter the issue
+ * also asked for was dropped: a group carries no geographic information at
+ * all, and there is nothing to filter on.
  */
 class GroupsFilterTest extends WebTestCase {
 	private const FIREWALL = 'main';

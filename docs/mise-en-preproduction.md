@@ -134,7 +134,7 @@ en « attention » ce qui la laisse tourner en silence.
 ## 2. Déployer
 
 `clevercloud/post_build.sh` enchaîne migrations, cache, `import:skills` et build
-front. **Quatorze migrations** vont s'appliquer :
+front. **Quinze migrations** vont s'appliquer :
 
 | Migration | Effet |
 |---|---|
@@ -152,6 +152,7 @@ front. **Quatorze migrations** vont s'appliquer :
 | `Version20260820140000` | tables `document_tags` et `documents_tags` (#26) |
 | `Version20260820160000` | `tour_seen_at` sur les comptes (#39) |
 | `Version20260821090000` | `rhythm` sur les notifications, et le drapeau d'annonce du nouveau défaut (#38) |
+| `Version20260821160000` | `slug` sur les thématiques de groupe (#23) |
 
 Après déploiement, une fois seulement :
 
@@ -166,6 +167,12 @@ php bin/console search:reindex:all
 - **Créer les étiquettes de documents** dans Administration → Étiquettes (#26).
   Les fixtures les créent en dev, pas en production. Sans elles, ni le
   formulaire de dépôt ni le filtre ne proposent quoi que ce soit.
+- **Créer les thématiques de groupe** dans Administration → Thématiques (#23),
+  pour la même raison. Tant que la liste est vide, le champ n'apparaît pas sur
+  les groupes et le second filtre de la liste des groupes reste absent — ce qui
+  est le comportement voulu, pas une panne. À remplir avec le réseau : une
+  thématique dit de quoi un groupe parle, et ne doit pas répéter la commission
+  dont il dépend.
 - **Renseigner `RNF_EXPORT_TOKEN`** si l'on veut que les réserves suivies
   viennent de GeoNature (#28). Sans jeton, le champ reste saisi à la main.
 
@@ -460,9 +467,9 @@ php bin/console search:reindex:all     # reconstruit les index, ne touche pas au
 php bin/console app:preflight
 ```
 
-### Ce que font réellement les quatorze migrations
+### Ce que font réellement les quinze migrations
 
-Douze n'ajoutent que des colonnes ou des tables. Les deux autres méritent d'être
+Treize n'ajoutent que des colonnes ou des tables. Les deux autres méritent d'être
 lues avant de lancer :
 
 | Migration | Effet |
@@ -481,6 +488,7 @@ lues avant de lancer :
 | `Version20260820140000` | **tables** `document_tags` et `documents_tags` |
 | `Version20260820160000` | colonne `tour_seen_at` sur les comptes |
 | `Version20260821090000` | ⚠️ colonne `rhythm` sur les notifications, **et une écriture** sur les comptes |
+| `Version20260821160000` | colonne `slug` sur les thématiques de groupe, avec un repli sur le nom pour les lignes qui existeraient déjà |
 
 - `Version20260820120000` est la seule à supprimer quelque chose : la colonne
   `edition_restricted` des pages, que l'application n'a jamais écrite (#33).

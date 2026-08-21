@@ -15,6 +15,9 @@
 		<li {% if (tab =='document-tags') %} class="active"{% endif %}>
 			<a href="{{ path('administration_document_tags') }}">{{ 'pages.administration.tabs.document_tags.name'|trans }}</a>
 		</li>
+		<li {% if (tab =='group-categories') %} class="active"{% endif %}>
+			<a href="{{ path('administration_group_categories') }}">{{ 'pages.administration.tabs.group_categories.name'|trans }}</a>
+		</li>
 		<li {% if (tab =='admin') %} class="active"{% endif %}>
 			<a href="{{ path('administration_administrators') }}">{{ 'pages.administration.tabs.admin.name'|trans }}</a>
 		</li>

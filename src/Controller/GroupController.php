@@ -49,14 +49,22 @@ class GroupController extends AbstractController {
 						] )
 					 ->getForm();
 
-		// Filtre par commission : la hiérarchie des groupes est la seule donnée
-		// dont on dispose réellement pour trier une liste de 58 groupes. (#23)
+		// Deux axes pour trier une liste de 58 groupes, et ils se cumulent :
+		// la commission dit de qui un groupe dépend, la thématique de quoi il
+		// parle. (#23)
 		$selected = $request->query->get( 'commission' );
 		$parent   = $selected ? $userGroupsManager->getGroupBySlug( $selected ) : NULL;
+
+		$theme    = $request->query->get( 'theme' );
+		$category = $theme ? $userGroupsManager->getCategoryBySlug( $theme ) : NULL;
 
 		$groups = $parent
 				? $userGroupsManager->getGroupsUnder( $parent )
 				: $userGroupsManager->getGroups();
+
+		if ( $category ) {
+			$groups = $userGroupsManager->keepWithCategory( $groups, $category );
+		}
 
 		return $this->render( 'pages/group/groups-index.html.twig', [
 				'groups' => $groups,
@@ -64,6 +72,8 @@ class GroupController extends AbstractController {
 				'groupsToActivate' => $userGroupsManager->getGroupsToActivate(),
 				'parents' => $userGroupsManager->getParentGroups(),
 				'selectedCommission' => $parent ? $parent->getSlug() : '',
+				'categories' => $userGroupsManager->getCategories(),
+				'selectedTheme' => $category ? $category->getSlug() : '',
 				'form' => $form->createView()
 		] );
 	}
@@ -84,10 +94,13 @@ class GroupController extends AbstractController {
         $query = $request->query->get('q');
         $type = $request->query->get('type');
 
-		// Le filtre en cours doit survivre à une recherche par texte, sans quoi
-		// taper une lettre ramènerait les 58 groupes. (#23)
+		// Les filtres en cours doivent survivre à une recherche par texte, sans
+		// quoi taper une lettre ramènerait les 58 groupes. (#23)
 		$selected = $request->query->get('commission');
 		$parent   = $selected ? $userGroupsManager->getGroupBySlug($selected) : NULL;
+
+		$theme    = $request->query->get('theme');
+		$category = $theme ? $userGroupsManager->getCategoryBySlug($theme) : NULL;
 
 		if ($parent) {
 			$allowed = [];
@@ -111,7 +124,11 @@ class GroupController extends AbstractController {
 					return isset($allowed[$group->getId()]);
 				}));
 			}
-			
+
+			if ($category) {
+				$groupList = $userGroupsManager->keepWithCategory($groupList, $category);
+			}
+
 			$groupList = $searchEngineManager->snippetGroupsText($query, $groupList);
 
 			// Pour les groupes en attente, utiliser un template spécialisé
@@ -140,6 +157,10 @@ class GroupController extends AbstractController {
 				$groupList = array_values(array_filter($groupList, function ($group) use ($allowed) {
 					return isset($allowed[$group->getId()]);
 				}));
+			}
+
+			if ($category) {
+				$groupList = $userGroupsManager->keepWithCategory($groupList, $category);
 			}
 
 			// Pour les groupes en attente, utiliser un template spécialisé

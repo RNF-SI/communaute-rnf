@@ -128,6 +128,19 @@ forms:
             label: "Presentation"
             hint: "Describe your group. This will be displayed on the group page."
             placeholder: "Presentation of the group, its objectives…"
+        categories:
+            label: "Themes"
+            hint: "What this group is about. Pick from the list kept by the administrators; a group may cover several themes. The commission says who the group answers to, the theme says what it deals with."
+
+    administration:
+        group_categories:
+            name: "Group themes"
+            introduction: "These themes sort the list of groups, alongside the commission each group answers to. The list is deliberately closed: everyone picks from it, nobody adds to it in passing, so that one notion does not end up spelled three ways."
+            label: "New theme"
+            placeholder: "Example: Habitat management"
+            button: "Add the theme"
+            empty: "No theme yet. While the list is empty, the field does not appear on groups and no filter is offered."
+            used: "%count% group(s)"
 
     page:
         cover:
@@ -348,6 +361,8 @@ pages:
             filter:
                 label: "Filter by commission"
                 all: "All commissions"
+                theme_label: "Filter by theme"
+                theme_all: "All themes"
                 submit: "Filter"
             title: "Groups"
             subtitle: "Find the groups that interest you"
@@ -529,6 +544,13 @@ pages:
             groups:
                 title: "Groups"
 
+    administration:
+        tabs:
+            group_categories:
+                title: "Themes"
+                name: "Themes"
+                introduction: "Keep the list of themes that sort the groups"
+
     tour:
         next: "Next"
         previous: "Previous"
@@ -550,7 +572,7 @@ pages:
                 body: "Your profile, your groups, your discussions, your notifications and your settings: everything about you opens from this menu, on any page."
             groups:
                 title: "The groups of the network"
-                body: "One group per commission, topic or workshop. Public groups are joined in one click; private ones need an animator to agree."
+                body: "One group per commission, topic or workshop. Two lists above narrow what is shown: the commission a group answers to, and the theme it deals with. Public groups are joined in one click; private ones need an animator to agree."
                 link: "See every group"
             groups_graph:
                 title: "The groups seen as a network"
@@ -682,6 +704,10 @@ messages:
         group_activated: "The group has been activated"
         group_updated: "This group information has been updated"
         group_deleted: "This group has been deleted"
+        category_created: "The theme has been added"
+        category_deleted: "The theme has been removed, and with it the classification of the groups carrying it"
+        category_exists: "This theme already exists"
+        category_empty: "The theme name cannot be empty"
 
     page:
         page_created: "The page has been created"

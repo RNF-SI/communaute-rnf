@@ -50,6 +50,13 @@
 							'tags': tags
 						}) %}
 					</section>
+				{% elseif (tab =='group-categories') %}
+					<section class="admin-form">
+						{% include 'forms/user/admin/admin-group-categories-form.html.twig' with ({
+							'form': form,
+							'categories': categories
+						}) %}
+					</section>
 				{% elseif (tab =='admin') %}
 					<section class="admin-form">
 						{% include 'forms/user/admin/admin-admin-form.html.twig' %}

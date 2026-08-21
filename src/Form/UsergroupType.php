@@ -2,7 +2,9 @@
 
 namespace App\Form;
 
+use App\Entity\Category;
 use App\Entity\Usergroup;
+use App\Repository\CategoryRepository;
 use App\Service\FileManager;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
@@ -86,6 +88,21 @@ class UsergroupType extends AbstractType {
 								'pages.group.status.' . Usergroup::PUBLIC  => Usergroup::PUBLIC,
 								'pages.group.status.' . Usergroup::PRIVATE => Usergroup::PRIVATE,
 						],
+				] )
+				// La thématique dit de quoi le groupe parle ; la commission qui
+				// le chapeaute dit de qui il dépend. Les deux servent à trier
+				// la liste des groupes, et ne se recouvrent pas. Vocabulaire
+				// fermé, tenu par les administrateurs. (#23)
+				->add( 'categories', EntityType::class, [
+						'class'         => Category::class,
+						'required'      => FALSE,
+						'expanded'      => TRUE,
+						'multiple'      => TRUE,
+						'choice_label'  => 'name',
+						'query_builder' => function ( CategoryRepository $repository ) {
+							return $repository->createQueryBuilder( 'c' )
+											  ->orderBy( 'c.name', 'ASC' );
+						},
 				] );
 
 		// Ajouter les champs de hiérarchie uniquement pour les administrateurs de la communauté

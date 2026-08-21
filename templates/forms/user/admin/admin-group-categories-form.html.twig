@@ -1,0 +1,33 @@
+<div class="form-rows">
+	<h2 class="h2">{{ 'forms.administration.group_categories.name'|trans }}</h2>
+	<p class="hint">{{ 'forms.administration.group_categories.introduction'|trans }}</p>
+
+	{% if categories is not empty %}
+		<ul class="document-tags-list">
+			{% for category in categories %}
+				<li class="document-tags-list--item">
+					<span class="tag">{{ category.name }}</span>
+					<span class="document-tags-list--count">{{ 'forms.administration.group_categories.used'|trans({'%count%': category.usergroups|length}) }}</span>
+
+					<form method="post" action="{{ path('administration_group_category_delete', {'categoryId': category.id}) }}">
+						<input type="hidden" name="_token" value="{{ csrf_token('delete-group-category') }}">
+						<button type="submit" class="document-tags-list--delete">{{ 'ui.delete'|trans }}</button>
+					</form>
+				</li>
+			{% endfor %}
+		</ul>
+	{% else %}
+		<p>{{ 'forms.administration.group_categories.empty'|trans }}</p>
+	{% endif %}
+
+	{{ form_start(form) }}
+	<div class="form-row form-row__field">
+		{{ form_label(form.name, 'forms.administration.group_categories.label') }}
+		{{ form_widget(form.name, {'attr': {'placeholder': 'forms.administration.group_categories.placeholder'}}) }}
+		<div class="form_errors">{{ form_errors(form.name) }}</div>
+	</div>
+	<div class="form-row form-row__submit">
+		{{ form_widget(form.submit, {'label': 'forms.administration.group_categories.button'|trans}) }}
+	</div>
+	{{ form_end(form) }}
+</div>
