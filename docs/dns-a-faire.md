@@ -1,47 +1,93 @@
-# Les trois enregistrements DNS à publier
+# Les enregistrements DNS à publier
 
-**Note à transmettre à qui administre le domaine `rnfrance.org`.**
+**Note à transmettre à qui administre les domaines `rnfrance.org` et
+`reserves-naturelles.org`.**
+
+## Deux domaines, pas un
+
+C'est le point qui a fait perdre du temps : **la plateforme écrit depuis deux
+domaines différents**, selon le type de message.
+
+| Ce qui part | Depuis | Variable |
+|---|---|---|
+| Résumé, demande d'adhésion, mot de passe oublié | `si@rnfrance.org` | `POSTMARK_SENDER` |
+| **Messages de discussion** | `noreply@lists.reserves-naturelles.org` | `POSTMARK_LIST_DOMAIN` |
+
+Les deux doivent être autorisés. Un seul des deux configuré donne **une moitié
+d'e-mails qui arrive** — le pire cas pour diagnostiquer, parce qu'on conclut
+que « les e-mails marchent ».
 
 ## Le problème, en trois phrases
 
-La plateforme Communauté RNF envoie ses e-mails par **Postmark**, un service
-d'envoi. Aujourd'hui, le domaine `rnfrance.org` ne dit nulle part que Postmark
-a le droit d'envoyer en son nom : pour les serveurs qui reçoivent ces messages,
-ce sont des e-mails qui se réclament de `rnfrance.org` sans preuve.
+La plateforme envoie ses e-mails par **Postmark**. Aujourd'hui, ni l'un ni
+l'autre des deux domaines ne dit qu'il autorise Postmark à envoyer en son nom :
+pour les serveurs qui reçoivent ces messages, ce sont des e-mails qui se
+réclament d'un domaine sans preuve.
 
-Et le domaine publie par ailleurs une consigne — DMARC `p=quarantine` — qui
+`rnfrance.org` publie en outre une consigne — DMARC `p=quarantine` — qui
 demande explicitement de mettre en quarantaine tout message dans ce cas. Les
 destinataires font donc exactement ce qu'on leur demande.
 
 **Ce n'est pas un problème de contenu, ni de réputation, ni de la plateforme :
-c'est une autorisation manquante.** Il faut trois enregistrements DNS.
+c'est une autorisation manquante.**
+
+## État constaté
+
+Relevé par `php bin/console app:mail:check`, qui lit les deux domaines :
+
+### `rnfrance.org` — transactionnel
+
+| Enregistrement | État |
+|---|---|
+| SPF | ❌ présent, mais sans `include:spf.mtasv.net` |
+| DKIM `pm._domainkey` | ❌ absent |
+| Return-Path `pm-bounces` | ❌ absent |
+| DMARC | ⚠️ `p=quarantine`, alors que rien n'authentifie |
+
+### `lists.reserves-naturelles.org` — discussions
+
+| Enregistrement | État |
+|---|---|
+| SPF | ❌ **aucun enregistrement** |
+| DKIM `pm._domainkey` | ❌ absent |
+| Return-Path `pm-bounces` | ✅ `pm.mtasv.net` — déjà fait |
+| DMARC | ⚠️ aucune politique publiée |
+
+Le Return-Path du second est en place : quelqu'un a commencé le travail sur ce
+domaine et s'est arrêté là.
 
 ## Qui fait quoi
 
 | Étape | Qui | Où |
 |---|---|---|
-| 1. Récupérer les valeurs | RNF, compte Postmark | tableau de bord Postmark |
-| 2. Publier les enregistrements | l'administrateur du domaine | **IONOS** (la zone `rnfrance.org` y est hébergée : serveurs `ns*.ui-dns.*`) |
-| 3. Vérifier | RNF | `php bin/console app:mail:check` sur le serveur |
+| 1. Récupérer les valeurs | RNF, compte Postmark | tableau de bord Postmark, **pour chacun des deux domaines** |
+| 2. Publier | l'administrateur du domaine | **IONOS** pour `rnfrance.org` (zone sur `ns*.ui-dns.*`) ; à vérifier pour `reserves-naturelles.org` |
+| 3. Vérifier | RNF | `php bin/console app:mail:check` |
 
 ⚠️ **Les valeurs ne s'inventent pas.** La clé DKIM et la cible du Return-Path
-sont générées par Postmark pour ce domaine précis. Il faut donc commencer par
-l'étape 1.
+sont générées par Postmark **pour chaque domaine**. Celles de `rnfrance.org` ne
+valent pas pour `lists.reserves-naturelles.org`.
 
 ## Étape 1 — récupérer les valeurs dans Postmark
 
 Se connecter à Postmark, puis :
 
-**Sender Signatures → Domains → `rnfrance.org`**
+**Sender Signatures → Domains**, puis **chacun des deux domaines** :
+`rnfrance.org` et `lists.reserves-naturelles.org`.
 
 La page affiche deux blocs, **DKIM** et **Return-Path**, chacun avec un
 enregistrement à publier. Les recopier (ou faire une capture) pour l'étape 2.
 
 Si le domaine n'y figure pas encore, l'ajouter avec **Add Domain**.
 
-## Étape 2 — publier les trois enregistrements chez IONOS
+## Étape 2 — publier les enregistrements
 
-Dans l'espace client IONOS : **Domaines → `rnfrance.org` → DNS**.
+Dans l'espace client du domaine concerné. Pour `rnfrance.org` : IONOS,
+**Domaines → `rnfrance.org` → DNS**. Pour `lists.reserves-naturelles.org`, le
+sous-domaine se gère dans la zone `reserves-naturelles.org`.
+
+**Les trois enregistrements ci-dessous sont à faire pour les deux domaines**,
+avec les valeurs propres à chacun.
 
 ### a. Autoriser Postmark dans SPF
 
@@ -49,7 +95,14 @@ Dans l'espace client IONOS : **Domaines → `rnfrance.org` → DNS**.
 qu'un seul ; deux font échouer SPF pour *tout* le domaine, la messagerie
 principale comprise. Il faut **modifier celui qui existe**.
 
-Enregistrement TXT existant sur `rnfrance.org` :
+**Sur `lists.reserves-naturelles.org`, il n'y en a aucun** : il faut donc en
+créer un, et un seul :
+
+```
+v=spf1 include:spf.mtasv.net ~all
+```
+
+**Sur `rnfrance.org`, il en existe un** qu'il faut modifier. Valeur actuelle :
 
 ```
 v=spf1 include:_spf.oktey.com include:spf.hornetsecurity.com include:spf.mandrillapp.com include:servers.mcsv.net ip4:212.83.185.127 ip4:188.165.104.13 ip4:188.165.104.33 ip4:62.210.196.146 ~all
@@ -92,8 +145,9 @@ serveur de la plateforme :
 php bin/console app:mail:check
 ```
 
-Les quatre lignes doivent être vertes. Tant qu'une ligne est en `ÉCHEC`, un
-e-mail peut partir sans arriver.
+La commande affiche **un tableau par domaine**. Toutes les lignes des deux
+tableaux doivent être vertes : tant qu'une ligne est en `ÉCHEC`, les e-mails de
+ce chemin-là peuvent partir sans arriver.
 
 Côté Postmark, les blocs DKIM et Return-Path passent au vert eux aussi
 (bouton **Verify**).

@@ -88,25 +88,33 @@ class MailCheckCommand extends Command {
 
 		$io->title( sprintf( 'E-mails — environnement « %s »', $environment ) );
 
-		$domain = $this->domainOf( $postmark, $platform );
+		$domains = $this->domainsOf( $postmark, $platform );
 
 		/**
 		 * 1. LE DNS
+		 *
+		 * Les deux chemins d'envoi ne partent pas forcément du même domaine :
+		 * le transactionnel de POSTMARK_SENDER, les discussions de
+		 * POSTMARK_LIST_DOMAIN. Un domaine autorisé et l'autre non donne une
+		 * moitié d'e-mails qui arrive — le pire cas pour diagnostiquer.
 		 */
-		$io->section( sprintf( 'Le DNS de %s', $domain ?: '(domaine inconnu)' ) );
-
-		$rows    = [];
 		$blocked = 0;
 
-		foreach ( $this->deliverability->check( $domain ) as $record ) {
-			if ( $record[ 'status' ] === MailDeliverability::FAILED ) {
-				$blocked++;
+		foreach ( $domains as $usage => $domain ) {
+			$io->section( sprintf( 'Le DNS de %s — %s', $domain ?: '(domaine inconnu)', $usage ) );
+
+			$rows = [];
+
+			foreach ( $this->deliverability->check( $domain ) as $record ) {
+				if ( $record[ 'status' ] === MailDeliverability::FAILED ) {
+					$blocked++;
+				}
+
+				$rows[] = [ $this->badge( $record[ 'status' ] ), $record[ 'label' ], $record[ 'detail' ] ];
 			}
 
-			$rows[] = [ $this->badge( $record[ 'status' ] ), $record[ 'label' ], $record[ 'detail' ] ];
+			$io->table( [ '', 'Enregistrement', 'Constat' ], $rows );
 		}
-
-		$io->table( [ '', 'Enregistrement', 'Constat' ], $rows );
 
 		if ( $blocked > 0 ) {
 			$io->warning(
@@ -257,21 +265,42 @@ class MailCheckCommand extends Command {
 	}
 
 	/**
+	 * Les domaines depuis lesquels la plateforme écrit, et à quoi chacun sert.
+	 *
+	 * Un seul quand les deux coïncident : on ne fait pas lire deux fois le
+	 * même tableau.
+	 *
 	 * @param array $postmark
 	 * @param array $platform
 	 *
-	 * @return string
+	 * @return array<string, string> usage => domaine
 	 */
-	private function domainOf ( array $postmark, array $platform ) {
-		if ( !empty( $postmark[ 'list_domain' ] ) ) {
-			return $postmark[ 'list_domain' ];
-		}
+	private function domainsOf ( array $postmark, array $platform ) {
+		$sender = '';
 
 		if ( !empty( $platform[ 'from' ] ) && ( strpos( $platform[ 'from' ], '@' ) !== FALSE ) ) {
-			return substr( strrchr( $platform[ 'from' ], '@' ), 1 );
+			$sender = substr( strrchr( $platform[ 'from' ], '@' ), 1 );
 		}
 
-		return '';
+		$list = !empty( $postmark[ 'list_domain' ] ) ? $postmark[ 'list_domain' ] : '';
+
+		if ( $sender && $list && ( mb_strtolower( $sender ) === mb_strtolower( $list ) ) ) {
+			return [ 'les deux chemins' => $sender ];
+		}
+
+		$domains = [];
+
+		if ( $sender ) {
+			$domains[ 'résumé, adhésion, mot de passe' ] = $sender;
+		}
+
+		if ( $list ) {
+			$domains[ 'messages de discussion' ] = $list;
+		}
+
+		// Aucun des deux configuré : le contrôle doit le dire plutôt que de
+		// n'afficher aucun tableau.
+		return $domains ?: [ 'domaine d’envoi' => '' ];
 	}
 
 	/**

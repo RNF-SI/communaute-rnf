@@ -2,6 +2,12 @@
 
 Ce que la plateforme envoie, et ce que le DNS doit dire pour que ça arrive.
 
+> ⚠️ **Ce diagnostic ne portait que sur `rnfrance.org`.** La plateforme écrit
+> depuis **deux** domaines : `rnfrance.org` pour le transactionnel,
+> `lists.reserves-naturelles.org` pour les messages de discussion. Les deux
+> doivent être autorisés. Voir [`dns-a-faire.md`](dns-a-faire.md), qui donne
+> l'état des deux.
+
 ## Diagnostic du 19 août 2026
 
 Les e-mails partent via **Postmark**, depuis le domaine `rnfrance.org`
