@@ -77,6 +77,7 @@ php bin/console app:update-nuts-id
 - **User** — central entity with profile, skills, and geographic data
 - **Usergroup** + **UsergroupMembership** — groups and member/admin links
 - **Content**: Article, Discussion (+ DiscussionMessage), Document (+ DocumentFolder, DocumentTag), Page (+ PageRevision), Category
+- **Messagerie**: Conversation (+ ConversationParticipant), PrivateMessage, MessageReport
 - **File / Upload** — managed uploads
 - **LogEvent**, **AppLink / AppLinkGroup**, **Skill**
 
@@ -86,7 +87,7 @@ Two parallel mechanisms:
 - **RNF external auth** — single sign-on against the GeoNature API (`RnfAuthService`, `RnfAuthenticatorGuard`, `RnfUserProvider`, `RnfAuthController`), configured via `RNF_AUTH_*` env vars.
 
 ### Authorization
-Voter-based, per resource type: `GroupVoter`, `GroupArticleVoter`, `GroupDiscussionVoter`, `GroupDocumentVoter`, `GroupFileVoter`, `GroupPageVoter`, `UserVoter`.
+Voter-based, per resource type: `GroupVoter`, `GroupArticleVoter`, `GroupDiscussionVoter`, `GroupDocumentVoter`, `GroupFileVoter`, `GroupPageVoter`, `UserVoter`, `ConversationVoter`.
 
 A group has exactly **two** visibilities, `Usergroup::PUBLIC` and `Usergroup::PRIVATE` — the four-level scale (OPEN / MODERATE / RESTRICTED) belongs to upstream Naturadapt and has never existed here:
 - **public** — readable by anyone, *including anonymous visitors*, and joinable without approval. Its documents download without a session, so treat a public group as published to the web.
@@ -112,6 +113,7 @@ through `templates/components/permission-note.html.twig`.
 Business logic lives in services, e.g.:
 - File handling: `FileManager`, `UserFileManager`, `UsergroupFileManager`, `AppFileManager`, `FileMimeManager`
 - Groups/members: `UserGroupRelation`, `UserGroupsManager`, `UsergroupMembersManager`, `Community` (the general community group)
+- Messagerie : `ConversationManager`, `Tagging\TagParser`, `Tagging\TagScanner`
 - Email: `EmailSender`, `DiscussionSender`
 - Search: `SearchEngineManager` (TNTSearch)
 - Other: `MapManager`, `AdminManager`, `UserAnonymize`, `SlugGenerator`, `HashGenerator`, `UrlManager`, `AppTextManager`
@@ -189,7 +191,85 @@ nothing intercepts clicks, and the page stays usable during the tour.
 It launches by itself while `User::$tourSeenAt` is null, and afterwards only
 through the settings link (`?tour=1`). Closing it counts as having seen it.
 
+### Messagerie
+
+Une conversation privée entre **N participants** (`Conversation`) : le
+tête-à-tête n'est que le cas N=2, et ajouter quelqu'un en cours de route ne
+change que ce nombre. `Conversation::$pairKey` porte les deux identifiants d'un
+tête-à-tête, triés, avec une **contrainte d'unicité en base** — c'est elle, et
+non un contrôle dans le code, qui empêche qu'écrire deux fois à la même
+personne ouvre deux fils entre lesquels la conversation se couperait. Elle est
+effacée dès qu'un troisième entre, et quand quelqu'un quitte le fil : sans quoi
+l'autre ne pourrait plus jamais réécrire.
+
+`ConversationParticipant` porte trois dates — `lastReadAt`, `archivedAt`,
+`leftAt` — plutôt que trois booléens. Un message ré-affiche la conversation
+chez ceux qui l'avaient rangée : **archiver n'est pas se désabonner**. Quitter
+laisse les messages en place, le fil de ceux qui restent serait troué sinon.
+
+`PrivateMessage::$body` est du **texte**, pas du HTML : pas d'éditeur riche, pas
+de pièce jointe. Ce qu'il contient, ce sont des tags.
+
+**Qui peut écrire.** Tout membre actif, sauf à quelqu'un qui a fermé sa boîte
+(`User::$messagesOpen`, réglé dans `/user/parameters/edit`). Fermer sa boîte
+ferme la porte, pas les conversations déjà ouvertes. `ConversationVoter`
+tranche — et il **ne court-circuite pas pour `ROLE_ADMIN`**, à la différence de
+`GroupVoter`. C'est le point à ne pas « corriger » en relisant : l'équipe RNF
+modère partout dans les groupes, mais une conversation privée n'est pas un
+groupe.
+
+**Signalement (`MessageReport`).** Le signalement **recopie** le message
+incriminé et les quelques messages qui le précédaient, au moment où il est
+fait. La page d'administration (`/administration/message-reports`) lit ces
+copies et **n'interroge jamais la messagerie** : c'est la propriété à préserver
+en la modifiant. Corollaire voulu : effacer le message après coup n'efface pas
+ce qui a été signalé.
+
+### Tags dans un message (`Tagging\TagParser`)
+
+`@Prénom Nom` désigne quelqu'un, `#Titre` un groupe, un document, une page, une
+actualité ou une discussion. Comme les mentions de #37, **rien n'est stocké
+d'autre que ce qui a été tapé** : le lien est refait à chaque affichage. Le
+message reste lisible tel quel, aucune table de liaison ne se désynchronise, et
+un tag écrit à la main vaut un tag inséré par la liste de suggestions. Ce qu'on
+y perd : un contenu renommé perd son lien, et un titre à ponctuation interne
+(« Guide : gestion ») n'est reconnu que jusqu'à cette ponctuation.
+
+**Le rendu dépend de qui lit.** Le même message affiche un lien pour un membre
+du groupe où vit le document, et un tag grisé (`.msg-tag__locked`, titre
+conservé, lien retiré) pour quelqu'un qui n'y est pas — `GroupVoter::READ`,
+lecteur par lecteur. Donc : ne rien mettre en cache, et ne pas s'en servir pour
+fabriquer un e-mail, où il n'y aurait pas de lecteur.
+
+L'ordre de résolution d'un `#` est fixe — groupe, document, page, actualité,
+discussion (`TaggedThing::kinds()`) — pour qu'une ambiguïté se tranche pareil à
+chaque affichage.
+
+`TagScanner` est la mécanique commune : où commence un nom, où il s'arrête, ce
+qu'on ignore de la casse et des accents. `MentionParser` (#37) s'en sert aussi
+depuis cette version. Deux lectures qui divergeraient d'un caractère donneraient
+un lien à l'affichage là où la notification n'aurait prévenu personne.
+
+Côté navigateur, `assets/js/ui/message-tags.js` propose une liste après `@` ou
+`#` en interrogeant `/messages/suggestions` — qui ne propose que ce que celui
+qui écrit peut lui-même ouvrir. C'est du confort : sans JavaScript, on tape le
+tag à la main et il est reconnu pareil, et le choix des destinataires passe par
+une recherche serveur plutôt que par une liste déroulante.
+
 ### Notification settings (#34, #38)
+**Cinq catégories, mais pas partout.** `NotificationCategory::all()` donne les
+quatre qu'un groupe sait régler ; `general()` y ajoute `messages`, qui ne vit
+dans aucun groupe et ne se règle qu'une fois, dans le réglage général. Son
+défaut est l'**immédiat** (`NotificationCategory::defaultLevel()`) et non le
+quotidien : quelqu'un qui écrit directement attend une réponse. Confondre les
+deux listes ferait apparaître sous chaque groupe un réglage « messages » qui ne
+voudrait rien dire.
+
+La notification d'un message privé est la seule **sans groupe**, et son titre
+est le **nom de celui qui écrit**, jamais un extrait : un résumé qui citerait un
+message privé le sortirait de la conversation pour le poser dans une boîte
+e-mail souvent partagée.
+
 What a member hears about is read from **two sources, in this order**: what
 the group itself says (`UsergroupMembership::getOwnNotificationLevel` — which
 reads a pre-#34 `unsubscribed` flag as « aucune notification » on all four
@@ -264,6 +344,67 @@ name. See `docs/delivrabilite-emails.md`.
 - Webpack Encore, SCSS (`assets/css/`), ES6 modules (`assets/js/`).
 - WYSIWYG is **Quill** (`assets/js/ui/wysiwyg.js`, `_quill-editor.scss`) — not CKEditor.
 - Maps via **Leaflet** + markercluster; data viz via **D3** (`GroupVisualizationController`, `MapManager`).
+
+### Design system (`assets/css/_config/`)
+
+**Deux fichiers font autorité, et rien ne se décide ailleurs.**
+
+`_colors.scss` sépare trois familles : la **marque** (`$brand_green`,
+`$brand_straw`… — les valeurs de la charte RNF, telles quelles), le **sens**
+(`$color_action`, `$color_success`, `$color_warning`, `$color_danger`,
+`$color_info`, plus un fond teinté `*_surface` par état) et le **neutre**
+(`$color_text`, `$color_text_muted`, `$color_canvas`, `$color_surface`,
+`$color_border`, `$color_border_strong`).
+
+La règle qui tient tout : **une couleur de marque ne porte jamais un rôle.**
+Le fichier a longtemps fait l'inverse — la charte plaquée sur les noms hérités
+de Naturadapt en réaffectant les variables (`$color_red: $color_senary`), si
+bien que le nom disait « rouge » et la valeur donnait du turquoise. Erreurs de
+formulaire, messages d'échec et bouton « Supprimer » s'affichaient en bleu-vert.
+Les anciens noms (`$color_orange_red`, `$color_lime_green`…) existent toujours
+et pointent maintenant sur la bonne sémantique ; rien de nouveau ne s'en sert.
+
+Les teintes sémantiques sont les teintes de la charte **assombries jusqu'à
+4,5:1 sur blanc et sur le fond de page**, à teinte et saturation constantes :
+le vert descend de `#0B885D` à `#0A8159`, un écart invisible qui fait passer le
+seuil. Ne pas « remettre la vraie couleur de la charte » sur du texte ou un
+bouton : c'est précisément ce qui est corrigé. La charte reste exacte partout
+où elle est décorative (aplats, pastilles de légende, `theme-color`).
+
+`_tokens.scss` porte l'échelle : espacements `$space_1..10` (multiples de 4px),
+rayons `$radius_sm/md/lg/full/circle`, ombres `$shadow_sm/md/lg` (trois
+niveaux, deux couches chacun), `@mixin focus-ring`, `@mixin transition`,
+z-index. Il **n'écrit aucune règle** — c'est `_setup/_root-tokens.scss`,
+importé par app.scss seul, qui expose les mêmes valeurs en propriétés
+personnalisées CSS. La séparation n'est pas cosmétique :
+`groups-visualization.scss` et `map/*.scss` sont des feuilles chargées
+directement par leur JavaScript, hors app.scss, et importent `_config/tokens`
+pour leurs variables — y laisser un bloc `:root` le dupliquerait dans une
+seconde feuille.
+
+**L'ordre des imports dans app.scss compte.** Outils → points de rupture →
+couleurs → tokens → **reset** → fontes → gabarit. Le reset n'est plus en tête :
+il se sert désormais des variables (`mark`, `fieldset`).
+
+**Le focus est traité une fois**, dans `_setup/_a11y.scss`, sur
+`:focus-visible`. Ne jamais réécrire `outline: none` dans un composant — c'est
+ce qui avait fait disparaître tout repère clavier de l'application. Le repli
+pour les vieux navigateurs tient à la règle `:focus:not(:focus-visible)`, qu'ils
+jugent invalide et ignorent ; ne pas l'entourer d'un `@supports selector(...)`,
+la version de PostCSS du projet (7.x) ne sait pas l'analyser et la compilation
+échoue.
+
+**Typographie.** Texte courant en **Jost** (variable, 100–900, SIL OFL), titres
+en **Arima Madurai** (400/700), servis depuis le domaine en woff2 :
+`assets/fonts/`, six fichiers, 156 Ko. Ce qui précédait embarquait 1,48 Mo de
+TTF, dont `GOTHIC.TTF` — les fichiers Century Gothic de Windows, propriété
+Monotype, redistribués depuis `/build/fonts/`. Ne pas les réintroduire. Jost
+étant variable, `font-weight: 500` ou `600` sont de vraies graisses et non des
+synthèses.
+
+Le `<link>` vers `fonts.googleapis.com` de `base.html.twig` a disparu : il
+chargeait Open Sans, appelée nulle part, et déposait l'IP de chaque visiteur
+chez un tiers.
 
 ## Key Configuration
 

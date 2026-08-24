@@ -1,0 +1,52 @@
+/**************************************************
+* TOKENS — EXPOSITION AU NAVIGATEUR
+**************************************************/
+
+/**
+ * Les mêmes valeurs que `_config/_tokens.scss`, en propriétés personnalisées.
+ *
+ * Séparées dans leur propre fichier parce que ce bloc **écrit** des règles :
+ * `groups-visualization.scss` est une seconde entrée webpack qui importe les
+ * tokens pour ses variables, et l'inclure là dupliquerait `:root` dans une
+ * deuxième feuille. Ici, il n'est émis qu'une fois, depuis app.scss.
+ */
+
+/**************************************************
+* EXPOSITION AU NAVIGATEUR
+**************************************************/
+
+:root {
+	--space-1:  #{$space_1};
+	--space-2:  #{$space_2};
+	--space-3:  #{$space_3};
+	--space-4:  #{$space_4};
+	--space-5:  #{$space_5};
+	--space-6:  #{$space_6};
+	--space-7:  #{$space_7};
+	--space-8:  #{$space_8};
+
+	--radius-sm: #{$radius_sm};
+	--radius-md: #{$radius_md};
+	--radius-lg: #{$radius_lg};
+
+	--shadow-sm: #{$shadow_sm};
+	--shadow-md: #{$shadow_md};
+	--shadow-lg: #{$shadow_lg};
+
+	--ease:          #{$ease};
+	--duration-fast: #{$duration_fast};
+	--duration-base: #{$duration_base};
+
+	--color-action:     #{$color_action};
+	--color-action-dark: #{$color_action_dark};
+	--color-text:       #{$color_text};
+	--color-text-muted: #{$color_text_muted};
+	--color-border:     #{$color_border};
+	--color-surface:    #{$color_surface};
+	--color-canvas:     #{$color_canvas};
+
+	--color-success: #{$color_success};
+	--color-warning: #{$color_warning};
+	--color-danger:  #{$color_danger};
+	--color-info:    #{$color_info};
+}

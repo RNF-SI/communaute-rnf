@@ -26,9 +26,9 @@
 
 	// Blocs de code
 	pre.ql-code-block {
-		background-color: #f4f4f4;
-		border: 1px solid #ddd;
-		border-radius: 4px;
+		background-color: $color_canvas;
+		border: 1px solid $color_border;
+		border-radius: $radius_sm;
 		padding: 1em;
 		margin: 1em 0;
 		font-family: 'Courier New', Courier, monospace;
@@ -39,9 +39,9 @@
 
 	// Code inline
 	code {
-		background-color: #f4f4f4;
-		border: 1px solid #ddd;
-		border-radius: 3px;
+		background-color: $color_canvas;
+		border: 1px solid $color_border;
+		border-radius: $radius_sm;
 		padding: 0.2em 0.4em;
 		font-family: 'Courier New', Courier, monospace;
 		font-size: 0.9em;
@@ -49,11 +49,11 @@
 
 	// Citations
 	blockquote {
-		border-left: 4px solid #ddd;
+		border-left: 4px solid $color_border_strong;
 		margin: 1em 0;
 		padding-left: 1em;
 		font-style: italic;
-		color: #666;
+		color: $color_text_muted;
 	}
 
 	// Listes - Corriger le problème de double puces
@@ -80,11 +80,13 @@
 
 	// Liens
 	a {
-		color: #007bff;
-		text-decoration: none;
+		color: $color_action;
+		text-decoration: underline;
+		text-underline-offset: .15em;
 
-		&:hover {
-			text-decoration: underline;
+		&:hover,
+		&:focus {
+			color: $color_action_dark;
 		}
 	}
 
@@ -98,8 +100,8 @@
 	
 	// Module de redimensionnement d'images custom
 	.ql-image-selected {
-		outline: 2px solid #007bff;
-		outline-offset: 2px;
+		outline: $focus_width solid $color_action;
+		outline-offset: $focus_offset;
 	}
 	
 	.ql-image-resize-overlay {
@@ -112,15 +114,15 @@
 		position: absolute;
 		width: 16px;
 		height: 16px;
-		background-color: #007bff;
-		border: 3px solid #ffffff;
+		background-color: $color_action;
+		border: 3px solid $color_surface;
 		border-radius: 50%;
 		cursor: nw-resize;
 		z-index: 10;
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+		box-shadow: $shadow_sm;
 		
 		&:hover {
-			background-color: #0056b3;
+			background-color: $color_action_dark;
 			transform: scale(1.1);
 		}
 	}
@@ -152,14 +154,14 @@
 	.ql-image-resize-toolbar {
 		position: absolute;
 		background-color: rgba(0, 0, 0, 0.9);
-		border-radius: 6px;
+		border-radius: $radius_md;
 		padding: 6px;
 		top: -45px;
 		left: 50%;
 		transform: translateX(-50%);
 		white-space: nowrap;
 		z-index: 20;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+		box-shadow: $shadow_md;
 		
 		button {
 			background: rgba(255, 255, 255, 0.1);
@@ -167,9 +169,9 @@
 			color: white;
 			padding: 4px 8px;
 			margin: 0 2px;
-			border-radius: 3px;
+			border-radius: $radius_sm;
 			cursor: pointer;
-			font-size: 11px;
+			font-size: rem(12px);
 			font-weight: 500;
 			
 			&:hover {
@@ -191,13 +193,13 @@
 	}
 
 	table td, table th {
-		border: 1px solid #ddd;
+		border: 1px solid $color_border;
 		padding: 0.5em;
 		text-align: left;
 	}
 
 	table th {
-		background-color: #f2f2f2;
+		background-color: $color_canvas;
 		font-weight: bold;
 	}
 
@@ -210,17 +212,19 @@
 
 // Ajustements de la barre d'outils Quill
 .quill-container .ql-toolbar {
-	border-top: 1px solid #ccc;
-	border-left: 1px solid #ccc;
-	border-right: 1px solid #ccc;
+	border-top: 1px solid $color_border_strong;
+	border-left: 1px solid $color_border_strong;
+	border-right: 1px solid $color_border_strong;
 	border-bottom: none;
-	background-color: #f8f9fa;
+	border-radius: $radius_sm $radius_sm 0 0;
+	background-color: $color_canvas;
 }
 
 .quill-container .ql-container {
-	border-bottom: 1px solid #ccc;
-	border-left: 1px solid #ccc;
-	border-right: 1px solid #ccc;
+	border-bottom: 1px solid $color_border_strong;
+	border-left: 1px solid $color_border_strong;
+	border-right: 1px solid $color_border_strong;
 	border-top: none;
+	border-radius: 0 0 $radius_sm $radius_sm;
 	min-height: 200px;
 }

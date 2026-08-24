@@ -67,12 +67,45 @@
 * CARDS
 **************************************************/
 
+/**
+ * Les cartes prennent le rayon et l'ombre de l'échelle (voir _config/tokens).
+ *
+ * L'ombre d'avant — `0 .05rem .2rem rgba(noir, .25)` — était une seule couche
+ * très opaque et très courte : de près elle ressemblait à un liseré gris sale
+ * plutôt qu'à un relief. Les trois niveaux de l'échelle sont plus légers en
+ * opacité et plus larges en portée, ce qui se lit comme de la hauteur.
+ */
+
 @mixin shadow() {
-	box-shadow: 0 .05rem .2rem rgba($color_default, .25);
+	box-shadow: $shadow_sm;
+}
+
+@mixin shadow_raised() {
+	box-shadow: $shadow_md;
+}
+
+@mixin shadow_floating() {
+	box-shadow: $shadow_lg;
 }
 
 @mixin card_shadow() {
-	color:            $color_default;
-	background-color: white;
+	color:            $color_text;
+	background-color: $color_surface;
+	border-radius:    $radius_md;
+
 	@include shadow;
+}
+
+/**
+ * Une carte qui réagit au survol : elle se soulève d'un cran, elle ne change
+ * pas de couleur. Réservé à ce qui est cliquable en entier.
+ */
+@mixin card_interactive() {
+	@include card_shadow;
+	@include transition(box-shadow, transform);
+
+	&:hover,
+	&:focus-within {
+		box-shadow: $shadow_md;
+	}
 }

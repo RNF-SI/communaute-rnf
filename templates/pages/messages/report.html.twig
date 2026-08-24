@@ -1,0 +1,75 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'pages.messages.report'|trans }} | {{ plateform.name }}{% endblock %}
+
+{#
+	Signaler un message.
+
+	L'écran montre exactement ce qui sera transmis — le message et les quelques
+	messages qui le précèdent, recopiés tels quels — avant de valider.
+	Signaler quelqu'un est un geste sérieux : il ne doit pas se faire sans
+	savoir ce qu'on donne à lire.
+#}
+
+{% block main %}
+	<section class="main main__messages main__messages-report">
+		<div class="main--content content-container">
+			<div class="thin">
+				{% include 'components/app-flashes.html.twig' %}
+
+				<div class="panel">
+					<h1 class="h1">{{ 'pages.messages.report'|trans }}</h1>
+				</div>
+
+				<p>{{ 'pages.messages.report_intro'|trans }}</p>
+
+				<section class="report--preview">
+					<h2 class="h2">{{ 'pages.messages.report_preview'|trans }}</h2>
+
+					<ol class="thread thread__preview">
+						{% for previous in context %}
+							<li class="message">
+								<div class="message--head">
+									<span class="message--author">{{ previous.author ? previous.author.name : 'pages.messages.unknown_author'|trans }}</span>
+									<span class="message--date">{{ previous.createdAt|ago }}</span>
+								</div>
+								<div class="message--body">
+									{% if previous.isDeleted %}
+										<em class="message--deleted">{{ 'pages.messages.deleted'|trans }}</em>
+									{% else %}
+										{{ previous.body|tags }}
+									{% endif %}
+								</div>
+							</li>
+						{% endfor %}
+
+						<li class="message message__reported">
+							<div class="message--head">
+								<span class="message--author">{{ message.author ? message.author.name : 'pages.messages.unknown_author'|trans }}</span>
+								<span class="message--date">{{ message.createdAt|ago }}</span>
+							</div>
+							<div class="message--body">{{ message.body|tags }}</div>
+						</li>
+					</ol>
+				</section>
+
+				<form method="post" action="{{ path('messages_message_report', {'id': message.id}) }}">
+					<input type="hidden" name="_token" value="{{ csrf_token('messages') }}">
+
+					<div class="form-row form-row__field">
+						<label for="report-reason">{{ 'pages.messages.report_reason'|trans }}</label>
+						<textarea id="report-reason" name="reason" rows="4"></textarea>
+						<div class="hint">{{ 'pages.messages.report_reason_hint'|trans }}</div>
+					</div>
+
+					<div class="form-row form-row__submit">
+						<button type="submit" class="cta">{{ 'pages.messages.report_submit'|trans }}</button>
+						<a class="cta__inverted" href="{{ path('messages_index', {'conversation': message.conversation.id}) }}">
+							{{ 'pages.messages.cancel'|trans }}
+						</a>
+					</div>
+				</form>
+			</div>
+		</div>
+	</section>
+{% endblock %}

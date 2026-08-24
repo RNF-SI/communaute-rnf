@@ -26,6 +26,15 @@
 				</div>
 			</div>
 
+			{# Sortir de la discussion sans sortir du sujet : la conversation
+			   s'ouvre avec le tag qui y ramène. #}
+			{% if is_granted(constant('App\\Security\\ConversationVoter::CONTACT'), message.author) %}
+				<a class="message--private-reply" href="{{ path('messages_new', {
+					'to': message.author.id,
+					'about': message.discussion.title
+				}) }}">{{ 'pages.messages.reply_privately'|trans }}</a>
+			{% endif %}
+
 			{% if is_granted(constant('App\\Security\\GroupDiscussionVoter::EDIT_MESSAGE'), message) %}
 				<div class="in-list-admin-panel">
 					<button class="toggle-button" type="button" data-toggle-element="sibling" title="{{ 'ui.settings'|trans|escape('html_attr') }}">

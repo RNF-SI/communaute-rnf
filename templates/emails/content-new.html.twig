@@ -26,7 +26,10 @@
 		<a href="{{ absolute_url(notification.url) }}">{{ notification.title }}</a>
 	</p>
 
-	{% if notification.author %}
+	{# Pour un message privé, le titre de la notification *est* le nom de
+	   celui qui écrit : répéter « ajouté par » dirait deux fois la même
+	   chose. Et rien du message lui-même ne sort d'ici. #}
+	{% if notification.author and notification.type != constant('App\\Entity\\Notification::MESSAGE_NEW') %}
 		<p class="sub">{{ 'emails.content.by'|trans|format(notification.author.displayName) }}</p>
 	{% endif %}
 

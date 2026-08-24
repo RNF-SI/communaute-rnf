@@ -55,8 +55,11 @@
 	a {
 		text-decoration: none;
 
+		@include transition(color);
+
 		&:focus,
 		&:hover {
+			color:           $color_action;
 			text-decoration: underline;
 		}
 	}
@@ -76,11 +79,14 @@
 		float:         left;
 		width:         rem(58px);
 		height:        auto;
-		border-radius: rem(5px);
+		border-radius: $radius_sm;
 		overflow:      hidden;
 	}
 
-	font-size:   rem(10px);
-	line-height: (13 * 0.1);
-	color:       #9b9b9b;
+	// Était 10px : le plus petit texte de l'application, sous le plancher de
+	// lisibilité admis (12px), pour une mention qui se lit rarement mais qui
+	// doit pouvoir se lire.
+	font-size:   rem(12px);
+	line-height: 1.45;
+	color:       $color_text_muted;
 }

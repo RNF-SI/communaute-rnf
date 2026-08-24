@@ -1,46 +1,88 @@
 @use "sass:math";
 
+/**************************************************
+* ONGLETS D'ADMINISTRATION
+**************************************************/
+
+/**
+ * Huit onglets sur une seule ligne, en `nowrap` et sans débordement prévu :
+ * sous 700px de large, les derniers sortaient de l'écran sans qu'on puisse les
+ * atteindre. La barre défile désormais horizontalement, et le trait de
+ * soulignement se prolonge sous toute la largeur au lieu de s'arrêter avec les
+ * onglets.
+ */
+
 .admin-tabs {
-	margin-bottom: rem(30px);
+	position:      relative;
+	margin-bottom: $space_7;
 
 	@include clearulli;
 
 	ul {
-		display:         flex;
-		flex-flow:       row nowrap;
-		justify-content: normal;
-		align-items:     flex-start;
-		border-bottom:   1px solid $color_grey_border;
+		display:                    flex;
+		flex-flow:                  row nowrap;
+		align-items:                stretch;
+
+		overflow-x:                 auto;
+		overflow-y:                 hidden;
+		-webkit-overflow-scrolling: touch;
+		scrollbar-width:            thin;
+
+		border-bottom:              1px solid $color_border;
+	}
+
+	li {
+		flex:         0 0 auto;
+		margin-right: $space_5;
+
+		&:last-child {
+			margin-right: 0;
+		}
 	}
 
 	a {
 		display:         block;
-		padding:         rem(10px) 0;
+		padding:         $space_3 0;
 
+		white-space:     nowrap;
 		text-decoration: none;
 
-		@include font_default_bold;
-		font-size:       font_size_default();
-		color:           $color_default;
+		@include font_default_medium;
+		font-size:       rem(15px);
+		color:           $color_text_muted;
 
+		// Le trait vit sous le lien depuis le début, transparent au repos :
+		// l'onglet ne se décale donc pas de 3px en devenant actif.
 		border-bottom:   3px solid transparent;
+
+		@include transition(color, border-color);
+
+		&:hover,
+		&:focus {
+			color:        $color_text;
+			border-color: $color_border_strong;
+		}
+
+		&:focus-visible {
+			@include focus-ring-flat;
+		}
 	}
 
-	.active a {
+	// `aria-current` porte l'information, `.active` reste pour les gabarits
+	// qui ne l'ont pas encore.
+	.active a,
+	a[aria-current='page'] {
+		@include font_default_bold;
+
 		color:        $color_action;
 		border-color: $color_action;
 	}
-
-	li {
-		margin-right: rem(25px);
-	}
-
 }
 
 .main__user-page__administrator {
 	.admin-form {
 		&:not(:last-child) {
-			margin-bottom: rem(50px);
+			margin-bottom: $space_8;
 		}
 
 		@include card_shadow;
@@ -63,11 +105,12 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		border:1px solid $color_grey_border;
-		border-radius: 0;
+		border:        1px solid $color_border;
+		border-radius: $radius_sm;
 		.logo-img {
-			width:  rem(136px);
-			height: rem(70px);
+			width:      rem(136px);
+			height:     rem(70px);
+			object-fit: contain;
 		}
 	}
 
@@ -81,25 +124,29 @@
 .element_title {
 	@include font_default_bold;
 
-	font-size: 22px;
-
+	font-size:     rem(20px);
+	margin-bottom: $space_3;
 }
 
-.form-rows{
-	margin-bottom: rem(35px);
+.form-rows {
+	margin-bottom: $space_6;
 }
 
 .columns__36-36-28 {
-	border-bottom:   1px solid $color_grey_border;
+	border-bottom: 1px solid $color_border;
 
-	.form-row-aligned{
-		margin-top: rem(13px);
-		margin-bottom: rem(13px);
-		label{
-			font-size: 0.875rem;
+	.form-row-aligned {
+		margin-top:    $space_3;
+		margin-bottom: $space_3;
+
+		label {
+			font-size: rem(14px);
 		}
-		input{
-			font-size: 0.8125rem;
+
+		// Était 0.8125rem, soit 13px : le plus petit corps de saisie de
+		// l'application, et le seul sous les 14px du reste des formulaires.
+		input {
+			font-size: rem(14px);
 		}
 	}
 }
@@ -112,16 +159,35 @@
 	}
 }
 
+/**
+ * Monter / descendre un élément dans une liste. Deux carrés de 40px qui
+ * n'avaient ni survol, ni focus, ni rayon : on ne savait pas qu'ils étaient
+ * cliquables avant de cliquer.
+ */
 .order_link_change {
+	width:         rem(40px);
+	height:        rem(40px);
+	margin:        0 $space_1;
+	padding:       0;
 
-	border: none;
-	padding: 0;
-	background: none;
-	width:               40px;
-	height:              40px;
-	margin-left: 5px;
-	margin-right: 5px;
+	border:        none;
+	border-radius: $radius_sm;
+	background:    none;
+	cursor:        pointer;
 
+	@include transition(background-color, transform);
+
+	&:hover {
+		background-color: $color_action_dark;
+	}
+
+	&:active {
+		transform: scale(.94);
+	}
+
+	&:focus-visible {
+		@include focus-ring;
+	}
 }
 
 .order_link_change_up {
@@ -163,9 +229,11 @@
 		@import "../../_assets/add.svg";
 	}
 
-	span{
-		color: #2FB67D;
-		font-size: 0.875rem;
+	span {
+		// Était #2FB67D — un vert voisin du vert RNF, mais pas le même : à
+		// côté d'un bouton de la charte, l'écart se voyait.
+		color:     $color_action;
+		font-size: rem(14px);
 	}
 }
 
@@ -254,8 +322,8 @@
 	}
 
 	.user--presentation {
-		font-size: math.div(12, 16) * 1em;
-		color:     $color_grey_light;
+		font-size: rem(13px);
+		color:     $color_text_muted;
 	}
 
 }
@@ -308,8 +376,8 @@
 				@import "../../_assets/star.svg";
 			}
 
-			span{
-				font-size: 0.875rem;
+			span {
+				font-size: rem(14px);
 			}
 		}
 
@@ -317,10 +385,10 @@
 
 }
 
-.subtitle-input{
-	input{
-		font-weight: bold;
-		font-size: 0.875rem;;
+.subtitle-input {
+	input {
+		font-weight: 600;
+		font-size:   rem(14px);
 	}
 }
 

@@ -255,3 +255,25 @@
 	color:     $color_grey_neutral;
 	font-size: rem(13px);
 }
+
+/**************************************************
+* RENOMMER / SUIVRE
+**************************************************/
+
+/**
+ * Les deux actions du haut d'une discussion — « Renommer le sujet » et « Ne
+ * plus suivre cette discussion » — partagent une seule colonne du panneau,
+ * qui ne met en page que deux enfants. Elles se touchaient : rien ne les
+ * séparait que l'espace typographique entre deux liens.
+ */
+.discussion-follow {
+	display:         flex;
+	flex-flow:       row wrap;
+	align-items:     center;
+	justify-content: flex-end;
+	gap:             $space_3;
+
+	@include medium-or-less {
+		justify-content: flex-start;
+	}
+}

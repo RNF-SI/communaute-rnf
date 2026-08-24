@@ -1,6 +1,7 @@
 # translations/messages.fr.yaml
 ui:
     home: "Accueil"
+    skip_to_content: "Aller au contenu"
     menu: "Menu"
     see_more: "En savoir plus"
     see_all: "Tout voir"
@@ -370,6 +371,8 @@ pages:
             introduction: "Gérez rapidement vos adhésions aux groupes"
             link: "Mes groupes"
         notifications_settings:
+            messages_open: "Accepter de recevoir des messages privés"
+            messages_open_hint: "Décochée, cette case empêche qu’une nouvelle conversation s’ouvre avec vous. Les conversations en cours restent ouvertes : vous continuez d’y répondre. L’équipe RNF peut toujours vous joindre."
             title: "Notifications"
             introduction: "Choisissez ce dont vous voulez être prévenu·e : une fois pour tous vos groupes, puis groupe par groupe pour ceux qui doivent s’en écarter."
             emails: "Recevoir des e-mails"
@@ -392,6 +395,7 @@ pages:
                 pages: "Pages"
                 articles: "Actualités"
                 documents: "Documents"
+                messages: "Messages privés"
             levels:
                 none: "Aucune notification"
                 app: "Sur la plateforme seulement"
@@ -416,6 +420,7 @@ pages:
                 page_create: "Une nouvelle page a été créée :"
                 article_create: "Une nouvelle actualité a été publiée :"
                 document_create: "Un nouveau document a été déposé :"
+                message_new: "Nouveau message de"
         my_discussions:
             title: "Mes discussions"
             introduction: "Retrouvez les discussions que vous avez ouvertes ou auxquelles vous avez participé, tous groupes confondus."
@@ -482,6 +487,8 @@ pages:
                 all: "Toutes les commissions"
                 theme_label: "Filtrer par thématique"
                 theme_all: "Toutes les thématiques"
+                search_label: "Rechercher un groupe"
+                search_placeholder: "Nom ou mot-clé"
                 submit: "Filtrer"
             list:
                 all: "Groupes"
@@ -764,6 +771,58 @@ pages:
             end:
                 title: "À vous de jouer"
                 body: "C’est tout pour l’essentiel. Rejoignez un groupe et présentez-vous dans une discussion : c’est la meilleure façon de commencer."
+    messages:
+        title: "Messagerie"
+        link: "Messages"
+        new: "Nouveau message"
+        back: "Retour à la messagerie"
+        write: "Votre message"
+        write_to: "Écrire"
+        reply_privately: "Répondre en privé"
+        box_closed: "Ce membre n’accepte pas les messages privés."
+        placeholder: "Écrivez votre message…"
+        tags_hint: "Tapez « @ » pour citer une personne, « # » pour renvoyer vers un groupe, un document, une page, une actualité ou une discussion."
+        filter: "Rechercher dans mes conversations"
+        filter_submit: "Rechercher"
+        filter_placeholder: "Nom ou message"
+        inbox: "Boîte de réception"
+        archived: "Archivées"
+        empty: "Aucune conversation pour l’instant. Écrivez à quelqu’un depuis sa fiche, ou par « Nouveau message »."
+        no_archived: "Aucune conversation archivée."
+        no_match: "Aucune conversation ne correspond."
+        pick: "Choisissez une conversation à gauche, ou ouvrez-en une nouvelle."
+        nobody: "Conversation sans autre participant"
+        thread_empty: "Rien n’a encore été écrit ici."
+        new_messages: "Nouveaux messages"
+        unknown_author: "Compte supprimé"
+        deleted: "Message supprimé"
+        edited: "modifié"
+        send: "Envoyer"
+        save: "Enregistrer"
+        edit: "Modifier"
+        delete: "Supprimer"
+        delete_confirm: "Supprimer ce message ? Le texte disparaîtra pour tout le monde ; sa place restera dans le fil."
+        cancel: "Annuler"
+        archive: "Archiver"
+        restore: "Remettre dans la boîte"
+        leave: "Quitter la conversation"
+        leave_confirm: "Quitter cette conversation ? Vous ne recevrez plus ses messages. Ce que vous y avez écrit y reste."
+        add_someone: "Ajouter quelqu’un"
+        add_hint: "La personne ajoutée lira tout ce qui a été écrit avant son arrivée."
+        add_submit: "Ajouter à la conversation"
+        search_people: "Chercher un membre par son nom"
+        search_submit: "Chercher"
+        no_people: "Aucun membre trouvé, ou déjà dans la conversation."
+        pick_people: "Cherchez un membre par son nom pour commencer."
+        recipients: "Destinataires"
+        results: "Résultats"
+        report: "Signaler"
+        report_intro: "Le signalement transmet à l’équipe RNF une copie du message et des quelques messages qui le précèdent. Le reste de la conversation n’est pas transmis, et personne ne peut l’ouvrir."
+        report_preview: "Ce qui sera transmis"
+        report_reason: "Ce que vous voulez ajouter"
+        report_reason_hint: "Facultatif. Quelques mots aident l’équipe à comprendre ce qui pose problème."
+        report_submit: "Transmettre le signalement"
+
     event:
         list:
             title: "Activités"
@@ -798,6 +857,20 @@ pages:
                 title: "Administrateurs"
                 name: "Administrateurs"
                 introduction: "Liste des administrateurs de la plateforme. Ajoutez, supprimez les rôles d'admin dans l'annuaire du groupe Communauté"
+            message_reports:
+                title: "Signalements"
+                name: "Signalements"
+                introduction: "Les messages privés que des membres ont transmis à l’équipe"
+        message_reports:
+            scope: "Cette page ne montre que ce que chaque signalement a recopié : le message transmis et les quelques messages qui le précédaient. Les conversations privées ne sont consultables ni ici, ni ailleurs."
+            pending: "À traiter"
+            handled: "Traités"
+            empty: "Aucun signalement."
+            against: "Message de"
+            by: "Signalé par"
+            handle: "Marquer comme traité"
+            handled_by: "Traité par"
+            reopen: "Rouvrir"
 
 
 
@@ -843,6 +916,20 @@ emails:
         settings: "Vous recevez cet e-mail tout de suite parce que vous l’avez demandé. Pour passer à un résumé, voyez vos"
 
 messages:
+    messaging:
+        incomplete: "Choisissez au moins un destinataire et écrivez votre message."
+        empty: "Votre message est vide."
+        closed_box: "%name% n’accepte pas les messages privés."
+        unknown_conversation: "Cette conversation n’existe pas, ou ne vous concerne pas."
+        added: "La conversation compte un participant de plus."
+        left: "Vous avez quitté la conversation."
+        archived: "Conversation archivée."
+        restored: "Conversation remise dans votre boîte."
+        deleted: "Message supprimé."
+        reported: "Signalement transmis à l’équipe RNF. Merci."
+        outsiders: "%names% ne fait pas partie de cette conversation : la citer ne la prévient pas. Ajoutez-la si vous voulez qu’elle lise."
+        report_handled: "Signalement classé."
+        report_reopened: "Signalement rouvert."
     user:
         already_connected: "Vous êtes déjà connecté·e."
         invalid_credentials: "Mot de passe incorrect"

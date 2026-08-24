@@ -201,8 +201,16 @@ class UserController extends AbstractController
 
 			$user->setWantsEmails(!empty($settings['emails']));
 
+			// La boîte aux lettres : ouverte à tout membre, ou fermée. Elle
+			// vit dans le même formulaire parce qu'elle répond à la même
+			// question — ce que j'accepte de recevoir — mais elle n'a rien
+			// d'un niveau de notification et ne se règle pas par groupe.
+			$user->setMessagesOpen(!empty($settings['messagesOpen']));
+
 			// Le réglage général : ce que vaut un groupe qui ne dit rien.
-			foreach (NotificationCategory::all() as $category) {
+			// general() et non all() : « messages » s'y règle aussi, une fois
+			// pour toute la plateforme.
+			foreach (NotificationCategory::general() as $category) {
 				if (!empty($settings['defaults'][$category])) {
 					$user->setDefaultNotificationLevel($category, $settings['defaults'][$category]);
 				}
@@ -261,9 +269,12 @@ class UserController extends AbstractController
 		}
 
 		return $this->render('pages/user/parameters-edit.html.twig', [
-				'user'       => $user,
-				'categories' => NotificationCategory::all(),
-				'levels'     => NotificationLevel::all(),
+				'user'              => $user,
+				// Deux listes : ce qu'un groupe sait régler, et tout ce qui se
+				// règle en général.
+				'categories'        => NotificationCategory::all(),
+				'generalCategories' => NotificationCategory::general(),
+				'levels'            => NotificationLevel::all(),
 		]);
 	}
 

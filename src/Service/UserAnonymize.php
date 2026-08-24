@@ -2,7 +2,9 @@
 
 namespace App\Service;
 
+use App\Entity\ConversationParticipant;
 use App\Entity\User;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -72,5 +74,29 @@ class UserAnonymize {
 		$user->setLongitude(null);
 		$user->setEmailNew(null);
 		$user->setEmailToken(null);
+
+		// La messagerie : le compte sort de ses conversations et ferme sa
+		// boîte. Ce qu'il y a écrit reste — l'effacer trouerait le fil de ceux
+		// qui restent, comme pour un message de discussion — mais plus
+		// personne ne peut lui écrire, et il ne reçoit plus rien.
+		$user->setMessagesOpen(false);
+
+		$participations = $this->manager->getRepository(ConversationParticipant::class)
+										->findBy(['user' => $user, 'leftAt' => null]);
+
+		$now = new DateTime();
+
+		foreach ($participations as $participation) {
+			$participation->setLeftAt($now);
+
+			$conversation = $participation->getConversation();
+
+			// Un tête-à-tête qu'on quitte n'est plus une boîte aux lettres :
+			// sans cela la clé unique retiendrait une conversation dont ce
+			// compte est sorti.
+			if ($conversation) {
+				$conversation->setPairKey(null);
+			}
+		}
 	}
 }

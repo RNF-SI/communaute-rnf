@@ -1,0 +1,250 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'pages.messages.title'|trans }} | {{ plateform.name }}{% endblock %}
+
+{#
+	La messagerie, en une page : la liste des conversations à gauche, celle
+	qui est ouverte à droite.
+
+	Tout est rendu par le serveur. Sur un écran étroit, les deux colonnes se
+	rangent l'une sous l'autre et la liste se replie dès qu'une conversation
+	est ouverte — il n'y a donc pas d'écran où l'on ne voit ni l'une ni
+	l'autre.
+#}
+
+{% block main %}
+	<section class="main main__messages">
+		<div class="main--content content-container">
+			{% include 'components/app-flashes.html.twig' %}
+
+			<div class="panel">
+				<h1 class="h1">{{ 'pages.messages.title'|trans }}</h1>
+
+				<div class="panel--edit">
+					<a class="cta" href="{{ path('messages_new') }}">{{ 'pages.messages.new'|trans }}</a>
+				</div>
+			</div>
+
+			<div class="messaging{{ conversation ? ' messaging__open' : '' }}">
+				<div class="messaging--list">
+					<form class="messaging--filter" method="get" action="{{ path('messages_index') }}">
+						{% if archived %}<input type="hidden" name="archived" value="1">{% endif %}
+						<label class="sr-only" for="messages-filter">{{ 'pages.messages.filter'|trans }}</label>
+						{# L'intitulé dit tout — il n'est lu que par un lecteur d'écran.
+						   Le placeholder, lui, tient dans la colonne : « Rechercher dans
+						   mes conversations » y était tronqué à « Rechercher dans m ». #}
+						<input id="messages-filter" type="search" name="q" value="{{ query }}"
+							   placeholder="{{ 'pages.messages.filter_placeholder'|trans }}">
+						<button type="submit" class="cta__inverted">{{ 'pages.messages.filter_submit'|trans }}</button>
+					</form>
+
+					<nav class="messaging--tabs">
+						<a class="{{ archived ? '' : 'is-active' }}"
+						   href="{{ path('messages_index', {'q': query}) }}">{{ 'pages.messages.inbox'|trans }}</a>
+						<a class="{{ archived ? 'is-active' : '' }}"
+						   href="{{ path('messages_index', {'q': query, 'archived': 1}) }}">{{ 'pages.messages.archived'|trans }}</a>
+					</nav>
+
+					{% if conversations is empty %}
+						<p class="messaging--empty">
+							{{ (query ? 'pages.messages.no_match' : (archived ? 'pages.messages.no_archived' : 'pages.messages.empty'))|trans }}
+						</p>
+					{% else %}
+						<ul class="conversations">
+							{% for item in conversations %}
+								{% set mine = item.getParticipantFor(app.user) %}
+								{% set last = lasts[item.id]|default(null) %}
+								{% set unread = last and mine and mine.hasNotRead(last) %}
+
+								<li class="conversation-item{{ unread ? ' conversation-item__unread' : '' }}{{ conversation and conversation.id == item.id ? ' is-open' : '' }}">
+									<a href="{{ path('messages_index', {'conversation': item.id, 'q': query, 'archived': archived ? 1 : null}) }}">
+										<span class="conversation-item--who">
+											{%- set others = item.getOthers(app.user) -%}
+											{%- if others is empty -%}
+												{{ 'pages.messages.nobody'|trans }}
+											{%- else -%}
+												{%- for other in others|slice(0, 3) -%}
+													{{ other.name }}{{ loop.last ? '' : ', ' }}
+												{%- endfor -%}
+												{%- if others|length > 3 %} +{{ others|length - 3 }}{% endif -%}
+											{%- endif -%}
+										</span>
+
+										{% if last %}
+											<span class="conversation-item--excerpt">
+												{{- last.isDeleted ? 'pages.messages.deleted'|trans : last.getExcerpt(80) -}}
+											</span>
+											<span class="conversation-item--date">{{ last.createdAt|ago }}</span>
+										{% endif %}
+									</a>
+								</li>
+							{% endfor %}
+						</ul>
+					{% endif %}
+				</div>
+
+				<div class="messaging--thread">
+					{% if not conversation %}
+						<p class="messaging--placeholder">{{ 'pages.messages.pick'|trans }}</p>
+					{% else %}
+						{% set mine = conversation.getParticipantFor(app.user) %}
+
+						<div class="thread--header">
+							<h2 class="h2">
+								{%- set others = conversation.getOthers(app.user) -%}
+								{%- if others is empty -%}
+									{{ 'pages.messages.nobody'|trans }}
+								{%- else -%}
+									{%- for other in others -%}
+										<a href="{{ path('member', {'user_id': other.id}) }}">{{ other.name }}</a>{{ loop.last ? '' : ', ' }}
+									{%- endfor -%}
+								{%- endif -%}
+							</h2>
+
+							<div class="thread--actions">
+								<form method="post" action="{{ path('messages_archive', {'id': conversation.id}) }}">
+									<input type="hidden" name="_token" value="{{ csrf_token('messages') }}">
+									{% if mine and mine.isArchived %}
+										<input type="hidden" name="restore" value="1">
+										<button type="submit" class="cta__inverted">{{ 'pages.messages.restore'|trans }}</button>
+									{% else %}
+										<button type="submit" class="cta__inverted">{{ 'pages.messages.archive'|trans }}</button>
+									{% endif %}
+								</form>
+
+								<form method="post" action="{{ path('messages_leave', {'id': conversation.id}) }}">
+									<input type="hidden" name="_token" value="{{ csrf_token('messages') }}">
+									<button type="submit" class="cta__inverted"
+											data-confirm-message="{{ 'pages.messages.leave_confirm'|trans }}">
+										{{ 'pages.messages.leave'|trans }}
+									</button>
+								</form>
+							</div>
+						</div>
+
+						<ol class="thread">
+							{% for message in messages %}
+								{# La barre « nouveaux messages ». Le message devant lequel
+								   elle se pose est repéré côté PHP : un compteur posé dans
+								   une boucle Twig ne survivrait pas à la boucle, et la barre
+								   se répéterait à chaque message non lu. #}
+								{% if firstUnread and message.id == firstUnread %}
+									<li class="thread--separator">{{ 'pages.messages.new_messages'|trans }}</li>
+								{% endif %}
+
+								<li class="message{{ message.author and message.author.id == app.user.id ? ' message__mine' : '' }}"
+									id="message-{{ message.id }}">
+									<div class="message--head">
+										<span class="message--author">
+											{% if message.author %}
+												<a href="{{ path('member', {'user_id': message.author.id}) }}">{{ message.author.name }}</a>
+											{% else %}
+												{{ 'pages.messages.unknown_author'|trans }}
+											{% endif %}
+										</span>
+										<span class="message--date">{{ message.createdAt|ago }}</span>
+										{% if message.isEdited %}
+											<span class="message--edited">{{ 'pages.messages.edited'|trans }}</span>
+										{% endif %}
+									</div>
+
+									<div class="message--body">
+										{% if message.isDeleted %}
+											<em class="message--deleted">{{ 'pages.messages.deleted'|trans }}</em>
+										{% else %}
+											{{ message.body|tags }}
+										{% endif %}
+									</div>
+
+									{% if not message.isDeleted %}
+										<div class="message--tools">
+											{% if is_granted(constant('App\\Security\\ConversationVoter::EDIT'), message) %}
+												<details class="message--edit">
+													<summary>{{ 'pages.messages.edit'|trans }}</summary>
+													<form method="post" action="{{ path('messages_message_edit', {'id': message.id}) }}">
+														<input type="hidden" name="_token" value="{{ csrf_token('messages') }}">
+														{% include 'components/message-composer.html.twig' with {
+															'id': 'edit-' ~ message.id,
+															'body': message.body,
+															'rows': 3,
+															'label': 'pages.messages.edit'|trans
+														} only %}
+														<button type="submit" class="cta">{{ 'pages.messages.save'|trans }}</button>
+													</form>
+												</details>
+
+												<form method="post" action="{{ path('messages_message_delete', {'id': message.id}) }}">
+													<input type="hidden" name="_token" value="{{ csrf_token('messages') }}">
+													<button type="submit" class="message--tool"
+															data-confirm-message="{{ 'pages.messages.delete_confirm'|trans }}">
+														{{ 'pages.messages.delete'|trans }}
+													</button>
+												</form>
+											{% endif %}
+
+											{% if is_granted(constant('App\\Security\\ConversationVoter::REPORT'), message) %}
+												<a class="message--tool" href="{{ path('messages_message_report', {'id': message.id}) }}">
+													{{ 'pages.messages.report'|trans }}
+												</a>
+											{% endif %}
+										</div>
+									{% endif %}
+								</li>
+							{% else %}
+								<li class="thread--empty">{{ 'pages.messages.thread_empty'|trans }}</li>
+							{% endfor %}
+						</ol>
+
+						<form class="thread--reply" method="post" action="{{ path('messages_send', {'id': conversation.id}) }}">
+							<input type="hidden" name="_token" value="{{ csrf_token('messages') }}">
+							{% include 'components/message-composer.html.twig' with {'id': 'reply-body'} only %}
+							<button type="submit" class="cta">{{ 'pages.messages.send'|trans }}</button>
+						</form>
+
+						{# Ajouter quelqu'un : on cherche par le nom, le serveur répond,
+						   on coche. Aucun JavaScript n'est nécessaire pour choisir à
+						   qui l'on parle. #}
+						<details class="thread--add"{{ search ? ' open' : '' }}>
+							<summary>{{ 'pages.messages.add_someone'|trans }}</summary>
+							<p class="hint">{{ 'pages.messages.add_hint'|trans }}</p>
+
+							<form class="recipients--search" method="get" action="{{ path('messages_index') }}">
+								<input type="hidden" name="conversation" value="{{ conversation.id }}">
+								<label class="sr-only" for="add-search">{{ 'pages.messages.search_people'|trans }}</label>
+								<input id="add-search" type="search" name="add" value="{{ search }}"
+									   placeholder="{{ 'pages.messages.search_people'|trans }}">
+								<button type="submit" class="cta__inverted">{{ 'pages.messages.search_submit'|trans }}</button>
+							</form>
+
+							{% if search %}
+								{# `candidates` arrive déjà débarrassé de ceux qui sont dans
+								   la conversation : le tri est fait côté PHP. #}
+								{% if candidates is empty %}
+									<p class="hint">{{ 'pages.messages.no_people'|trans }}</p>
+								{% else %}
+									<form method="post" action="{{ path('messages_add', {'id': conversation.id}) }}">
+										<input type="hidden" name="_token" value="{{ csrf_token('messages') }}">
+										<ul class="recipients--candidates">
+											{% for candidate in candidates %}
+												<li>
+													<label>
+														<input type="checkbox" name="to[]" value="{{ candidate.id }}">
+														{{ candidate.name }}
+														{% if candidate.organisation %}
+															<span class="recipients--hint">{{ candidate.organisation }}</span>
+														{% endif %}
+													</label>
+												</li>
+											{% endfor %}
+										</ul>
+										<button type="submit" class="cta">{{ 'pages.messages.add_submit'|trans }}</button>
+									</form>
+								{% endif %}
+							{% endif %}
+						</details>
+					{% endif %}
+				</div>
+			</div>
+		</div>
+	</section>
+{% endblock %}

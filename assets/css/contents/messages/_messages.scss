@@ -1,0 +1,568 @@
+/**************************************************
+* MESSAGERIE
+**************************************************/
+
+/**
+ * La messagerie : deux colonnes sur un écran large, deux blocs l'un sous
+ * l'autre sur un écran étroit.
+ *
+ * Rien ici ne dépend du JavaScript : la mise en page est la même que la liste
+ * de suggestions des tags soit branchée ou non.
+ */
+
+.sr-only {
+	@include visually-hidden;
+}
+
+.messaging {
+	display:               grid;
+	gap:                   column_gap();
+	margin-top:            column_gap();
+	grid-template-columns: 1fr;
+
+	@include large-or-more {
+		// La liste garde une largeur fixe : c'est le fil qui profite de la
+		// place, et c'est lui qu'on lit.
+		grid-template-columns: rem(320px) 1fr;
+	}
+}
+
+.messaging--list {
+	// 50px de chaque côté sur une colonne de 320 : il n'en restait que 220
+	// pour le champ de recherche et les noms de conversation, qui se
+	// tronquaient tous les deux. Le rembourrage d'une colonne étroite n'a pas
+	// à être celui d'une page.
+	padding:       $space_5;
+
+	background:    $color_surface;
+	border:        1px solid $color_border;
+	border-radius: $radius_md;
+
+	// Sur un écran étroit, ouvrir une conversation replie la liste : sans
+	// cela, il faudrait faire défiler cinquante lignes avant d'atteindre le
+	// premier message.
+	@include medium-or-less {
+		.messaging__open & {
+			max-height: rem(200px);
+			overflow-y: auto;
+		}
+	}
+}
+
+/**
+ * Le filtre de la colonne de gauche.
+ *
+ * En une seule ligne, le bouton « Rechercher » — large de son propre chef —
+ * écrasait le champ à trois caractères de visible. Les deux passent donc l'un
+ * au-dessus de l'autre : le champ prend toute la largeur de la colonne, ce
+ * qui est bien le minimum pour un champ dont c'est la seule raison d'être.
+ */
+.messaging--filter {
+	display:        flex;
+	flex-flow:      column nowrap;
+	gap:            $space_2;
+	margin-bottom:  $space_4;
+
+	input {
+		width:     100%;
+		min-width: 0;
+	}
+
+	button {
+		align-self: flex-start;
+	}
+}
+
+.messaging--tabs {
+	display:        flex;
+	gap:            $space_5;
+	margin-bottom:  $space_4;
+	padding-bottom: $space_3;
+
+	border-bottom: 1px solid $color_grey_border;
+	font-size:     rem(15px);
+
+	a {
+		color:           $color_grey_neutral;
+		text-decoration: none;
+
+		&.is-active {
+			color:       $color_action;
+			font-weight: 600;
+		}
+	}
+}
+
+.messaging--empty,
+.messaging--placeholder {
+	color:     $color_grey_neutral;
+	font-size: rem(15px);
+}
+
+.conversations {
+	@include clearulli(true);
+}
+
+.conversation-item {
+	border-bottom: 1px solid $color_grey_lighter;
+
+	&:last-child {
+		border-bottom: none;
+	}
+
+	a {
+		display:         block;
+		padding:         $space_3 $space_2;
+
+		color:           inherit;
+		text-decoration: none;
+
+		@include transition(background-color);
+	}
+
+	&.is-open a,
+	a:hover,
+	a:focus {
+		background: $color_grey_lighter;
+	}
+}
+
+.conversation-item--who {
+	display:     block;
+	font-weight: 600;
+	color:       $color_default;
+}
+
+.conversation-item--excerpt {
+	display:       block;
+	margin-top:    $space_1;
+	overflow:      hidden;
+	white-space:   nowrap;
+	text-overflow: ellipsis;
+
+	font-size:     rem(14px);
+	color:         $color_text_muted;
+}
+
+.conversation-item--date {
+	display:    block;
+	margin-top: $space_1;
+	font-size:  rem(13px);
+	color:      $color_text_muted;
+}
+
+/**
+ * Une conversation non lue : le repère doit tenir au coin de l'œil, sans
+ * dépendre de la couleur seule.
+ */
+.conversation-item__unread {
+	.conversation-item--who {
+		&::before {
+			content:       '';
+			display:       inline-block;
+			margin-right:  rem(6px);
+			width:         rem(8px);
+			height:        rem(8px);
+
+			background:    $color_action;
+			border-radius: 50%;
+			vertical-align: middle;
+		}
+	}
+
+	.conversation-item--excerpt {
+		color:       $color_default;
+		font-weight: 600;
+	}
+}
+
+.messaging--thread {
+	padding:       column_gap();
+
+	background:    $color_surface;
+	border:        1px solid $color_grey_border;
+	border-radius: $radius_sm;
+}
+
+.thread--header {
+	display:        flex;
+	flex-flow:      row wrap;
+	align-items:    baseline;
+	gap:            $space_4;
+	margin-bottom:  column_gap();
+	padding-bottom: $space_4;
+
+	border-bottom:  1px solid $color_border;
+
+	h2 {
+		flex:   1 1 auto;
+		margin: 0;
+	}
+}
+
+/**
+ * Archiver, quitter. Chaque action est son propre formulaire — deux blocs qui
+ * ne s'espaceraient pas seuls, et dont la marge par défaut décalerait la ligne.
+ */
+.thread--actions {
+	display:     flex;
+	flex-flow:   row wrap;
+	align-items: center;
+	gap:         $space_3;
+
+	form {
+		margin: 0;
+	}
+}
+
+.thread {
+	@include clearulli(true);
+	margin-bottom: column_gap();
+}
+
+// Même piège que `.message` : c'est un `<li>` de `.thread`, il lui faut la
+// même spécificité pour que son `padding` survive à `clearulli()`.
+.thread--separator,
+.thread > .thread--separator {
+	margin:     column_gap() 0;
+	padding:    $space_1 0;
+
+	color:      $color_tertiary;
+	font-size:  rem(13px);
+	font-weight: 600;
+	text-align: center;
+	border-top: 1px solid $color_tertiary;
+}
+
+.thread--empty {
+	color:     $color_grey_neutral;
+	font-size: rem(15px);
+}
+
+/**
+ * Un message. Le bloc était serré de dix pixels sur douze : l'auteur, le
+ * texte et les outils se touchaient, et deux messages consécutifs se lisaient
+ * comme un seul.
+ */
+/**
+ * ⚠️ Le sélecteur est `.thread > .message`, et il doit le rester.
+ *
+ * Un message est un `<li>` dans `<ol class="thread">`, et `clearulli()` —
+ * appelé juste au-dessus sur `.thread` — écrit `.thread li { padding: 0 }`.
+ * Cette règle-là pèse (0,1,1) : une classe et un type. Un simple `.message`
+ * ne pèse que (0,1,0) et **perd**, quel que soit l'ordre des fichiers.
+ *
+ * Autrement dit, le `padding` de cette règle n'a jamais rien fait : le texte
+ * des messages était collé au bord depuis le début, et coller à la barre de
+ * couleur ne se voyait que parce que la barre, elle, s'affichait. Augmenter la
+ * valeur ne changeait rien — il fallait gagner la cascade.
+ *
+ * `.message` reste dans la liste pour les rendus hors fil ; c'est
+ * `.thread > .message`, à (0,2,0), qui l'emporte là où il y en a un.
+ */
+.message,
+.thread > .message {
+	margin-bottom: $space_4;
+
+	// Plus d'air à gauche qu'à droite, volontairement : c'est de ce côté que
+	// se tient la barre de couleur, et elle a besoin d'être détachée du texte
+	// pour se lire comme un repère plutôt que comme un liseré collé au mot.
+	padding:       $space_4 $space_5 $space_4 $space_6;
+
+	background:    $color_grey_lighter;
+	border-radius: $radius_md;
+
+	// La barre est réservée sur *tous* les messages, transparente quand il
+	// n'y en a pas : sinon les trois pixels manquants décalent le texte des
+	// messages des autres par rapport aux siens, et deux messages voisins ne
+	// s'alignent plus.
+	border-left:   rem(3px) solid transparent;
+
+	// Ce qu'on a écrit soi-même se distingue sans se déplacer : une colonne
+	// de droite rendrait les fils à plusieurs illisibles.
+	&.message__mine {
+		background:        $color_surface;
+		border-left-color: $color_action;
+	}
+
+	&.message__reported {
+		background:        $color_surface;
+		border-left-color: $color_danger;
+	}
+}
+
+.message--head {
+	display:       flex;
+	flex-flow:     row wrap;
+	align-items:   baseline;
+	gap:           $space_2;
+	margin-bottom: $space_2;
+
+	font-size:     rem(13px);
+	color:         $color_text_muted;
+}
+
+.message--author {
+	font-weight: 600;
+	color:       $color_default;
+
+	a {
+		color:           inherit;
+		text-decoration: none;
+	}
+}
+
+.message--body {
+	font-size:   rem(16px);
+	line-height: 1.5;
+	word-wrap:   break-word;
+}
+
+.message--deleted {
+	color: $color_grey_light;
+}
+
+.message--tools {
+	display:     flex;
+	flex-flow:   row wrap;
+	align-items: center;
+	gap:         $space_4;
+	margin-top:  $space_3;
+
+	font-size:   rem(13px);
+
+	// Chaque outil est dans son propre <form> : sans cela les marges par
+	// défaut des formulaires rouvraient un écart que le `gap` gère déjà.
+	form {
+		margin: 0;
+	}
+
+	summary {
+		cursor: pointer;
+		color:  $color_action;
+	}
+}
+
+.message--tool {
+	padding:         0;
+
+	border:          none;
+	background:      none;
+
+	font-size:       rem(13px);
+	color:           $color_action;
+	text-decoration: underline;
+	cursor:          pointer;
+}
+
+.thread--reply,
+.thread--add {
+	padding-top: column_gap();
+	border-top:  1px solid $color_grey_lighter;
+}
+
+.thread--add summary {
+	cursor: pointer;
+	color:  $color_action;
+}
+
+/**************************************************
+* LE CHAMP OÙ L'ON ÉCRIT
+**************************************************/
+
+.message-composer {
+	// Repère de la liste de suggestions, qui se place en absolu dedans.
+	position:      relative;
+	margin-bottom: rem(12px);
+}
+
+.message-composer--label {
+	@include visually-hidden;
+}
+
+.message-composer--input {
+	width:      100%;
+	resize:     vertical;
+	font-family: inherit;
+	font-size:  rem(16px);
+}
+
+.message-composer--hint {
+	margin:    rem(4px) 0 0;
+	font-size: rem(13px);
+	color:     $color_grey_neutral;
+}
+
+.mentions-suggestions--hint {
+	margin-left: rem(8px);
+	font-size:   rem(13px);
+	color:       $color_grey_light;
+}
+
+/**************************************************
+* LES TAGS DANS UN MESSAGE
+**************************************************/
+
+/**
+ * Un tag porte une pastille qui dit son type. Ce n'est pas la couleur seule
+ * qui distingue une personne d'un document : la pastille reste lisible en
+ * noir et blanc.
+ */
+
+.msg-tag {
+	font-weight:     600;
+	text-decoration: none;
+	white-space:     nowrap;
+
+	&::before {
+		margin-right: rem(3px);
+		font-weight:  400;
+	}
+
+	&[data-kind='member']::before { content: '\0040'; }      // @
+	&[data-kind='group']::before { content: '\2317'; }       // ⌗
+	&[data-kind='document']::before { content: '\1F5CE'; }   // 🗎
+	&[data-kind='page']::before { content: '\1F5CB'; }       // 🗋
+	&[data-kind='article']::before { content: '\1F5DE'; }    // 🗞
+	&[data-kind='discussion']::before { content: '\1F5E9'; } // 🗩
+}
+
+a.msg-tag {
+	color: $color_action;
+
+	&:hover,
+	&:focus {
+		text-decoration: underline;
+	}
+}
+
+a.msg-tag__content {
+	color: $color_quaternary;
+}
+
+/**
+ * Ce que le lecteur n'a pas le droit d'ouvrir : le titre reste — il est dans
+ * la phrase de toute façon — mais il ne mène nulle part.
+ */
+.msg-tag__locked {
+	color:            $color_grey_light;
+	background:       $color_grey_lighter;
+	padding:          0 rem(4px);
+	border-radius:    $radius_sm;
+	text-decoration:  line-through;
+	text-decoration-color: $color_grey_border;
+}
+
+/**************************************************
+* CHOISIR À QUI ON ÉCRIT
+**************************************************/
+
+.recipients--search {
+	display:       flex;
+	flex-flow:     row wrap;
+	align-items:   flex-end;
+	gap:           rem(8px);
+	margin-bottom: column_gap();
+
+	input[type='search'] {
+		flex:      1 1 rem(200px);
+		min-width: 0;
+	}
+}
+
+.recipients--chosen,
+.recipients--candidates {
+	@include clearulli(true);
+	margin-bottom: column_gap();
+
+	li {
+		padding:       rem(4px) 0;
+		border-bottom: 1px solid $color_grey_lighter;
+	}
+
+	label {
+		display:     flex;
+		align-items: baseline;
+		gap:         rem(8px);
+		cursor:      pointer;
+	}
+}
+
+.recipients--hint {
+	font-size: rem(13px);
+	color:     $color_grey_neutral;
+}
+
+.user--write {
+	align-self:      center;
+	padding:         rem(4px) rem(10px);
+
+	font-size:       rem(13px);
+	color:           $color_action;
+	text-decoration: underline;
+	white-space:     nowrap;
+}
+
+/**************************************************
+* SIGNALEMENTS (ADMINISTRATION)
+**************************************************/
+
+.report--preview,
+.reports-list {
+	margin-bottom: column_gap();
+}
+
+.reports-list {
+	@include clearulli(true);
+}
+
+// Et une troisième fois : `<li class="report">` dans `<ul class="reports-list">`.
+// La liste d'administration des signalements affichait donc ses fiches sans
+// aucun rembourrage, collées à leur bordure.
+.report,
+.reports-list > .report {
+	margin-bottom: column_gap();
+	padding:       column_gap();
+
+	background:    $color_surface;
+	border:        1px solid $color_grey_border;
+	border-radius: $radius_sm;
+}
+
+.report--head {
+	display:       flex;
+	flex-flow:     row wrap;
+	gap:           rem(12px);
+	margin-bottom: rem(8px);
+
+	font-size:     rem(14px);
+	color:         $color_grey_neutral;
+}
+
+.report--reason {
+	font-style: italic;
+}
+
+.report--excerpt {
+	margin:      rem(8px) 0;
+	padding:     rem(10px) rem(12px);
+
+	background:  $color_grey_lighter;
+	border-left: rem(3px) solid $color_tertiary;
+	line-height: 1.5;
+	word-wrap:   break-word;
+}
+
+.report--tools {
+	display:     flex;
+	flex-flow:   row wrap;
+	align-items: center;
+	gap:         rem(12px);
+
+	font-size:   rem(14px);
+}
+
+.thread__copy .message,
+.thread__preview .message {
+	font-size: rem(15px);
+}

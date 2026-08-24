@@ -30,7 +30,7 @@ $tour_move: cubic-bezier(.4, 0, .2, 1);
 	z-index:       900;
 	pointer-events: none;
 
-	border-radius: rem(6px);
+	border-radius: $radius_md;
 	box-shadow:    0 0 0 rem(3px) rgba($color_action, .9),
 				   0 0 0 rem(9px) rgba($color_action, .25),
 				   0 0 0 9999px $tour_veil;
@@ -66,8 +66,8 @@ $tour_move: cubic-bezier(.4, 0, .2, 1);
 	padding:       rem(26px) rem(24px) rem(20px);
 
 	background:    white;
-	border-radius: rem(8px);
-	box-shadow:    0 rem(10px) rem(30px) rgba(black, .3);
+	border-radius: $radius_md;
+	box-shadow:    $shadow_lg;
 
 	transition:    top .3s $tour_move,
 				   left .3s $tour_move;
@@ -144,7 +144,7 @@ $tour_move: cubic-bezier(.4, 0, .2, 1);
 	height:        rem(4px);
 	overflow:      hidden;
 
-	border-radius: rem(8px) rem(8px) 0 0;
+	border-radius: $radius_md $radius_md 0 0;
 	background:    $color_grey_border;
 
 	span {
@@ -214,7 +214,7 @@ $tour_move: cubic-bezier(.4, 0, .2, 1);
 	padding:       rem(7px) rem(16px);
 
 	border:        1px solid $color_action;
-	border-radius: rem(4px);
+	border-radius: $radius_sm;
 	background:    white;
 
 	font-size:     rem(15px);
@@ -289,9 +289,9 @@ $tour_move: cubic-bezier(.4, 0, .2, 1);
 	align-items:   stretch;
 	overflow:      hidden;
 
-	border-radius: rem(4px);
+	border-radius: $radius_sm;
 	background:    $color_action;
-	box-shadow:    0 rem(4px) rem(16px) rgba(black, .3);
+	box-shadow:    $shadow_md;
 
 	animation:     tour-resume-in .3s ease-out;
 }
@@ -351,7 +351,7 @@ $tour_move: cubic-bezier(.4, 0, .2, 1);
 
 		transform:     none !important;
 
-		border-radius: rem(8px);
+		border-radius: $radius_md;
 
 		&::before {
 			display: none;

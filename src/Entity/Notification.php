@@ -29,6 +29,14 @@ class Notification {
 	const DOCUMENT_CREATE    = 'document:create';
 
 	/**
+	 * Un message privé. La seule notification qui ne porte pas de groupe — et
+	 * son titre est le nom de l'auteur, jamais un extrait du message : ce qui
+	 * s'écrit en privé ne doit pas ressortir dans un résumé lu par-dessus une
+	 * épaule.
+	 */
+	const MESSAGE_NEW        = 'message:new';
+
+	/**
 	 * @ORM\Id()
 	 * @ORM\GeneratedValue()
 	 * @ORM\Column(type="integer")

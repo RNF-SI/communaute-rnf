@@ -100,6 +100,23 @@ class NamedAccountsTest extends TestCase {
 		} ), 'Assert a complete directory profile of #30 is seeded' );
 	}
 
+	/**
+	 * Une boîte fermée et des boîtes ouvertes. Sans les deux, on ne voit
+	 * jamais disparaître le bouton « Écrire » sur une fiche.
+	 */
+	public function testABoxIsClosedAndTheOthersAreOpen () {
+		$closed = $this->count( function ( array $profile ) {
+			return array_key_exists( 'messages', $profile ) && ( $profile[ 'messages' ] === FALSE );
+		} );
+
+		$open = $this->count( function ( array $profile ) {
+			return !empty( $profile ) && !array_key_exists( 'messages', $profile );
+		} );
+
+		$this->assertEquals( 1, $closed, 'Assert exactly one mailbox is closed, so the case stays recognisable' );
+		$this->assertGreaterThan( 0, $open, 'Assert the default — an open mailbox — is represented too' );
+	}
+
 	public function testAnAccountIsLeftBlank () {
 		$this->assertGreaterThan( 0, $this->count( function ( array $profile ) {
 			return $profile === [];

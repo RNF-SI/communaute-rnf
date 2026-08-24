@@ -3,11 +3,14 @@
 namespace App\Tests\DataFixtures;
 
 use App\Entity\Article;
+use App\Entity\Conversation;
 use App\Entity\Discussion;
 use App\Entity\Document;
 use App\Entity\DocumentTag;
+use App\Entity\MessageReport;
 use App\Entity\Notification;
 use App\Entity\Page;
+use App\Entity\PrivateMessage;
 use App\Entity\User;
 use App\Entity\Usergroup;
 use Doctrine\ORM\EntityManagerInterface;
@@ -408,5 +411,316 @@ class SeedDataTest extends KernelTestCase {
 		);
 		$this->assertGreaterThan( 0, $read, 'Assert read and unread can be told apart' );
 		$this->assertLessThan( count( $notifications ), $read, 'Assert one of them is still unread' );
+	}
+
+	/**************************************************
+	 * LA MESSAGERIE
+	 **************************************************/
+
+	/**
+	 * Les conversations d'un compte, la boîte et les archives ensemble.
+	 *
+	 * @param string $email
+	 *
+	 * @return \App\Entity\Conversation[]
+	 */
+	private function conversationsOf ( $email ) {
+		$user       = $this->account( $email );
+		$repository = $this->manager->getRepository( Conversation::class );
+
+		$found = array_merge(
+				$repository->findForUser( $user ),
+				$repository->findForUser( $user, NULL, TRUE )
+		);
+
+		if ( empty( $found ) ) {
+			$this->markTestSkipped( 'Fixtures not loaded: conversations' );
+		}
+
+		return $found;
+	}
+
+	/**
+	 * Tout ce qui a été écrit dans les conversations d'un compte.
+	 *
+	 * @param string $email
+	 *
+	 * @return \App\Entity\PrivateMessage[]
+	 */
+	private function messagesOf ( $email ) {
+		$messages = [];
+
+		foreach ( $this->conversationsOf( $email ) as $conversation ) {
+			foreach ( $this->manager->getRepository( PrivateMessage::class )->findForConversation( $conversation ) as $message ) {
+				$messages[] = $message;
+			}
+		}
+
+		return $messages;
+	}
+
+	public function testTheInboxIsNotEmpty () {
+		$this->assertNotEmpty(
+				$this->conversationsOf( 'membre@example.org' ),
+				'Assert the messaging page shows something on a freshly loaded database'
+		);
+	}
+
+	/**
+	 * Sans conversation non lue, ni le compteur de l'en-tête ni la barre
+	 * « nouveaux messages » n'ont rien à montrer.
+	 */
+	public function testAConversationIsWaitingToBeRead () {
+		$this->assertGreaterThan(
+				0,
+				$this->manager->getRepository( Conversation::class )
+							  ->countUnread( $this->account( 'membre@example.org' ) ),
+				'Assert an unread conversation is seeded, so the header count is not always zero'
+		);
+	}
+
+	public function testAConversationIsArchivedAndAnotherIsNot () {
+		$user       = $this->account( 'membre@example.org' );
+		$repository = $this->manager->getRepository( Conversation::class );
+
+		$this->assertNotEmpty(
+				$repository->findForUser( $user, NULL, TRUE ),
+				'Assert the « Archivées » tab has something to show'
+		);
+
+		$this->assertNotEmpty(
+				$repository->findForUser( $user ),
+				'Assert archiving one conversation did not empty the inbox'
+		);
+	}
+
+	/**
+	 * Le tête-à-tête et le fil à plusieurs : les deux cas du même modèle.
+	 */
+	public function testAOneToOneAndAGroupConversationAreBothSeeded () {
+		$pairs  = 0;
+		$groups = 0;
+
+		foreach ( $this->conversationsOf( 'membre@example.org' ) as $conversation ) {
+			if ( count( $conversation->getActiveParticipants() ) > 2 ) {
+				$groups++;
+
+				continue;
+			}
+
+			$pairs++;
+		}
+
+		$this->assertGreaterThan( 0, $pairs, 'Assert a one-to-one conversation is seeded' );
+		$this->assertGreaterThan( 0, $groups, 'Assert a conversation with more than two people is seeded' );
+	}
+
+	/**
+	 * Quitter laisse les messages en place : sans un fil que quelqu'un a
+	 * quitté, on ne voit jamais que le fil de ceux qui restent tient debout.
+	 */
+	public function testSomebodyLeftAConversationWithoutEmptyingIt () {
+		$left = 0;
+
+		foreach ( $this->conversationsOf( 'membre@example.org' ) as $conversation ) {
+			foreach ( $conversation->getParticipants() as $participant ) {
+				if ( $participant->hasLeft() ) {
+					$left++;
+				}
+			}
+		}
+
+		$this->assertGreaterThan( 0, $left, 'Assert a conversation somebody left is seeded' );
+	}
+
+	public function testAMessageWasEditedAndAnotherWasDeleted () {
+		$edited  = 0;
+		$deleted = 0;
+
+		foreach ( $this->messagesOf( 'membre@example.org' ) as $message ) {
+			if ( $message->isEdited() ) {
+				$edited++;
+			}
+
+			if ( $message->isDeleted() ) {
+				$deleted++;
+			}
+		}
+
+		$this->assertGreaterThan( 0, $edited, 'Assert « modifié » can be seen without editing a message first' );
+		$this->assertGreaterThan( 0, $deleted, 'Assert a deleted message keeps its place in the thread' );
+	}
+
+	/**
+	 * Un compte ouvert et un compte fermé : sans les deux, on ne voit jamais
+	 * le bouton « Écrire » disparaître.
+	 */
+	public function testABoxIsClosedAndTheOthersAreOpen () {
+		$this->assertFalse(
+				$this->account( 'exterieur@example.org' )->isMessagesOpen(),
+				'Assert a closed mailbox is seeded'
+		);
+
+		$this->assertTrue(
+				$this->account( 'membre@example.org' )->isMessagesOpen(),
+				'Assert the default — an open mailbox — is represented too'
+		);
+	}
+
+	/**
+	 * Fermer sa boîte n'interrompt pas les conversations déjà ouvertes. La
+	 * règle ne s'éprouve qu'avec un compte fermé qui en a déjà une.
+	 */
+	public function testTheClosedBoxStillCarriesAConversation () {
+		$this->assertNotEmpty(
+				$this->conversationsOf( 'exterieur@example.org' ),
+				'Assert the closed mailbox already holds a conversation, so answering it can be tried'
+		);
+	}
+
+	/**************************************************
+	 * LES TAGS D'UN MESSAGE
+	 **************************************************/
+
+	/**
+	 * Un tag vers une personne, un vers un groupe, un vers un document : les
+	 * trois sortes doivent être écrites quelque part, sinon le rendu ne se
+	 * regarde pas.
+	 */
+	public function testTheThreeKindsOfTagAreWrittenSomewhere () {
+		$bodies = '';
+
+		foreach ( $this->messagesOf( 'membre@example.org' ) as $message ) {
+			$bodies .= "\n" . $message->getBody();
+		}
+
+		foreach ( $this->messagesOf( 'candidat@example.org' ) as $message ) {
+			$bodies .= "\n" . $message->getBody();
+		}
+
+		$this->assertRegExp( '/@[A-ZÉÈÀÂÎÔÛ]/u', $bodies, 'Assert somebody is named with an « @ » tag' );
+		$this->assertStringContainsString( '#Groupe de test', $bodies, 'Assert a group is pointed at with a « # » tag' );
+		$this->assertStringContainsString( '#Guide des suivis partagés', $bodies, 'Assert a document is pointed at' );
+	}
+
+	/**
+	 * Le rendu d'un tag dépend du lecteur. Sans un contenu que l'un des deux
+	 * correspondants ne peut pas ouvrir, le tag grisé ne se voit nulle part.
+	 */
+	public function testAMessagePointsAtSomethingItsReaderMayNotOpen () {
+		$note = $this->manager->getRepository( Document::class )
+							  ->findOneBy( [ 'title' => 'Note de cadrage du bureau' ] );
+
+		if ( !$note ) {
+			$this->markTestSkipped( 'Fixtures not loaded: the private document' );
+		}
+
+		$this->assertEquals(
+				Usergroup::PRIVATE,
+				$note->getUsergroup()->getVisibility(),
+				'Assert the tagged document lives where not everybody may read it'
+		);
+
+		$bodies = '';
+
+		foreach ( $this->messagesOf( 'candidat@example.org' ) as $message ) {
+			$bodies .= "\n" . $message->getBody();
+		}
+
+		$this->assertStringContainsString(
+				'#' . $note->getTitle(),
+				$bodies,
+				'Assert the greyed-out tag can be seen by somebody who is not a member'
+		);
+	}
+
+	/**
+	 * Le titre tagué ne doit désigner qu'une chose. Les contenus du groupe de
+	 * référence s'appellent tous pareil dans les trois groupes : un « # »
+	 * écrit dessus se résoudrait sur le premier trouvé, ce qui ne se raconte
+	 * pas dans une recette.
+	 */
+	public function testTheTaggedTitlesAreUnique () {
+		foreach ( [ 'Guide des suivis partagés', 'Note de cadrage du bureau' ] as $title ) {
+			$this->assertCount(
+					1,
+					$this->manager->getRepository( Document::class )->findBy( [ 'title' => $title ] ),
+					sprintf( 'Assert « %s » names one document and one only', $title )
+			);
+		}
+	}
+
+	/**************************************************
+	 * LES SIGNALEMENTS
+	 **************************************************/
+
+	public function testAReportIsWaitingAndAnotherIsHandled () {
+		$repository = $this->manager->getRepository( MessageReport::class );
+
+		$pending = $repository->findForAdmin();
+		$handled = $repository->findForAdmin( TRUE );
+
+		if ( empty( $pending ) && empty( $handled ) ) {
+			$this->markTestSkipped( 'Fixtures not loaded: reports' );
+		}
+
+		$this->assertNotEmpty( $pending, 'Assert the « À traiter » tab has something to show' );
+		$this->assertNotEmpty( $handled, 'Assert the « Traités » tab has something to show too' );
+	}
+
+	/**
+	 * Un signalement porte sa propre copie : c'est ce qui permet à
+	 * l'administration de juger sans jamais ouvrir la conversation.
+	 */
+	public function testAReportCarriesItsOwnCopyAndItsContext () {
+		$reports = $this->manager->getRepository( MessageReport::class )->findForAdmin();
+
+		if ( empty( $reports ) ) {
+			$this->markTestSkipped( 'Fixtures not loaded: reports' );
+		}
+
+		$withContext = 0;
+
+		foreach ( $reports as $report ) {
+			$this->assertNotEmpty(
+					$report->getExcerpt(),
+					'Assert the report reads without going back to the message'
+			);
+
+			if ( !empty( $report->getContext() ) ) {
+				$withContext++;
+			}
+		}
+
+		$this->assertGreaterThan(
+				0,
+				$withContext,
+				'Assert a report carries the messages around the one being reported'
+		);
+	}
+
+	/**
+	 * La notification d'un message privé est la seule sans groupe, et son
+	 * titre est le nom de celui qui écrit — jamais un extrait.
+	 */
+	public function testAPrivateMessageNotificationIsSeeded () {
+		$notifications = $this->manager->getRepository( Notification::class )
+									   ->findBy( [
+											   'recipient' => $this->account( 'membre@example.org' ),
+											   'type'      => Notification::MESSAGE_NEW,
+									   ] );
+
+		if ( empty( $notifications ) ) {
+			$this->markTestSkipped( 'Fixtures not loaded: message notifications' );
+		}
+
+		foreach ( $notifications as $notification ) {
+			$this->assertNull( $notification->getUsergroup(), 'Assert a private message belongs to no group' );
+			$this->assertEquals(
+					$notification->getAuthor() ? $notification->getAuthor()->getName() : NULL,
+					$notification->getTitle(),
+					'Assert the notification names the author rather than quoting the message'
+			);
+		}
 	}
 }

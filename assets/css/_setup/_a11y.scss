@@ -1,0 +1,101 @@
+/**************************************************
+* FOCUS ET MOUVEMENT
+**************************************************/
+
+/**
+ * Où est le clavier.
+ *
+ * L'état d'avant : le reset annulait l'anneau du navigateur (`a:active,
+ * a:hover { outline: 0 }`), les champs le remplaçaient par un gris de bordure
+ * à peine plus foncé que le gris normal, et les cases à cocher le
+ * supprimaient sans rien mettre à la place. Aucune occurrence de
+ * `:focus-visible` dans les 8 400 lignes. Naviguer au clavier revenait à
+ * avancer à l'aveugle.
+ *
+ * La règle est posée une fois, ici, sur tout ce qui peut recevoir le focus.
+ * `:focus-visible` et non `:focus` : l'anneau apparaît au clavier et reste
+ * invisible au clic de souris — c'est la raison pour laquelle les développeurs
+ * le retiraient, et elle ne tient plus.
+ */
+
+:focus-visible {
+	@include focus-ring;
+}
+
+/**
+ * Le focus à la souris ne montre pas d'anneau — c'est précisément la raison
+ * pour laquelle les développeurs écrivaient `outline: none`, et elle est ici
+ * traitée sans casser le clavier.
+ *
+ * Pas de `@supports selector(:focus-visible)` autour : la version de PostCSS
+ * du projet (7.x) ne sait pas analyser cette forme et fait échouer la
+ * compilation. Ce n'est pas gênant, la règle se protège toute seule — un
+ * navigateur qui ignore `:focus-visible` juge le sélecteur invalide et écarte
+ * la règle entière, donc garde son anneau natif. C'est exactement le repli
+ * voulu.
+ *
+ * Seul `outline` est remis à zéro : `box-shadow` ne l'est pas, sinon un champ
+ * de recherche cliqué à la souris perdrait l'ombre de sa carte.
+ */
+:focus:not(:focus-visible) {
+	outline: none;
+}
+
+/**************************************************
+* LIEN D'ÉVITEMENT
+**************************************************/
+
+/**
+ * Sauter l'en-tête et le menu pour atteindre le contenu. Invisible tant qu'on
+ * ne l'atteint pas au clavier, et alors bien visible.
+ */
+
+.skip-link {
+	position:         absolute;
+	z-index:          $z_tour + 1;
+	top:              0;
+	left:             50%;
+
+	transform:        translate(-50%, -120%);
+
+	padding:          $space_3 $space_5;
+
+	@include font_default_medium;
+	font-size:        rem(15px);
+
+	color:            white;
+	background-color: $color_action;
+	border-radius:    0 0 $radius_md $radius_md;
+	text-decoration:  none;
+
+	@include transition(transform);
+
+	&:focus {
+		transform: translate(-50%, 0);
+	}
+}
+
+/**************************************************
+* MOUVEMENT RÉDUIT
+**************************************************/
+
+/**
+ * Rien dans l'application ne dépend d'une animation pour être compréhensible :
+ * les transitions sont décoratives, on peut donc toutes les couper d'un bloc
+ * pour qui l'a demandé au système. Utile en particulier pour la visite guidée,
+ * dont la bulle se déplace d'un pas à l'autre.
+ *
+ * `.01ms` plutôt que `0` : une durée nulle empêche certains `transitionend`
+ * de se déclencher, et du JavaScript attend parfois dessus.
+ */
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration:        .01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration:       .01ms !important;
+		scroll-behavior:           auto !important;
+	}
+}

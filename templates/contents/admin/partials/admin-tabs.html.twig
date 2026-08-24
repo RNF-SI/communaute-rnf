@@ -1,25 +1,28 @@
 <nav class="admin-tabs">
 	<ul>
 		<li {% if (tab =='platform') %} class="active"{% endif %}>
-			<a href="{{ path('administration_platform') }}">{{ 'pages.administration.tabs.platform.name'|trans }}</a>
+			<a href="{{ path('administration_platform') }}"{% if (tab =='platform') %} aria-current="page"{% endif %}>{{ 'pages.administration.tabs.platform.name'|trans }}</a>
 		</li>
 		<li {% if (tab =='home') %} class="active"{% endif %}>
-			<a href="{{ path('administration_home') }}">{{ 'pages.administration.tabs.home.name'|trans }}</a>
+			<a href="{{ path('administration_home') }}"{% if (tab =='home') %} aria-current="page"{% endif %}>{{ 'pages.administration.tabs.home.name'|trans }}</a>
 		</li>
 		<li {% if (tab =='groups') %} class="active"{% endif %}>
-			<a href="{{ path('administration_groups') }}">{{ 'pages.administration.tabs.groups.name'|trans }}</a>
+			<a href="{{ path('administration_groups') }}"{% if (tab =='groups') %} aria-current="page"{% endif %}>{{ 'pages.administration.tabs.groups.name'|trans }}</a>
 		</li>
 		<li {% if (tab =='menus') %} class="active"{% endif %}>
-			<a href="{{ path('administration_menus') }}">{{ 'pages.administration.tabs.menus.name'|trans }}</a>
+			<a href="{{ path('administration_menus') }}"{% if (tab =='menus') %} aria-current="page"{% endif %}>{{ 'pages.administration.tabs.menus.name'|trans }}</a>
 		</li>
 		<li {% if (tab =='document-tags') %} class="active"{% endif %}>
-			<a href="{{ path('administration_document_tags') }}">{{ 'pages.administration.tabs.document_tags.name'|trans }}</a>
+			<a href="{{ path('administration_document_tags') }}"{% if (tab =='document-tags') %} aria-current="page"{% endif %}>{{ 'pages.administration.tabs.document_tags.name'|trans }}</a>
 		</li>
 		<li {% if (tab =='group-categories') %} class="active"{% endif %}>
-			<a href="{{ path('administration_group_categories') }}">{{ 'pages.administration.tabs.group_categories.name'|trans }}</a>
+			<a href="{{ path('administration_group_categories') }}"{% if (tab =='group-categories') %} aria-current="page"{% endif %}>{{ 'pages.administration.tabs.group_categories.name'|trans }}</a>
+		</li>
+		<li {% if (tab =='message-reports') %} class="active"{% endif %}>
+			<a href="{{ path('administration_message_reports') }}"{% if (tab =='message-reports') %} aria-current="page"{% endif %}>{{ 'pages.administration.tabs.message_reports.name'|trans }}</a>
 		</li>
 		<li {% if (tab =='admin') %} class="active"{% endif %}>
-			<a href="{{ path('administration_administrators') }}">{{ 'pages.administration.tabs.admin.name'|trans }}</a>
+			<a href="{{ path('administration_administrators') }}"{% if (tab =='admin') %} aria-current="page"{% endif %}>{{ 'pages.administration.tabs.admin.name'|trans }}</a>
 		</li>
 	</ul>
 </nav>

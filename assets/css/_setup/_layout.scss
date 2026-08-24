@@ -19,8 +19,14 @@ body {
 		line-height: line_height_default('large');
 	}
 
-	color:            $color_default;
-	background-color: $color_grey_lighter;
+	color:                   $color_text;
+	background-color:        $color_canvas;
+
+	// Le rendu du texte : sans cela, Jost paraît plus maigre sur macOS que
+	// sur Windows, et l'écart se voit sur les gros titres.
+	-webkit-font-smoothing:  antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering:          optimizeLegibility;
 }
 
 button,
@@ -32,12 +38,20 @@ img {
 	@include max100;
 }
 
+/**
+ * Les variantes de bouton.
+ *
+ * Le piège d'avant, à ne pas remettre : `.cta__red` était déclaré *avant*
+ * `.cta__inverted`, à spécificité égale. Or les deux seuls boutons destructifs
+ * de l'application s'écrivent `class="cta__inverted cta__red"` — « Refuser la
+ * demande », « Supprimer le groupe ». `.cta__inverted` gagnait, et ils
+ * s'affichaient en vert, exactement comme « Accepter ». La combinaison est
+ * donc désormais déclarée explicitement : deux classes, spécificité 0-2-0,
+ * l'ordre ne peut plus la trahir.
+ */
+
 .cta {
 	@include cta-style;
-}
-
-.cta__red {
-	@include cta-style($color_red);
 }
 
 .cta__white {
@@ -48,10 +62,23 @@ img {
 	@include cta-style($color_action, true);
 }
 
+.cta__danger,
+.cta__red {
+	@include cta-style($color_danger);
+}
+
+.cta__inverted.cta__danger,
+.cta__inverted.cta__red {
+	@include cta-style($color_danger, true);
+}
+
 a:not([class]) {
 	color:                    inherit;
 	text-decoration:          underline;
 	text-decoration-skip-ink: auto;
+	text-underline-offset:    .15em;
+
+	@include transition(color);
 }
 
 p {
@@ -64,6 +91,11 @@ p:not([class]):not(:last-child), .p {
 
 p a:not([class]) {
 	color: $color_action;
+
+	&:hover,
+	&:focus {
+		color: $color_action_dark;
+	}
 }
 
 figcaption {
@@ -92,18 +124,35 @@ blockquote {
 	}
 }
 
+/**
+ * Les tableaux tiraient un trait plein sur chaque cellule, dans le même gris
+ * que le texte secondaire : le quadrillage pesait plus lourd que les données.
+ * Il ne reste que les traits horizontaux, dans le gris de séparateur.
+ */
 table {
-	width:         100%;
-	margin-bottom: 1rem;
-	border:        1px solid $color_grey_light;
+	width:           100%;
+	margin-bottom:   $space_5;
+
+	border:          1px solid $color_border;
+	border-radius:   $radius_md;
+	border-collapse: separate;
+	border-spacing:  0;
+	overflow:        hidden;
 
 	th,
 	td {
 		@include font_default;
 
-		padding:          .75em;
+		padding:          $space_3 $space_4;
+		text-align:       left;
 		background-color: white;
-		border:           1px solid $color_grey_light;
+		border:           0;
+		border-bottom:    1px solid $color_border;
+	}
+
+	tr:last-child > th,
+	tr:last-child > td {
+		border-bottom: 0;
 	}
 
 	th {
@@ -111,11 +160,13 @@ table {
 	}
 
 	thead th {
-		text-align:          left;
-		vertical-align:      bottom;
-		border-bottom-width: 2px;
+		vertical-align:   bottom;
+		background-color: $color_canvas;
+		color:            $color_text_muted;
+		font-size:        rem(14px);
+		letter-spacing:   .02em;
+		text-transform:   uppercase;
 	}
-
 }
 
 .hint {

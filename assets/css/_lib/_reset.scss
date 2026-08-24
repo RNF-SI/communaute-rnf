@@ -108,21 +108,12 @@ a {
 }
 
 /**
- * Address `outline` inconsistency between Chrome and other browsers.
+ * Le focus des liens est traité dans _setup/_a11y.scss, une fois pour tous les
+ * éléments focalisables. Ce qui se trouvait ici — un pointillé sur `a:focus`,
+ * puis `outline: 0` sur `a:active, a:hover` — annulait l'anneau dès que la
+ * souris passait sur un lien atteint au clavier, et gagnait sur la règle
+ * `:focus-visible` par spécificité.
  */
-
-a:focus {
-	outline: thin dotted;
-}
-
-/**
- * Improve readability when focused and also mouse hovered in all browsers.
- */
-
-a:active,
-a:hover {
-	outline: 0;
-}
 
 /* ==========================================================================
    Typography
@@ -178,8 +169,8 @@ hr {
  */
 
 mark {
-	background: #ffff00;
-	color:      #000000;
+	background: rgba($brand_straw, .55);
+	color:      $color_text;
 }
 
 /**
@@ -279,7 +270,7 @@ figure {
  */
 
 fieldset {
-	border:  1px solid #c0c0c0;
+	border:  1px solid $color_border;
 	margin:  0 2px;
 	padding: 0.35em 0.625em 0.75em;
 }

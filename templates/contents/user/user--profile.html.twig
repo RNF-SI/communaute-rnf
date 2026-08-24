@@ -33,6 +33,14 @@
 				   été saisi. (#27) #}
 				{% set showEmail = user.emailVisible or app.user.isAdmin %}
 				<div class="user-contact">
+					{# Écrire par la plateforme : le seul chemin qui marche même
+					   quand l'adresse n'est pas publiée. #}
+					{% if is_granted(constant('App\\Security\\ConversationVoter::CONTACT'), user) %}
+						<a class="cta" href="{{ path('messages_new', {'to': user.id}) }}">{{ 'pages.messages.write_to'|trans }}</a>
+					{% elseif not user.isMessagesOpen %}
+						<div class="hint">{{ 'pages.messages.box_closed'|trans }}</div>
+					{% endif %}
+
 					{% if showEmail %}
 						<a class="cta" href="mailto:{{ user.email }}">{{ 'pages.user.profile.contact'|trans }}</a>
 

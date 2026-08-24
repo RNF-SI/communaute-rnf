@@ -1,0 +1,27 @@
+{#
+	Le champ où l'on écrit un message.
+
+	Un textarea, pas un éditeur riche : un message privé est du texte. Ce que
+	le texte porte, ce sont des tags — « @Prénom Nom » pour quelqu'un,
+	« #Titre » pour un groupe, un document, une page, une actualité ou une
+	discussion —, reconnus à l'affichage.
+
+	`data-tags` branche la liste de suggestions. Sans JavaScript, le champ
+	reste un champ : on écrit le tag à la main et il est reconnu pareil.
+#}
+<div class="message-composer">
+	<label class="message-composer--label" for="{{ id|default('message-body') }}">
+		{{ label|default('pages.messages.write'|trans) }}
+	</label>
+
+	<textarea id="{{ id|default('message-body') }}"
+			  class="message-composer--input"
+			  name="body"
+			  rows="{{ rows|default(4) }}"
+			  required
+			  data-tags="{{ path('messages_suggestions') }}"
+			  data-tags-hint="{{ 'pages.messages.tags_hint'|trans }}"
+			  placeholder="{{ 'pages.messages.placeholder'|trans }}">{{ body|default('') }}</textarea>
+
+	<p class="message-composer--hint">{{ 'pages.messages.tags_hint'|trans }}</p>
+</div>

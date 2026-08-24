@@ -1,32 +1,121 @@
 /**************************************************
-* SETTINGS
+* COULEURS
 **************************************************/
 
-// RNF Color Palette (according to brand guidelines)
-$color_primary: #0B885D;      // Sea Green (primary)
-$color_secondary: #C8D469;    // Straw (secondary)
-$color_tertiary: #DC8063;     // Copper Crayola (accent)
-$color_quaternary: #518196;   // Teal Blue
-$color_quinary: #fabb64;      // Yellow Orange
-$color_senary: #31b7bc;       // Maximum Blue Green
-$color_septenary: #646363;    // Grey
+/**
+ * Trois familles, dans cet ordre : la marque, le sens, le neutre.
+ *
+ * Le piège que ce fichier a contenu longtemps mérite d'être écrit, parce qu'il
+ * se retend tout seul : la charte RNF a été plaquée sur les noms hérités de
+ * Naturadapt en réaffectant les variables (`$color_red: $color_senary`), si
+ * bien que le nom disait « rouge » et la valeur donnait du turquoise. Les
+ * erreurs de formulaire, les messages d'échec et le bouton « Supprimer »
+ * s'affichaient dans un joli bleu-vert rassurant.
+ *
+ * D'où la règle : **une couleur de marque ne porte jamais un rôle**. Les
+ * variables de marque disent d'où vient la teinte, les variables sémantiques
+ * disent ce qu'elle signifie, et c'est celles-là qu'on écrit dans les
+ * composants. Renommer une marque ne doit jamais changer un sens.
+ */
 
-// Legacy colors mapped to RNF palette
-$color_grey_dark: #1e1b2e;
-$color_grey_medium: #333435;
-$color_grey_neutral: $color_septenary;  // Using RNF grey
-$color_grey_light: #8E8F94;
-$color_grey_border: #e3e5e9;
-$color_grey_lighter: #f5f7f6;
-$color_grey_border: #DBDEE4;
+/**************************************************
+* MARQUE
+**************************************************/
 
-$color_dodger_blue: $color_tertiary;    // Using RNF turquoise
-$color_lime_green: $color_secondary;     // Using RNF light green
-$color_saddle_brown: #8f3f00;
-$color_red: $color_senary;              // Using RNF red-orange
-$color_orange_red: $color_senary;       // Using RNF red-orange
-$color_orange: $color_quinary;          // Using RNF orange
-$color_gold_yellow: #fed102;
+/**
+ * Les valeurs de la charte, telles quelles. Elles ne se modifient que si la
+ * charte change — et elles ne s'utilisent pas directement pour du texte : sauf
+ * le vert, aucune ne tient le contraste sur blanc (la paille est à 1,6:1).
+ * Elles servent d'aplats, d'accents, de repères de catégorie.
+ */
 
-$color_default: black;
-$color_action: $color_primary;          // Using RNF main green
+$brand_green:  #0B885D;  // Sea Green — couleur principale
+$brand_straw:  #C8D469;  // Straw — secondaire
+$brand_copper: #DC8063;  // Copper Crayola — accent
+$brand_teal:   #518196;  // Teal Blue
+$brand_orange: #FABB64;  // Yellow Orange
+$brand_cyan:   #31B7BC;  // Maximum Blue Green
+$brand_grey:   #646363;  // Gris de charte
+
+/**************************************************
+* SÉMANTIQUE
+**************************************************/
+
+/**
+ * Les teintes de la charte, assombries jusqu'à passer 4,5:1 sur blanc *et* sur
+ * le fond de page. Teinte et saturation sont conservées : à côté l'une de
+ * l'autre, la version accessible et la version de marque se lisent comme la
+ * même couleur. Le vert principal ratait le seuil de 0,03 — il descend de
+ * #0B885D à #0A8159, un écart qu'on ne voit pas et qui fait la différence.
+ */
+
+$color_action:      #0A8159;  // liens, boutons, tout ce qui se clique — 4,89:1
+$color_action_dark: #076845;  // survol et état actif — 6,83:1
+
+$color_success: #0A8159;
+$color_warning: #A46205;
+$color_danger:  #BD4D2A;
+$color_info:    #4B778B;
+
+/**
+ * Les fonds teintés qui vont avec. Assez pâles pour que le texte sémantique y
+ * tienne encore 4,5:1 — ce sont eux qui portent les messages flash.
+ */
+
+$color_success_surface: #F0FCF8;
+$color_warning_surface: #FCF7F0;
+$color_danger_surface:  #FCF3F0;
+$color_info_surface:    #F3F7F9;
+
+/**************************************************
+* NEUTRES
+**************************************************/
+
+$color_text:       #1E1B2E;  // le texte courant — 16,8:1
+$color_text_muted: #55575C;  // dates, métadonnées, second plan — 7,2:1
+
+$color_canvas:  #F5F7F6;  // le fond de page
+$color_surface: #FFFFFF;  // le fond des cartes
+
+$color_border:        #DBDEE4;  // séparateurs, purement décoratifs
+$color_border_strong: #8E8F94;  // bordure d'un champ : 3:1, exigé pour
+								// identifier un contrôle (WCAG 1.4.11)
+
+/**************************************************
+* NOMS HÉRITÉS
+**************************************************/
+
+/**
+ * Sept cents lignes de CSS écrivent encore ces noms-là. Ils restent, mais ils
+ * pointent désormais sur la bonne valeur : c'est ce remappage qui répare d'un
+ * coup les erreurs turquoise, sans toucher aux composants.
+ *
+ * Rien de nouveau ne doit s'en servir — ils disparaîtront au fil des passages.
+ */
+
+$color_default:       $color_text;
+$color_grey_dark:     #1E1B2E;
+$color_grey_medium:   #333435;
+$color_grey_neutral:  #5F5E5E;  // était #646363 : 4,3:1 sur le fond de page,
+								// or il sert surtout de couleur de texte
+$color_grey_light:    #6B6D73;  // était #8E8F94 : 3,2:1, illisible en petit
+$color_grey_border:   $color_border;
+$color_grey_lighter:  $color_canvas;
+
+$color_primary:    $brand_green;
+$color_secondary:  $brand_straw;
+$color_tertiary:   $brand_copper;
+$color_quaternary: $brand_teal;
+$color_quinary:    $brand_orange;
+$color_senary:     $brand_cyan;
+$color_septenary:  $brand_grey;
+
+// Les quatre qui mentaient sur leur nom.
+$color_red:        $color_danger;
+$color_orange_red: $color_danger;
+$color_orange:     $color_warning;
+$color_lime_green: $color_success;
+
+$color_dodger_blue:  $color_info;
+$color_saddle_brown: #8F3F00;
+$color_gold_yellow:  $brand_orange;

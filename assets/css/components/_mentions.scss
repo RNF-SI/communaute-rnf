@@ -36,10 +36,10 @@ a.mention {
 	overflow-y:    auto;
 
 	list-style:    none;
-	background:    #fff;
+	background:    $color_surface;
 	border:        1px solid $color_grey_light;
-	border-radius: rem(4px);
-	box-shadow:    0 rem(2px) rem(8px) rgba(0, 0, 0, .15);
+	border-radius: $radius_sm;
+	box-shadow:    $shadow_md;
 
 	&[hidden] {
 		display: none;

@@ -1,101 +1,122 @@
 /**************************************************
-* LOCAL FONT FACES - RNF Typography
+* FONTES
 **************************************************/
 
-// Arima Madurai font family
+/**
+ * Deux familles, six fichiers, 156 Ko.
+ *
+ * Ce qui remplaçait ceci embarquait 1,48 Mo de TTF : huit graisses d'Arima
+ * Madurai dont deux servaient, et surtout `GOTHIC.TTF` / `GOTHICB.TTF` —
+ * c'est-à-dire les fichiers Century Gothic livrés avec Windows, redistribués
+ * depuis /build/fonts/. Century Gothic appartient à Monotype et n'est pas
+ * concédé pour la diffusion web : le problème n'était pas de style.
+ *
+ * **Jost** prend sa place. Century Gothic descend du Twentieth Century de
+ * Monotype, lui-même taillé d'après le Futura ; Jost est un Futura libre
+ * (SIL OFL). Même genre, même géométrie, même « a » à un étage — le
+ * remplacement se voit peu, et il se distribue.
+ *
+ * Jost est une fonte *variable* : un seul fichier couvre 100 à 900. Les
+ * `font-weight: 600` semés dans le CSS étaient jusqu'ici synthétisés par le
+ * navigateur — Century Gothic n'avait que normal et gras. Ils deviennent de
+ * vraies graisses dessinées.
+ *
+ * Arima Madurai reste — elle est sous SIL OFL, elle n'a jamais posé de
+ * problème — mais en woff2, et réduite aux deux graisses que les titres
+ * utilisent.
+ *
+ * Les fichiers viennent de Google Fonts et sont **servis depuis le domaine**.
+ * L'ancien `<link>` vers fonts.googleapis.com dans base.html.twig chargeait en
+ * prime Open Sans, qui n'était appelée nulle part, et déposait l'adresse IP de
+ * chaque visiteur chez un tiers — ce que la CNIL a déjà sanctionné ailleurs.
+ */
+
+$subset_latin:     U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6,
+				   U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F,
+				   U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF,
+				   U+FFFD;
+
+$subset_latin_ext: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7,
+				   U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF,
+				   U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB,
+				   U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+
+/**************************************************
+* JOST — texte courant
+**************************************************/
+
 @font-face {
-    font-family: 'Arima Madurai';
-    src: url('/build/fonts/arimaMadurai/ArimaMadurai-Regular.ttf') format('truetype');
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
+	font-family:   'Jost';
+	src:           url('/build/fonts/jost/jost-latin.woff2') format('woff2');
+	font-weight:   100 900;
+	font-style:    normal;
+	font-display:  swap;
+	unicode-range: $subset_latin;
 }
 
 @font-face {
-    font-family: 'Arima Madurai';
-    src: url('/build/fonts/arimaMadurai/ArimaMadurai-Light.ttf') format('truetype');
-    font-weight: 300;
-    font-style: normal;
-    font-display: swap;
+	font-family:   'Jost';
+	src:           url('/build/fonts/jost/jost-latin-ext.woff2') format('woff2');
+	font-weight:   100 900;
+	font-style:    normal;
+	font-display:  swap;
+	unicode-range: $subset_latin_ext;
 }
 
 @font-face {
-    font-family: 'Arima Madurai';
-    src: url('/build/fonts/arimaMadurai/ArimaMadurai-Medium.ttf') format('truetype');
-    font-weight: 500;
-    font-style: normal;
-    font-display: swap;
+	font-family:   'Jost';
+	src:           url('/build/fonts/jost/jost-italic-latin.woff2') format('woff2');
+	font-weight:   100 900;
+	font-style:    italic;
+	font-display:  swap;
+	unicode-range: $subset_latin;
 }
 
 @font-face {
-    font-family: 'Arima Madurai';
-    src: url('/build/fonts/arimaMadurai/ArimaMadurai-Bold.ttf') format('truetype');
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
+	font-family:   'Jost';
+	src:           url('/build/fonts/jost/jost-italic-latin-ext.woff2') format('woff2');
+	font-weight:   100 900;
+	font-style:    italic;
+	font-display:  swap;
+	unicode-range: $subset_latin_ext;
+}
+
+/**************************************************
+* ARIMA MADURAI — titres
+**************************************************/
+
+@font-face {
+	font-family:   'Arima Madurai';
+	src:           url('/build/fonts/arima/arima-madurai-400-latin.woff2') format('woff2');
+	font-weight:   400;
+	font-style:    normal;
+	font-display:  swap;
+	unicode-range: $subset_latin;
 }
 
 @font-face {
-    font-family: 'Arima Madurai';
-    src: url('/build/fonts/arimaMadurai/ArimaMadurai-ExtraBold.ttf') format('truetype');
-    font-weight: 800;
-    font-style: normal;
-    font-display: swap;
+	font-family:   'Arima Madurai';
+	src:           url('/build/fonts/arima/arima-madurai-400-latin-ext.woff2') format('woff2');
+	font-weight:   400;
+	font-style:    normal;
+	font-display:  swap;
+	unicode-range: $subset_latin_ext;
 }
 
 @font-face {
-    font-family: 'Arima Madurai';
-    src: url('/build/fonts/arimaMadurai/ArimaMadurai-Black.ttf') format('truetype');
-    font-weight: 900;
-    font-style: normal;
-    font-display: swap;
+	font-family:   'Arima Madurai';
+	src:           url('/build/fonts/arima/arima-madurai-700-latin.woff2') format('woff2');
+	font-weight:   700;
+	font-style:    normal;
+	font-display:  swap;
+	unicode-range: $subset_latin;
 }
 
 @font-face {
-    font-family: 'Arima Madurai';
-    src: url('/build/fonts/arimaMadurai/ArimaMadurai-ExtraLight.ttf') format('truetype');
-    font-weight: 200;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Arima Madurai';
-    src: url('/build/fonts/arimaMadurai/ArimaMadurai-Thin.ttf') format('truetype');
-    font-weight: 100;
-    font-style: normal;
-    font-display: swap;
-}
-
-// Century Gothic font family
-@font-face {
-    font-family: 'Century Gothic';
-    src: url('/build/fonts/centuryGothic/GOTHIC.TTF') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Century Gothic';
-    src: url('/build/fonts/centuryGothic/GOTHICB.TTF') format('truetype');
-    font-weight: bold;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Century Gothic';
-    src: url('/build/fonts/centuryGothic/GOTHICI.TTF') format('truetype');
-    font-weight: normal;
-    font-style: italic;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Century Gothic';
-    src: url('/build/fonts/centuryGothic/GOTHICBI.TTF') format('truetype');
-    font-weight: bold;
-    font-style: italic;
-    font-display: swap;
+	font-family:   'Arima Madurai';
+	src:           url('/build/fonts/arima/arima-madurai-700-latin-ext.woff2') format('woff2');
+	font-weight:   700;
+	font-style:    normal;
+	font-display:  swap;
+	unicode-range: $subset_latin_ext;
 }

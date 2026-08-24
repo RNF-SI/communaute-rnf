@@ -162,45 +162,80 @@ $tree_line_color: $color_grey_light;
 // Le champ de recherche et le filtre par commission forment une seule barre :
 // ils partagent la même ligne de base, se séparent d'une gouttière et passent
 // l'un sous l'autre quand la place manque. (#23)
+/**
+ * La barre « chercher et filtrer » de la page des groupes.
+ *
+ * Elle empilait deux logiques différentes : le champ de recherche seul d'un
+ * côté, une colonne de deux filtres intitulés de l'autre, le tout aligné par
+ * le bas. Le champ se retrouvait donc poussé au niveau du *dernier* filtre,
+ * avec un grand vide au-dessus, et sa pilule ne ressemblait à aucun des deux
+ * sélecteurs voisins.
+ *
+ * Maintenant : trois contrôles de même nature — un intitulé, un champ — sur
+ * une seule ligne, alignés par le haut de leurs intitulés. La recherche prend
+ * la place qui reste, les filtres gardent une largeur fixe.
+ */
 .group-search-bar {
-	padding:         padding_vertical('large') 0;
+	display:     flex;
+	flex-flow:   row wrap;
+	align-items: flex-start;
+	gap:         $space_4;
 
-	display:         flex;
-	flex-flow:       row wrap;
-	justify-content: center;
-	align-items:     flex-end;
-	gap:             column_gap('small') * .4;
+	padding:     $space_6 0;
+}
+
+.group-search-bar--field {
+	flex:      1 1 rem(320px);
+	min-width: 0;
+	max-width: rem(645px);
 
 	input[type="search"] {
-		flex:      1 1 rem(320px);
-		width:     auto;
+		width:     100%;
 		min-width: 0;
-		max-width: rem(645px);
 	}
 }
 
 .groups-filter {
-	display:     flex;
-	flex-flow:   column nowrap;
+	display:   flex;
+	flex-flow: row wrap;
+	gap:       $space_4;
 
-	flex:        0 1 rem(260px);
-	min-width:   rem(180px);
+	flex:      0 1 auto;
+	margin:    0;
+}
 
-	label {
-		margin-bottom: rem(4px);
-
-		font-size:     rem(14px);
-		color:         $color_grey_medium;
-	}
+.groups-filter--field {
+	flex:      0 1 rem(240px);
+	min-width: rem(180px);
 
 	select {
-		width:      100%;
-		min-height: rem(50px);
+		width: 100%;
 	}
+}
 
-	button {
-		margin-top: rem(4px);
+/**
+ * L'intitulé est le même pour la recherche et pour les filtres : c'est lui qui
+ * met les trois contrôles sur la même ligne de base.
+ */
+.group-search-bar--field,
+.groups-filter--field {
+	> label {
+		display:       block;
+		margin-bottom: $space_1;
+
+		font-size:     rem(14px);
+		color:         $color_text_muted;
 	}
+}
+
+/**
+ * Les trois contrôles ont exactement la même hauteur : sans cela, la boîte
+ * de recherche — qui monte à 50px par défaut — dépasse les sélecteurs.
+ */
+.group-search-bar input[type="search"],
+.group-search-bar select {
+	min-height: rem(46px);
+	height:     rem(46px);
 }
 
 /**************************************************
@@ -210,7 +245,7 @@ $tree_line_color: $color_grey_light;
 .groups-pending {
 	.group__teaser {
 		opacity: 0.8;
-		border: 1px dashed #ffc107;
+		border: 1px dashed $color_warning;
 		
 		&:hover {
 			opacity: 1;
@@ -235,12 +270,12 @@ $tree_line_color: $color_grey_light;
 		bottom: 100%;
 		left: 50%;
 		transform: translateX(-50%);
-		background-color: #333;
+		background-color: $color_grey_dark;
 		color: white;
 		padding: 10px 15px;
-		border-radius: 6px;
+		border-radius: $radius_md;
 		white-space: nowrap;
-		font-size: 14px;
+		font-size: rem(14px);
 		z-index: 1000;
 		margin-bottom: 8px;
 		max-width: 450px;
@@ -257,7 +292,7 @@ $tree_line_color: $color_grey_light;
 		left: 50%;
 		transform: translateX(-50%);
 		border: 6px solid transparent;
-		border-top-color: #333;
+		border-top-color: $color_grey_dark;
 		margin-bottom: -7px;
 		z-index: 1000;
 	}
@@ -288,7 +323,7 @@ $tree_line_color: $color_grey_light;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+	box-shadow: $shadow_sm;
 	
 	img {
 		width: 28px;
@@ -301,12 +336,12 @@ $tree_line_color: $color_grey_light;
 		top: 100%;
 		left: 0;
 		margin-top: 5px;
-		background-color: #333;
+		background-color: $color_grey_dark;
 		color: white;
 		padding: 8px 12px;
-		border-radius: 4px;
+		border-radius: $radius_sm;
 		white-space: nowrap;
-		font-size: 13px;
+		font-size: rem(13px);
 		z-index: 1000;
 		max-width: 250px;
 		line-height: 1.4;
@@ -373,7 +408,7 @@ $tree_line_color: $color_grey_light;
 	margin-bottom: 1rem;
 	
 	.small-text {
-		font-size: 0.9rem;
+		font-size: rem(14px);
 		color: $color_grey_medium;
 		margin-bottom: 0.5rem;
 	}
@@ -393,17 +428,17 @@ $tree_line_color: $color_grey_light;
 	.hint {
 		font-style: italic;
 		color: $color_grey_medium;
-		font-size: 0.9rem;
+		font-size: rem(14px);
 		margin-bottom: 1rem;
 	}
 	
 	.form-row__checkboxes {
 		max-height: 300px;
 		overflow-y: auto;
-		border: 1px solid #ddd;
-		border-radius: 4px;
+		border: 1px solid $color_border;
+		border-radius: $radius_sm;
 		padding: 10px;
-		background-color: #fafafa;
+		background-color: $color_canvas;
 		
 		input[type="checkbox"] {
 			margin-right: 8px;
@@ -416,9 +451,9 @@ $tree_line_color: $color_grey_light;
 			cursor: pointer;
 			
 			&:hover {
-				background-color: #f0f0f0;
+				background-color: $color_border;
 				padding: 2px 4px;
-				border-radius: 2px;
+				border-radius: $radius_sm;
 			}
 		}
 	}
@@ -446,15 +481,15 @@ $tree_line_color: $color_grey_light;
 		left:     0;
 	}
 
-	transition: box-shadow .15s ease-in-out;
+	@include transition(box-shadow);
 
 	&:focus,
 	&:hover {
-		box-shadow: 0 .15rem 1rem rgba($color_default, .25);
+		box-shadow: $shadow_md;
 	}
 
 	&:focus-within {
-		box-shadow: 0 .15rem 1rem rgba($color_default, .25);
+		box-shadow: $shadow_md;
 	}
 
 	.group-illustration {
@@ -494,8 +529,13 @@ $tree_line_color: $color_grey_light;
 
 		padding:         padding_vertical('small') padding_horizontal('small');
 
+		// Le même surlignage que sur la page de recherche : il portait ici
+		// un jaune (#FFFFAF) et là-bas le même, sans que l'un sache l'autre.
 		em {
-			background-color: #FFFFAF;
+			padding:          .05em .2em;
+			font-style:       normal;
+			background-color: rgba($brand_straw, .55);
+			border-radius:    $radius_sm;
 		}
 
 		@include large-or-more {
@@ -1025,7 +1065,7 @@ $tree_line_color: $color_grey_light;
 			&:focus,
 			&:hover {
 				&::before {
-					@include picto-arrow(#ffffff, 7, 12, 2);
+					@include picto-arrow(white, 7, 12, 2);
 				}
 			}
 		}

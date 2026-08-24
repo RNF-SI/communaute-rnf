@@ -5,14 +5,18 @@ namespace App\DataFixtures;
 use App\Command\ImportSkillsCommand;
 use App\Entity\Article;
 use App\Entity\Category;
+use App\Entity\Conversation;
+use App\Entity\ConversationParticipant;
 use App\Entity\Discussion;
 use App\Entity\DiscussionMessage;
 use App\Entity\Document;
 use App\Entity\DocumentFolder;
 use App\Entity\DocumentTag;
-use App\Entity\Notification;
 use App\Entity\LogEvent;
+use App\Entity\MessageReport;
+use App\Entity\Notification;
 use App\Entity\Page;
+use App\Entity\PrivateMessage;
 use App\Entity\Skill;
 use App\Entity\User;
 use App\Entity\Usergroup;
@@ -111,12 +115,18 @@ class AppFixtures extends Fixture {
 					'role'      => 'none',
 					// Téléphone publié mais adresse retirée : l'autre moitié
 					// du choix laissé à chacun. (#27)
+					//
+					// Le seul compte dont la boîte est fermée. Sans lui, on ne
+					// voit jamais disparaître le bouton « Écrire » — ni la
+					// règle qui va avec : fermer sa boîte n'interrompt pas les
+					// conversations déjà ouvertes, et il en a une.
 					'profile'   => [
 							'jobTitle'     => 'Garde technicien',
 							'organisation' => '',
 							'reserves'     => 'RN de la Bassée',
 							'phone'        => '06 12 34 56 78',
 							'emailVisible' => FALSE,
+							'messages'     => FALSE,
 					],
 			],
 	];
@@ -347,6 +357,7 @@ class AppFixtures extends Fixture {
 			$user->setReserves( isset( $profile[ 'reserves' ] ) ? $profile[ 'reserves' ] : NULL );
 			$user->setPhone( isset( $profile[ 'phone' ] ) ? $profile[ 'phone' ] : NULL );
 			$user->setEmailVisible( !isset( $profile[ 'emailVisible' ] ) || $profile[ 'emailVisible' ] );
+			$user->setMessagesOpen( !isset( $profile[ 'messages' ] ) || $profile[ 'messages' ] );
 
 			// Un compte l'a déjà vue, un autre non : sans les deux, on ne
 			// peut éprouver ni le lancement automatique ni le lien de
@@ -652,7 +663,16 @@ class AppFixtures extends Fixture {
 		 * membership requests, notifications — happens here rather than in a
 		 * randomly generated group whose composition changes at each load.
 		 */
-		$this->buildReferenceGroups( $manager, $named, $categories, $documentTags );
+		$groups = $this->buildReferenceGroups( $manager, $named, $categories, $documentTags );
+
+		/**
+		 * MESSAGERIE
+		 *
+		 * Des conversations privées déjà écrites, entre les comptes nommés.
+		 * Une messagerie vide ne montre rien : ni le compteur de l'en-tête, ni
+		 * un tag grisé, ni un signalement à traiter.
+		 */
+		$this->buildMessaging( $manager, $named, $groups );
 	}
 
 	/**
@@ -817,6 +837,8 @@ class AppFixtures extends Fixture {
 	 * @param \Doctrine\Persistence\ObjectManager $manager
 	 * @param \App\Entity\User[]                  $named
 	 * @param \App\Entity\Category[]              $categories
+	 *
+	 * @return \App\Entity\Usergroup[] indexés par slug
 	 */
 	private function buildReferenceGroups ( ObjectManager $manager, array $named, array $categories, array $documentTags = [] ) {
 		$faker = Faker\Factory::create( 'fr_FR' );
@@ -914,6 +936,8 @@ class AppFixtures extends Fixture {
 		}
 
 		$manager->flush();
+
+		return $built;
 	}
 
 	/**
@@ -1126,5 +1150,448 @@ class AppFixtures extends Fixture {
 		$discussion->addMessage( $renvoi );
 
 		$manager->flush();
+	}
+
+	/**
+	 * La messagerie : quatre conversations déjà écrites entre les comptes
+	 * nommés.
+	 *
+	 * Une boîte vide ne prouve rien. Chaque cas a ici son contraire : une
+	 * conversation non lue et une lue, un tête-à-tête et un fil à plusieurs,
+	 * un tag qui mène quelque part et un tag grisé, un message modifié et un
+	 * message supprimé, un signalement à traiter et un signalement classé.
+	 *
+	 * **Deux documents sont créés exprès**, avec des titres qu'aucun autre
+	 * contenu ne porte. Les contenus du groupe de référence s'appellent tous
+	 * « Document de test » dans les trois groupes : un « # » écrit dessus
+	 * désignerait le premier trouvé, ce qui ne se raconte pas dans une
+	 * recette. Ceux-ci ne laissent aucun doute — l'un est public, l'autre vit
+	 * dans le groupe privé, et c'est le second qui s'affiche grisé chez qui
+	 * n'y a pas droit.
+	 *
+	 * @param \Doctrine\Persistence\ObjectManager $manager
+	 * @param \App\Entity\User[]                  $named
+	 * @param \App\Entity\Usergroup[]             $groups indexés par slug
+	 */
+	private function buildMessaging ( ObjectManager $manager, array $named, array $groups ) {
+		$alice   = $named[ 'admin@example.org' ];
+		$remi    = $named[ 'referent@example.org' ];
+		$manon   = $named[ 'membre@example.org' ];
+		$camille = $named[ 'candidat@example.org' ];
+		$eric    = $named[ 'exterieur@example.org' ];
+
+		$public  = isset( $groups[ self::REFERENCE_GROUP ] ) ? $groups[ self::REFERENCE_GROUP ] : NULL;
+		$private = isset( $groups[ self::PRIVATE_GROUP ] ) ? $groups[ self::PRIVATE_GROUP ] : NULL;
+
+		if ( !$public || !$private ) {
+			return;
+		}
+
+		$guide = $this->taggableDocument(
+				$manager,
+				$public,
+				$remi,
+				'Guide des suivis partagés',
+				'Lisible de tous, y compris hors connexion : un tag « # » posé dessus mène toujours quelque part.'
+		);
+
+		$note = $this->taggableDocument(
+				$manager,
+				$private,
+				$remi,
+				'Note de cadrage du bureau',
+				'Déposée dans le groupe privé : un tag « # » posé dessus s’affiche grisé chez qui n’est pas membre.'
+		);
+
+		$manager->flush();
+
+		/**
+		 * A. LE TÊTE-À-TÊTE, AVEC DES TAGS ET UN MESSAGE NON LU
+		 *
+		 * C'est la conversation qu'on ouvre en premier : elle porte le
+		 * compteur de l'en-tête chez Manon, les trois sortes de tags, et un
+		 * message modifié.
+		 */
+		$suivi = $this->conversation( $manager, [ $remi, $manon ], '-4 days' );
+
+		$this->privateMessage(
+				$manager,
+				$suivi,
+				$remi,
+				"Bonjour Manon,\n\nJ’ai enfin déposé #" . $guide->getTitle() . " dans le groupe. "
+				. "C’est la version que nous avions relue en commission, avec les fiches de terrain en annexe.\n\n"
+				. "Dis-moi si le tableau des fréquences te paraît tenable pour une équipe de trois.",
+				'-4 days'
+		);
+
+		$reponse = $this->privateMessage(
+				$manager,
+				$suivi,
+				$manon,
+				"Merci @" . $remi->getName() . " ! Je l’ai parcouru ce matin.\n\n"
+				. "Le tableau tient, à condition de sortir les relevés de mai — c’est le mois où nous sommes déjà "
+				. "sur les comptages d’oiseaux. Je te propose de le voir jeudi.",
+				'-3 days'
+		);
+
+		// Modifié après coup : le fil doit le dire, et c'est la seule façon de
+		// le voir sans éditer un message à la main.
+		$reponse->setEditedAt( new \DateTime( '-3 days +2 hours' ) );
+
+		$this->privateMessage(
+				$manager,
+				$suivi,
+				$remi,
+				"Parfait pour jeudi. J’en profiterai pour te montrer ce qui se prépare dans #"
+				. $public->getName() . " : deux collègues y ont posé des questions très proches des tiennes.",
+				'-2 hours'
+		);
+
+		// Rémi a tout lu ; Manon s'est arrêtée avant le dernier message.
+		// Sans cet écart, ni le compteur de l'en-tête ni la barre « nouveaux
+		// messages » n'ont rien à montrer.
+		$this->readUpTo( $suivi, $remi, '-1 hour' );
+		$this->readUpTo( $suivi, $manon, '-1 day' );
+
+		/**
+		 * B. LE FIL À PLUSIEURS
+		 *
+		 * Quatre participants dont un parti, un message supprimé, et une
+		 * conversation rangée par l'une des trois. Pas de pairKey : ce n'est
+		 * plus un tête-à-tête.
+		 */
+		$rencontre = $this->conversation( $manager, [ $alice, $remi, $manon, $eric ], '-10 days' );
+
+		$this->privateMessage(
+				$manager,
+				$rencontre,
+				$alice,
+				"Bonjour à toutes et tous,\n\nJe vous mets ensemble pour préparer l’atelier de la rencontre "
+				. "annuelle. Il nous faut un titre, deux intervenants et une salle avant la fin du mois.",
+				'-10 days'
+		);
+
+		$this->privateMessage(
+				$manager,
+				$rencontre,
+				$eric,
+				"Je peux venir présenter le comptage sur les sentiers, mais je ne pourrai pas rester la journée.",
+				'-9 days'
+		);
+
+		// Supprimé : la place reste, le texte part. C'est ce qu'on ne peut pas
+		// éprouver sans un message déjà supprimé, puisque supprimer le sien
+		// demande de l'avoir écrit.
+		$retire = $this->privateMessage( $manager, $rencontre, $remi, '', '-8 days' );
+		$retire->setDeletedAt( new \DateTime( '-7 days' ) );
+
+		$this->privateMessage(
+				$manager,
+				$rencontre,
+				$manon,
+				"Titre proposé : « Compter sans se noyer — ce que dix ans de suivis nous ont appris ».\n\n"
+				. "Je m’occupe de la salle.",
+				'-7 days'
+		);
+
+		$this->readUpTo( $rencontre, $alice, '-6 days' );
+		$this->readUpTo( $rencontre, $remi, '-6 days' );
+		$this->readUpTo( $rencontre, $manon, '-6 days' );
+
+		// Rangée par Manon : l'onglet « Archivées » a quelque chose à montrer,
+		// et la boîte de réception ne la montre plus.
+		$this->archiveFor( $rencontre, $manon, '-5 days' );
+
+		// Éric est sorti du fil. Ce qu'il y a écrit reste, et c'est le point :
+		// quitter ne troue pas la conversation de ceux qui restent.
+		$this->leaveFor( $rencontre, $eric, '-6 days' );
+
+		/**
+		 * C. LE TAG GRISÉ
+		 *
+		 * Camille attend à la porte du groupe privé : le même message affiche
+		 * des liens chez Rémi et des tags grisés chez elle. C'est la seule
+		 * façon de voir que le rendu dépend du lecteur.
+		 */
+		$accueil = $this->conversation( $manager, [ $remi, $camille ], '-2 days' );
+
+		$this->privateMessage(
+				$manager,
+				$accueil,
+				$remi,
+				"Bonjour Camille,\n\nJ’ai bien vu votre demande pour rejoindre #" . $private->getName() . ". "
+				. "Je la présente au bureau lundi ; d’ici là vous pouvez déjà lire #" . $guide->getTitle() . ", "
+				. "qui est ouvert à tous.\n\n"
+				. "Le document de cadrage — #" . $note->getTitle() . " — ne vous sera visible qu’une fois la "
+				. "demande acceptée.",
+				'-2 days'
+		);
+
+		$this->privateMessage(
+				$manager,
+				$accueil,
+				$camille,
+				"Merci beaucoup, je regarde le guide en attendant. Bonne journée.",
+				'-1 day'
+		);
+
+		// Jamais ouverte par Camille : une conversation qu'on n'a pas encore
+		// lue du tout, à côté de celle de Manon qu'on a lue en partie.
+		$this->readUpTo( $accueil, $remi, '-1 day +1 hour' );
+
+		/**
+		 * D. LA BOÎTE FERMÉE, ET LES SIGNALEMENTS
+		 *
+		 * Éric a fermé sa boîte : personne ne peut lui écrire depuis sa fiche.
+		 * Mais celle-ci était déjà ouverte, et Manon y répond encore — c'est
+		 * la règle qu'on ne peut pas éprouver autrement.
+		 */
+		$litige = $this->conversation( $manager, [ $eric, $manon ], '-6 days' );
+
+		$sec = $this->privateMessage(
+				$manager,
+				$litige,
+				$eric,
+				"Votre compte rendu ne correspond pas à ce qui a été dit en réunion. Merci de le corriger.",
+				'-6 days'
+		);
+
+		$this->privateMessage(
+				$manager,
+				$litige,
+				$manon,
+				"Bonjour Éric,\n\nJe reprends volontiers le compte rendu si un point est faux — dites-moi lequel "
+				. "et je le corrige aujourd’hui.",
+				'-5 days'
+		);
+
+		$vif = $this->privateMessage(
+				$manager,
+				$litige,
+				$eric,
+				"Tout le paragraphe sur le pâturage. Je ne vais pas relire à votre place, c’était votre "
+				. "réunion et votre travail.",
+				'-4 days'
+		);
+
+		$this->readUpTo( $litige, $eric, '-4 days' );
+		$this->readUpTo( $litige, $manon, '-3 days' );
+
+		// Un signalement à traiter, avec son contexte recopié — c'est ce que
+		// l'administration lit, et elle ne lit rien d'autre.
+		$aTraiter = $this->report(
+				$manager,
+				$vif,
+				$manon,
+				'Le ton monte et je ne sais pas comment répondre. Je préfère que quelqu’un regarde.',
+				'-3 days'
+		);
+		$aTraiter->setContext( [
+				[
+						'author' => $eric->getName(),
+						'at'     => ( new \DateTime( '-6 days' ) )->format( DATE_ATOM ),
+						'body'   => $sec->getBody(),
+				],
+				[
+						'author' => $manon->getName(),
+						'at'     => ( new \DateTime( '-5 days' ) )->format( DATE_ATOM ),
+						'body'   => 'Bonjour Éric,' . "\n\n" . 'Je reprends volontiers le compte rendu si un point est faux.',
+				],
+		] );
+
+		// Et un signalement déjà classé, sans contexte : le premier message
+		// d'une conversation n'en a pas. Les deux onglets de l'écran
+		// d'administration ont ainsi chacun leur ligne.
+		$classe = $this->report(
+				$manager,
+				$sec,
+				$manon,
+				NULL,
+				'-5 days'
+		);
+		$classe->setHandledAt( new \DateTime( '-4 days' ) );
+		$classe->setHandledBy( $alice );
+
+		$manager->flush();
+
+		/**
+		 * LA NOTIFICATION
+		 *
+		 * Comme pour les groupes, rien ne naît sans passer par
+		 * NotificationSender, que les fixtures ne déclenchent pas. Sans
+		 * celle-ci, le nouveau type « message:new » n'apparaît jamais dans la
+		 * liste des notifications. Elle ne porte aucun groupe, et son titre
+		 * est le nom de celui qui écrit : jamais un extrait du message.
+		 */
+		$prevenue = new Notification();
+		$prevenue->setRecipient( $manon );
+		$prevenue->setAuthor( $remi );
+		$prevenue->setType( Notification::MESSAGE_NEW );
+		$prevenue->setTitle( $remi->getName() );
+		$prevenue->setUrl( '/messages?conversation=' . $suivi->getId() );
+		$prevenue->setCreatedAt( new \DateTime( '-2 hours' ) );
+		$prevenue->setByEmail( FALSE );
+
+		$manager->persist( $prevenue );
+
+		$manager->flush();
+	}
+
+	/**
+	 * Un document au titre unique, posé pour qu'un « # » puisse le désigner
+	 * sans ambiguïté.
+	 *
+	 * @param \Doctrine\Persistence\ObjectManager $manager
+	 * @param \App\Entity\Usergroup               $group
+	 * @param \App\Entity\User                    $author
+	 * @param string                              $title
+	 * @param string                              $description
+	 *
+	 * @return \App\Entity\Document
+	 */
+	private function taggableDocument ( ObjectManager $manager, Usergroup $group, User $author, $title, $description ) {
+		$document = new Document();
+		$document->setTitle( $title );
+		$document->setSlug( $this->slugGenerator->generateSlug( $title, Document::class, 'slug' ) );
+		$document->setDescription( $description );
+		$document->setUsergroup( $group );
+		$document->setUser( $author );
+		$document->setCreatedAt( new \DateTime( '-15 days' ) );
+
+		$manager->persist( $document );
+
+		return $document;
+	}
+
+	/**
+	 * @param \Doctrine\Persistence\ObjectManager $manager
+	 * @param \App\Entity\User[]                  $participants
+	 * @param string                              $createdAt une expression de DateTime
+	 *
+	 * @return \App\Entity\Conversation
+	 */
+	private function conversation ( ObjectManager $manager, array $participants, $createdAt ) {
+		$conversation = new Conversation();
+		$conversation->setCreatedAt( new \DateTime( $createdAt ) );
+
+		// La clé n'existe que pour un tête-à-tête : c'est elle qui empêche
+		// qu'écrire deux fois à la même personne ouvre un second fil.
+		if ( count( $participants ) === 2 ) {
+			$conversation->setPairKey( Conversation::pairKeyFor( $participants[ 0 ], $participants[ 1 ] ) );
+		}
+
+		foreach ( $participants as $participant ) {
+			$link = new ConversationParticipant( $participant );
+			$link->setJoinedAt( new \DateTime( $createdAt ) );
+
+			$conversation->addParticipant( $link );
+
+			$manager->persist( $link );
+		}
+
+		$manager->persist( $conversation );
+		$manager->flush();
+
+		return $conversation;
+	}
+
+	/**
+	 * @param \Doctrine\Persistence\ObjectManager $manager
+	 * @param \App\Entity\Conversation            $conversation
+	 * @param \App\Entity\User                    $author
+	 * @param string                              $body texte brut, tags compris
+	 * @param string                              $at
+	 *
+	 * @return \App\Entity\PrivateMessage
+	 */
+	private function privateMessage ( ObjectManager $manager, Conversation $conversation, User $author, $body, $at ) {
+		$written = new \DateTime( $at );
+
+		$message = new PrivateMessage();
+		$message->setConversation( $conversation );
+		$message->setAuthor( $author );
+		$message->setBody( $body );
+		$message->setCreatedAt( $written );
+
+		$manager->persist( $message );
+
+		// Recopiée sur la conversation, comme le fait ConversationManager :
+		// c'est cette date qui trie la boîte.
+		$conversation->setLastMessageAt( $written );
+
+		$manager->flush();
+
+		return $message;
+	}
+
+	/**
+	 * @param \App\Entity\Conversation $conversation
+	 * @param \App\Entity\User         $user
+	 * @param string                   $at
+	 */
+	private function readUpTo ( Conversation $conversation, User $user, $at ) {
+		$participant = $conversation->getParticipantFor( $user );
+
+		if ( $participant ) {
+			$participant->setLastReadAt( new \DateTime( $at ) );
+		}
+	}
+
+	/**
+	 * @param \App\Entity\Conversation $conversation
+	 * @param \App\Entity\User         $user
+	 * @param string                   $at
+	 */
+	private function archiveFor ( Conversation $conversation, User $user, $at ) {
+		$participant = $conversation->getParticipantFor( $user );
+
+		if ( $participant ) {
+			$participant->setArchivedAt( new \DateTime( $at ) );
+		}
+	}
+
+	/**
+	 * @param \App\Entity\Conversation $conversation
+	 * @param \App\Entity\User         $user
+	 * @param string                   $at
+	 */
+	private function leaveFor ( Conversation $conversation, User $user, $at ) {
+		$participant = $conversation->getParticipantFor( $user );
+
+		if ( !$participant ) {
+			return;
+		}
+
+		$participant->setLeftAt( new \DateTime( $at ) );
+
+		// Un tête-à-tête quitté n'est plus une boîte aux lettres.
+		$conversation->setPairKey( NULL );
+	}
+
+	/**
+	 * @param \Doctrine\Persistence\ObjectManager $manager
+	 * @param \App\Entity\PrivateMessage          $message
+	 * @param \App\Entity\User                    $reporter
+	 * @param string|null                         $reason
+	 * @param string                              $at
+	 *
+	 * @return \App\Entity\MessageReport
+	 */
+	private function report ( ObjectManager $manager, PrivateMessage $message, User $reporter, $reason, $at ) {
+		$report = new MessageReport();
+		$report->setMessage( $message );
+		$report->setReporter( $reporter );
+		$report->setReported( $message->getAuthor() );
+		$report->setReason( $reason );
+
+		// Une copie, pas un renvoi : c'est ce qui permet à l'administration de
+		// juger sans jamais ouvrir la conversation.
+		$report->setExcerpt( $message->getBody() );
+		$report->setConversationId( $message->getConversation() ? $message->getConversation()->getId() : NULL );
+		$report->setCreatedAt( new \DateTime( $at ) );
+
+		$manager->persist( $report );
+
+		return $report;
 	}
 }

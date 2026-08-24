@@ -1,3 +1,14 @@
+/**
+ * Cette feuille est chargée deux fois : par app.scss et, directement, par le
+ * JavaScript de la carte (assets/js/map/*.js). Le second chemin ne passe pas
+ * par app.scss, d'où ces imports — sans eux les variables ne sont pas
+ * définies. Aucun des quatre n'écrit de règle, les importer ne duplique rien.
+ */
+@import "../_lib/tools";
+@import "../_lib/mediaqueries";
+@import "../_config/colors";
+@import "../_config/tokens";
+
 .custom-marker {
     width: 30px;
     height: 30px;

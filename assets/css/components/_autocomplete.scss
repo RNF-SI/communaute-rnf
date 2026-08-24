@@ -45,7 +45,7 @@ label.autocomplete-tags {
 	}
 
 	.aa-hint {
-		color: #999;
+		color: $color_text_muted;
 	}
 
 	.aa-dropdown-menu {
@@ -61,7 +61,7 @@ label.autocomplete-tags {
 		}
 
 		.aa-suggestion.aa-cursor {
-			background-color: #B2D7FF;
+			background-color: rgba($color_action, .12);
 		}
 
 		.aa-suggestion em {

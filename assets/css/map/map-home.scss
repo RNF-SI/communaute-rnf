@@ -1,3 +1,14 @@
+/**
+ * Cette feuille est chargée deux fois : par app.scss et, directement, par le
+ * JavaScript de la carte (assets/js/map/*.js). Le second chemin ne passe pas
+ * par app.scss, d'où ces imports — sans eux les variables ne sont pas
+ * définies. Aucun des quatre n'écrit de règle, les importer ne duplique rien.
+ */
+@import "../_lib/tools";
+@import "../_lib/mediaqueries";
+@import "../_config/colors";
+@import "../_config/tokens";
+
 #title-radio-button{
   margin: 0;
   text-decoration: underline; 
@@ -16,7 +27,7 @@
     cursor: pointer;
     z-index: 1000;
     padding: 10px; /* Ajouter une marge à gauche pour espacer le texte du switch */
-    font-size: 15px; /* Taille de la police du texte */
+    font-size: rem(15px);
   }
 
   /* Style for the radio button when it is checked */
@@ -34,7 +45,7 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background-color: #30b67d;
+  background-color: $color_action;
 }
 
 /* Hide the default radio button */

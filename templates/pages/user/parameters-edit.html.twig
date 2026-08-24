@@ -38,8 +38,20 @@
                         <h3 class="h3">{{ 'pages.user.notifications_settings.general'|trans }}</h3>
                         <p class="hint">{{ 'pages.user.notifications_settings.general_hint'|trans }}</p>
 
+                        {# La boîte aux lettres. Fermer n'interrompt pas les
+                           conversations en cours : on y répond encore, on n'en
+                           reçoit simplement plus de nouvelles. #}
+                        <div class="form-row form-row__field">
+                            <label>
+                                <input type="checkbox" name="notifications[messagesOpen]" value="1"
+                                       {{ user.isMessagesOpen ? 'checked' : '' }}>
+                                {{ 'pages.user.notifications_settings.messages_open'|trans }}
+                            </label>
+                            <div class="hint">{{ 'pages.user.notifications_settings.messages_open_hint'|trans }}</div>
+                        </div>
+
                         <div class="notifications-settings--defaults">
-                            {% for category in categories %}
+                            {% for category in generalCategories %}
                                 <div class="form-row form-row__field">
                                     <label for="notif-default-{{ category }}">
                                         {{ ('pages.user.notifications_settings.categories.' ~ category)|trans }}

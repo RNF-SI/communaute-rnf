@@ -7,6 +7,7 @@ use App\Entity\User;
 use App\Postmark\BulkTransport;
 use Swift_Message;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Throwable;
 use Twig\Environment;
 
@@ -55,6 +56,11 @@ class ContentSender {
 	 */
 	private $guard;
 
+	/**
+	 * @var \Symfony\Contracts\Translation\TranslatorInterface
+	 */
+	private $translator;
+
 	public function __construct (
 			BulkTransport $transport,
 			$params,
@@ -62,7 +68,8 @@ class ContentSender {
 			HtmlToText $htmlToText,
 			HashGenerator $hashGenerator,
 			UrlGeneratorInterface $router,
-			MailGuard $guard
+			MailGuard $guard,
+			TranslatorInterface $translator
 	) {
 		$this->transport     = $transport;
 		$this->params        = $params;
@@ -71,6 +78,7 @@ class ContentSender {
 		$this->hashGenerator = $hashGenerator;
 		$this->router        = $router;
 		$this->guard         = $guard;
+		$this->translator    = $translator;
 	}
 
 	/**
@@ -85,6 +93,19 @@ class ContentSender {
 	 * @return \App\Entity\Notification[] celles qui sont effectivement parties
 	 */
 	public function sendNow ( array $notifications ) {
+		// Sans adresse d'expédition configurée, il n'y a rien à envoyer — et
+		// surtout rien à faire échouer. Le contrôle est ici plutôt qu'au fond
+		// parce que c'est le seul endroit qui sait qu'on peut renoncer sans
+		// conséquence : la notification reste non marquée, et le résumé la
+		// reprendra le jour où la plateforme sera configurée.
+		//
+		// Le cas n'est pas théorique : la messagerie part en e-mail immédiat
+		// par défaut, si bien qu'un environnement sans POSTMARK_SENDER
+		// échouait en pleine page dès qu'on écrivait à quelqu'un.
+		if ( empty( $this->params[ 'from' ] ) ) {
+			return [];
+		}
+
 		$messages = [];
 		$sent     = [];
 
@@ -136,23 +157,41 @@ class ContentSender {
 	private function message ( Notification $notification, User $recipient ) {
 		$group = $notification->getUsergroup();
 
+		// Tout l'assemblage est protégé, et pas seulement le rendu du gabarit :
+		// une adresse que Swift refuse — la nôtre comme celle du destinataire —
+		// ne doit pas faire échouer la page de celui qui vient d'écrire. Un
+		// e-mail qu'on ne sait pas fabriquer se traite comme un e-mail qu'on ne
+		// sait pas envoyer : on renonce, et le résumé rattrapera.
 		try {
 			$body = $this->twig->render( 'emails/content-new.html.twig', [
 					'user'         => $recipient,
 					'notification' => $notification,
 					'group'        => $group,
 			] );
+
+			// Sans groupe, il n'y a pas de crochets pour dire d'où l'on vient :
+			// c'est un message privé, et son titre est un nom de personne.
+			// « Jeanne Réserve » en objet d'e-mail ne dirait rien ; on met
+			// devant la même phrase que la plateforme affiche.
+			$subject = $group
+					? trim( '[' . $group->getName() . '] ' . (string) $notification->getTitle() )
+					: trim( $this->what( $notification ) . ' ' . (string) $notification->getTitle() );
+
+			return $this->build( $subject, $body, $recipient );
 		}
 		catch ( Throwable $e ) {
 			return NULL;
 		}
+	}
 
-		$subject = trim( sprintf(
-				'%s%s',
-				$group ? '[' . $group->getName() . '] ' : '',
-				(string) $notification->getTitle()
-		) );
-
+	/**
+	 * @param string           $subject
+	 * @param string           $body
+	 * @param \App\Entity\User $recipient
+	 *
+	 * @return \Swift_Message
+	 */
+	private function build ( $subject, $body, User $recipient ) {
 		$message = ( new Swift_Message( $subject ) )
 				->setFrom( $this->params[ 'from' ], $this->params[ 'name' ] )
 				->setTo( $recipient->getEmail() )
@@ -172,6 +211,20 @@ class ContentSender {
 		$headers->addTextHeader( 'List-Unsubscribe-Post', 'List-Unsubscribe=One-Click' ); // RFC 8058
 
 		return $message;
+	}
+
+	/**
+	 * La phrase qui dit de quoi il s'agit — la même que la liste des
+	 * notifications et que le résumé, pour que les trois se lisent pareil.
+	 *
+	 * @param \App\Entity\Notification $notification
+	 *
+	 * @return string
+	 */
+	private function what ( Notification $notification ) {
+		return $this->translator->trans(
+				'pages.user.notifications.types.' . str_replace( ':', '_', (string) $notification->getType() )
+		);
 	}
 
 	/**

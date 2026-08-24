@@ -44,6 +44,12 @@ services:
       - "../src/Kernel.php"
       - "../src/Tests/"
       - "../src/Migrations/"
+      # Deux objets-valeurs, pas des services : ils portent un préfixe et un
+      # titre, on les construit avec `new`. Les laisser dans l'autowiring
+      # inviterait le conteneur à leur chercher des arguments qui n'existent
+      # pas.
+      - "../src/Service/Tagging/TagScanner.php"
+      - "../src/Service/Tagging/TaggedThing.php"
 
   # controllers are imported separately to make sure services can be injected
   # as action arguments even if you don't extend any base controller class

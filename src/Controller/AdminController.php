@@ -263,11 +263,37 @@ class AdminController extends AbstractController {
 	}
 
 	/**
+	 * La liste des administrateurs de la plateforme.
+	 *
+	 * L'action avait disparu en ne laissant que son bloc de documentation,
+	 * collé au suivant : l'annotation ne se rattachait donc à aucune méthode,
+	 * la route n'existait plus, et l'onglet « Administrateurs » — présent sur
+	 * *toutes* les pages d'administration — faisait échouer le rendu de
+	 * chacune d'elles. Le formulaire, le gabarit et les traductions, eux,
+	 * n'avaient jamais bougé.
+	 *
 	 * @Route("/administration/administrators", name="administration_administrators")
-	 * @param \App\Service\AdminManager       $adminManager
+	 *
+	 * @param \Doctrine\ORM\EntityManagerInterface $manager
+	 * @param \App\Service\AdminManager            $adminManager
 	 *
 	 * @return \Symfony\Component\HttpFoundation\Response
 	 */
+	public function adminAdministrators (
+			EntityManagerInterface $manager,
+			AdminManager $adminManager
+	) {
+		$communauteGroup = $manager->getRepository( Usergroup::class )
+								   ->findOneBy( [ 'slug' => 'communaute' ] );
+
+		$this->denyAccessUnlessGranted( GroupVoter::ADMIN, $communauteGroup );
+
+		return $this->render( 'pages/user/admin-edit.html.twig', array_merge(
+				[ 'tab' => 'admin' ],
+				$adminManager->getCommuniteAdminMembers()
+		) );
+	}
+
 	/**
 	 * Le vocabulaire d'étiquettes des documents : le créer, le renommer, en
 	 * retirer une entrée. (#26)

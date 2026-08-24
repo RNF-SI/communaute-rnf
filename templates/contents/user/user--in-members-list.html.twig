@@ -42,6 +42,13 @@
 			</div>
 		</a>
 
+		{% if is_granted(constant('App\\Security\\ConversationVoter::CONTACT'), user) %}
+			<a class="user--write" href="{{ path('messages_new', {'to': user.id}) }}"
+			   title="{{ 'pages.messages.write_to'|trans|escape('html_attr') }}">
+				<span>{{ 'pages.messages.write_to'|trans }}</span>
+			</a>
+		{% endif %}
+
 		{% if (group is defined) and is_granted(constant('App\\Security\\GroupVoter::ADMIN'), group) %}
 			{% if isPending %}
 				<div class="in-list-admin-panel">

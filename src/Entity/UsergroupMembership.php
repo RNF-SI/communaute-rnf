@@ -266,7 +266,10 @@ class UsergroupMembership {
 	 * @return $this
 	 */
 	public function setNotificationLevel ( $category, $level ) {
-		if ( !NotificationCategory::exists( $category ) || !NotificationLevel::exists( $level ) ) {
+		// inGroup() et non exists() : « messages » se règle une fois pour
+		// toute la plateforme, pas groupe par groupe. L'écrire ici donnerait
+		// un réglage que rien ne relit.
+		if ( !NotificationCategory::inGroup( $category ) || !NotificationLevel::exists( $level ) ) {
 			return $this;
 		}
 

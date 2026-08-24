@@ -4,13 +4,26 @@
 /**************************************************
  * RESET
  *************************************************/
-@import "_lib/reset";
+/**
+ * L'ordre compte : les outils (`rem()`), puis les points de rupture, puis les
+ * couleurs et l'échelle — et seulement ensuite le reset, qui s'en sert
+ * désormais (le surlignage de `mark`, la bordure des `fieldset`). Déplacer le
+ * reset en tête, comme il l'était, casse la compilation.
+ */
 @import "_lib/tools";
 @import "_lib/mediaqueries";
 /**************************************************
 * SETTINGS
 **************************************************/
 @import "_config/colors";
+@import "_config/tokens";
+/**************************************************
+* RESET
+**************************************************/
+@import "_lib/reset";
+/**************************************************
+* TYPOGRAPHIE ET GABARIT
+**************************************************/
 @import "_config/fonts";
 @import "_config/layout";
 /**************************************************
@@ -24,6 +37,8 @@
 /**************************************************
  * SETUP
  *************************************************/
+@import "_setup/root-tokens";
+@import "_setup/a11y";
 @import "_setup/forms";
 @import "_setup/layout";
 @import "_setup/object-fit-image";
@@ -65,6 +80,7 @@
 @import "contents/logevent/logevent";
 @import "contents/search/search";
 @import "contents/administration/administration";
+@import "contents/messages/messages";
 
 @import "map/map-home";
 

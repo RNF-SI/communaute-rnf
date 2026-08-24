@@ -10,7 +10,9 @@
 	<p>{{ 'emails.digest.introduction'|trans }}</p>
 
 	{% for group in groups %}
-		<h3>{{ group.name }}</h3>
+		{# Une notification sans groupe — un message privé — se range sous son
+		   propre intertitre plutôt que sous un titre vide. #}
+		<h3>{{ group.name ?: 'pages.messages.title'|trans }}</h3>
 		<ul>
 			{% for notification in group.notifications %}
 				<li>

@@ -8,6 +8,7 @@ use App\Entity\DiscussionMessage;
 use App\Entity\Document;
 use App\Entity\Notification;
 use App\Entity\Page;
+use App\Entity\PrivateMessage;
 use App\Entity\User;
 use App\Entity\Usergroup;
 use App\Entity\UsergroupMembership;
@@ -139,6 +140,81 @@ class NotificationSender {
 				$discussion,
 				array_keys( $mentioned )
 		) + count( $mentioned );
+	}
+
+	/**
+	 * Prévient ceux à qui un message privé vient d'être adressé.
+	 *
+	 * Le seul chemin de notification qui ne passe pas par un groupe : une
+	 * boîte aux lettres n'appartient à personne d'autre qu'à son propriétaire,
+	 * et le niveau se lit donc directement sur le membre, sur la catégorie
+	 * « messages ». Elle vaut l'immédiat par défaut — quelqu'un qui écrit
+	 * directement attend une réponse.
+	 *
+	 * Ce que la notification porte, c'est le nom de celui qui écrit, jamais un
+	 * extrait de ce qu'il a écrit. Un résumé qui citerait un message privé le
+	 * sortirait de la conversation pour le poser dans une boîte e-mail
+	 * professionnelle, souvent partagée.
+	 *
+	 * @param \App\Entity\PrivateMessage $message
+	 *
+	 * @return int nombre de notifications créées
+	 */
+	public function notifyNewPrivateMessage ( PrivateMessage $message ) {
+		$conversation = $message->getConversation();
+		$author       = $message->getAuthor();
+
+		if ( !$conversation ) {
+			return 0;
+		}
+
+		$url = $this->router->generate( 'messages_index', [ 'conversation' => $conversation->getId() ] );
+
+		$created   = 0;
+		$immediate = [];
+
+		foreach ( $conversation->getActiveParticipants() as $participant ) {
+			$recipient = $participant->getUser();
+
+			if ( !$recipient || ( $recipient->getStatus() !== User::STATUS_ACTIVE ) ) {
+				continue;
+			}
+
+			// On ne se prévient pas soi-même de ce qu'on vient d'écrire.
+			if ( $author && ( $author->getId() !== NULL ) && ( $author->getId() === $recipient->getId() ) ) {
+				continue;
+			}
+
+			$level = $recipient->getDefaultNotificationLevel( NotificationCategory::MESSAGES );
+
+			if ( !NotificationLevel::showsOnPlatform( $level ) ) {
+				continue;
+			}
+
+			$notification = new Notification();
+			$notification->setRecipient( $recipient );
+			$notification->setAuthor( $author );
+			$notification->setType( Notification::MESSAGE_NEW );
+			$notification->setTitle( $author ? (string) $author->getName() : '' );
+			$notification->setUrl( $url );
+			$notification->setCreatedAt( new DateTime() );
+			$notification->setRhythm( NotificationLevel::rhythm( $level ) );
+			$notification->setByEmail( $this->shouldGoInTheSummary( $recipient, $level ) );
+
+			if ( NotificationLevel::sendsNow( $level ) && $recipient->wantsEmails() ) {
+				$immediate[] = $notification;
+			}
+
+			$this->manager->persist( $notification );
+
+			$created++;
+		}
+
+		$this->manager->flush();
+
+		$this->sendNow( $immediate );
+
+		return $created;
 	}
 
 	/**

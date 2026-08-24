@@ -129,9 +129,17 @@ La commande `app:db:anonymize` remplace, pour chaque compte :
 - le mot de passe, les jetons de réinitialisation et de changement d'e-mail ;
 - les identifiants du compte GeoNature associé.
 
+Elle réécrit également **le texte de tous les messages privés**, et les copies
+que portent les signalements. C'est la seule exception à la règle ci-dessous, et
+elle est voulue : une discussion de groupe a été lue par tout un groupe, un
+message privé ne l'a été que par deux personnes. Ce qui reste d'une conversation
+sur une copie, c'est qui a parlé à qui, quand et combien de fois — de quoi
+éprouver la messagerie, rien de plus. Un message que quelqu'un avait effacé le
+reste.
+
 Sont conservés tels quels : les identifiants internes, les adhésions aux
-groupes, les compétences, les dates, les rôles, et **tout le contenu rédigé** —
-discussions, pages, actualités, noms de documents.
+groupes, les compétences, les dates, les rôles, et **tout le reste du contenu
+rédigé** — discussions, pages, actualités, noms de documents.
 
 > ⚠️ Le contenu rédigé n'est pas anonymisé et **cite des personnes**. Un message
 > de discussion qui commence par « Bonjour Angélique » restera tel quel. La copie

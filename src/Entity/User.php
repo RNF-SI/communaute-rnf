@@ -268,6 +268,20 @@ class User implements UserInterface, JsonSerializable {
 	private $profileUpdatedAt;
 
 	/**
+	 * Cette boîte accepte-t-elle qu'un membre y écrive ?
+	 *
+	 * Une colonne à elle plutôt qu'une ligne de plus dans le JSON des
+	 * notifications : ce n'est pas un réglage d'e-mail mais une porte, et
+	 * c'est une requête — « à qui puis-je écrire » — qui la lit.
+	 *
+	 * Fermer sa boîte ne ferme pas les conversations déjà ouvertes : on y
+	 * répond encore. Ce qu'on ne peut plus, c'est en ouvrir une nouvelle.
+	 *
+	 * @ORM\Column(type="boolean", options={"default":"1"})
+	 */
+	private $messagesOpen = TRUE;
+
+	/**
 	 * Choices that apply to every group at once: whether e-mails go out at
 	 * all, at what rhythm discussion e-mails leave (#34), and what a group
 	 * that says nothing of its own is worth, category by category.
@@ -803,6 +817,19 @@ class User implements UserInterface, JsonSerializable {
 	}
 
 	/**
+	 * @return bool
+	 */
+	public function isMessagesOpen (): bool {
+		return $this->messagesOpen === NULL ? TRUE : (bool) $this->messagesOpen;
+	}
+
+	public function setMessagesOpen ( ?bool $messagesOpen ): self {
+		$this->messagesOpen = $messagesOpen === NULL ? TRUE : $messagesOpen;
+
+		return $this;
+	}
+
+	/**
 	 * Whether this member wants e-mails at all. Switching it off keeps the
 	 * notifications visible on the platform. (#34)
 	 *
@@ -862,7 +889,7 @@ class User implements UserInterface, JsonSerializable {
 
 		$level = NotificationLevel::fromLegacy( $stored, $this->getLegacyDiscussionRhythm(), $category );
 
-		return $level !== NULL ? $level : NotificationLevel::DEFAULT_LEVEL;
+		return $level !== NULL ? $level : NotificationCategory::defaultLevel( $category );
 	}
 
 	/**

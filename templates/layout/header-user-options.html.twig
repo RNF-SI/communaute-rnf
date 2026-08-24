@@ -5,6 +5,13 @@
     <li><a href="{{ path('user_groups') }}">{{ 'pages.user.my_groups.link'|trans }}</a></li>
     <li><a href="{{ path('user_discussions') }}">{{ 'pages.user.my_discussions.link'|trans }}</a></li>
     <li>
+        <a href="{{ path('messages_index') }}">
+            {{ 'pages.messages.link'|trans }}
+            {% set waiting = unread_messages() %}
+            {% if waiting > 0 %}<span class="notifications-count">{{ waiting }}</span>{% endif %}
+        </a>
+    </li>
+    <li>
         <a href="{{ path('user_notifications') }}">
             {{ 'pages.user.notifications.link'|trans }}
             {% set unread = unread_notifications() %}

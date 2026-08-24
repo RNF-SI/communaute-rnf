@@ -17,7 +17,7 @@
 
 		color:            $color_action;
 		background-color: $color_grey_lighter;
-		border-radius:    2em;
+		border-radius:    $radius_full;
 
 		button {
 			position:      relative;
@@ -27,7 +27,7 @@
 			width:         rem(10px);
 			height:        rem(10px);
 			border:        1px solid $color_action;
-			border-radius: rem(5px);
+			border-radius: $radius_sm;
 
 			&::before,
 			&::after {

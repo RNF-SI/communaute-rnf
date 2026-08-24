@@ -24,7 +24,7 @@
 	font-size:   1rem;
 	line-height: line_height_default();
 
-	color:       $color_default;
+	color:       $color_text;
 }
 
 @mixin input-style {
@@ -48,32 +48,50 @@
 		min-height: rem(40px);
 	}
 
-	color:         $color_default;
+	color:         $color_text;
 	background:    white;
 
-	border:        1px solid $color_grey_border;
-	border-radius: 0;
+	// La bordure d'un champ doit tenir 3:1 pour qu'on sache où le champ
+	// commence (WCAG 1.4.11). L'ancien $color_grey_border (#DBDEE4) est à
+	// 1,35 : sur le fond de page il ne se voyait pratiquement pas.
+	border:        1px solid $color_border_strong;
+	border-radius: $radius_sm;
+
+	@include transition(border-color, box-shadow);
 
 	&:disabled {
-		color: #999999;
+		color:            $color_text_muted;
+		background-color: $color_canvas;
+		cursor:           not-allowed;
 	}
 
-	&:hover {
+	&:hover:not(:disabled) {
+		border-color: $color_text_muted;
 	}
 
-	&:focus {
-		outline:      none;
-		border-color: $color_grey_medium;
-	}
-
+	// Avant : `outline: none` remplacé par un simple changement de gris. Un
+	// champ atteint au clavier n'était pas distinguable d'un champ survolé.
+	&:focus,
+	&:focus-visible,
 	&:focus-within {
-		outline:      none;
-		border-color: $color_grey_medium;
+		border-color: $color_action;
+
+		@include focus-ring;
 	}
 
 	&.error,
 	.error & {
-		border-color: $color_orange_red;
+		border-color: $color_danger;
+
+		&:focus,
+		&:focus-visible {
+			@include focus-ring($color_danger);
+		}
+	}
+
+	&::placeholder {
+		color:   $color_text_muted;
+		opacity: 1; // Firefox l'atténue de lui-même, ce qui le rend illisible.
 	}
 }
 
@@ -93,9 +111,24 @@
 * STYLES ASSIGNATION
 **************************************************/
 
+/**
+ * Ces deux-là portaient un `outline: none` sec, sans rien à la place : au
+ * clavier, cocher une case se faisait sans savoir laquelle était visée. Le
+ * picto qui les remplace visuellement est dessiné sur le label, c'est donc lui
+ * qui doit s'allumer.
+ */
 input[type="checkbox"],
 input[type="radio"] {
-	outline: none;
+	accent-color: $color_action;
+
+	&:focus-visible {
+		@include focus-ring;
+	}
+
+	&:focus-visible + .checkbox-label::before,
+	&:focus-visible + .radiobox-label::before {
+		@include focus-ring;
+	}
 }
 
 input[type="text"],
@@ -110,8 +143,17 @@ select {
 }
 
 input[type="search"] {
-	border-color:        white;
-	@include card_shadow;
+	/**
+	 * Le champ de recherche ne se dessinait que par son ombre — bordure
+	 * transparente. Sur le fond gris de la page cela passait ; posé sur une
+	 * carte blanche, comme la colonne de la messagerie, il disparaissait. Il
+	 * porte désormais la même bordure que les autres champs, et l'ombre ne
+	 * fait plus que le décoller.
+	 */
+	border-color:        $color_border_strong;
+	border-radius:       $radius_sm;
+	background-color:    $color_surface;
+	box-shadow:          $shadow_sm;
 
 	$line-height:        1.3;
 
@@ -146,7 +188,7 @@ select {
 	-moz-appearance:     none;
 	appearance:          none;
 
-	$color:              $color_default;
+	$color:              $color_text;
 	@import '../_assets/picto-select.svg';
 	background-repeat:   no-repeat;
 	background-position: right rem(10px) center;
@@ -172,9 +214,23 @@ textarea {
 	height:      line_height_default() * 5 * 1em;
 }
 
+/**
+ * Le bouton de formulaire par défaut — **seulement** quand il n'en porte
+ * aucune classe.
+ *
+ * `:not([class])` n'est pas une précaution, c'est une correction. Sans lui,
+ * `button[type="submit"]` (spécificité 0-1-1) l'emporte sur toutes les classes
+ * du projet (0-1-0), quel que soit l'ordre : `class="cta__inverted"` rendait un
+ * bouton plein, et `class="message--tool"`, écrit pour ressembler à un lien,
+ * sortait un gros bouton vert à côté de « Modifier ». Les deux boutons du
+ * fil de messagerie et le « Rechercher » de la colonne de gauche en venaient.
+ *
+ * Symfony n'ajoute aucune classe aux boutons qu'il rend lui-même
+ * (`form_widget`) : ils continuent de tomber ici.
+ */
 button[type="button"]:not([class]),
-button[type="submit"],
-input[type="submit"] {
+button[type="submit"]:not([class]),
+input[type="submit"]:not([class]) {
 	@include submit-style;
 }
 
@@ -420,7 +476,7 @@ $form_label_width: math.div(1, 3) * 100%;
 		overflow:         hidden;
 
 		background-color: $color_grey_light;
-		border-radius:    rem(5px);
+		border-radius:    $radius_sm;
 
 		img {
 			display:         block;
@@ -524,12 +580,15 @@ $form_label_width: math.div(1, 3) * 100%;
 	@include font_default_bold;
 	font-size:        rem(14px);
 
-	color:            $color_orange_red;
-	background-color: lighten($color_orange_red, 50);
-	border:           1px solid $color_orange_red;;
-	border-radius:    rem(3px);
+	// `lighten($color_orange_red, 50)` produisait un fond quasi blanc sous un
+	// texte turquoise : 2,4:1. Le fond sémantique est calculé pour que le
+	// texte d'erreur y tienne 4,5:1.
+	color:            $color_danger;
+	background-color: $color_danger_surface;
+	border:           1px solid $color_danger;
+	border-radius:    $radius_sm;
 }
 
-.adaptative-approach-form-has-not-been-notified{
-	background-color: #ffcccc;
+.adaptative-approach-form-has-not-been-notified {
+	background-color: $color_danger_surface;
 }

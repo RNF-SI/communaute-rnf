@@ -2,6 +2,8 @@
 
 namespace App\Command;
 
+use App\Entity\MessageReport;
+use App\Entity\PrivateMessage;
 use App\Entity\User;
 use App\EventSubscriber\SearchEngineIndexSubscriber;
 use Doctrine\ORM\EntityManagerInterface;
@@ -20,6 +22,13 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
  *
  * Volumetry and relations are left untouched: same accounts, same
  * memberships, same discussions, same documents. Only who people are changes.
+ *
+ * **Les messages privés font exception** et sont réécrits, eux, pas seulement
+ * leurs auteurs. Une discussion de groupe a été lue par tout un groupe ; un
+ * message privé n'a été lu que par deux personnes, et une copie de production
+ * traîne sur des postes et des préproductions que bien d'autres regardent. La
+ * messagerie reste donc utilisable sur une copie — mêmes conversations, mêmes
+ * dates — mais elle ne dit plus rien de ce qui s'est écrit.
  */
 class AnonymizeDatabaseCommand extends Command {
 	protected static $defaultName = 'app:db:anonymize';
@@ -123,9 +132,19 @@ class AnonymizeDatabaseCommand extends Command {
 			$anonymised++;
 		}
 
+		$messages = $dryRun
+				? $this->manager->getRepository( PrivateMessage::class )->count( [] )
+				: $this->anonymiseMessages();
+
 		if ( !$dryRun ) {
 			$this->manager->flush();
 		}
+
+		$io->text( sprintf(
+				'%d private messages %s',
+				$messages,
+				$dryRun ? 'would be rewritten' : 'rewritten'
+		) );
 
 		$io->success( sprintf(
 				'%d accounts %s, %d already anonymised, %d left untouched',
@@ -137,10 +156,64 @@ class AnonymizeDatabaseCommand extends Command {
 
 		if ( !$dryRun ) {
 			$io->note( 'Free-text content — discussions, pages, articles, document names — is left as it is and may still name people.' );
+			$io->note( 'Private messages are the exception: their text is replaced, and so are the copies carried by reports.' );
 			$io->note( 'The search index was not updated along the way: run search:reindex:all.' );
 		}
 
 		return 0;
+	}
+
+	/**
+	 * Réécrit le texte des messages privés, et les copies que portent les
+	 * signalements.
+	 *
+	 * Ce qui reste : qui a parlé à qui, quand, combien de fois. C'est ce qui
+	 * fait qu'une copie sert encore à éprouver la messagerie. Ce qui part :
+	 * tout ce qui a été dit.
+	 *
+	 * @return int
+	 */
+	private function anonymiseMessages () {
+		$rewritten = 0;
+
+		foreach ( $this->manager->getRepository( PrivateMessage::class )->findAll() as $message ) {
+			$rewritten++;
+
+			// Un message effacé le reste : lui rendre un texte ferait
+			// réapparaître sur la copie ce que quelqu'un avait retiré.
+			if ( $message->isDeleted() ) {
+				continue;
+			}
+
+			$this->faker->seed( $message->getId() );
+
+			$message->setBody( implode( ' ', $this->faker->sentences( 2 ) ) );
+		}
+
+		foreach ( $this->manager->getRepository( MessageReport::class )->findAll() as $report ) {
+			$this->faker->seed( $report->getId() );
+
+			$report->setExcerpt( implode( ' ', $this->faker->sentences( 2 ) ) );
+			$report->setReason( $report->getReason() ? $this->faker->sentence( 8 ) : NULL );
+
+			// Le nom recopié au moment du signalement est celui d'avant : il
+			// se réaligne sur le compte, qui vient d'être réécrit.
+			if ( $report->getReported() ) {
+				$report->setReportedName( $report->getReported()->getName() );
+			}
+
+			$context = $report->getContext();
+
+			foreach ( $context as $index => $entry ) {
+				if ( !empty( $entry[ 'body' ] ) ) {
+					$context[ $index ][ 'body' ] = $this->faker->sentence( 10 );
+				}
+			}
+
+			$report->setContext( $context );
+		}
+
+		return $rewritten;
 	}
 
 	/**

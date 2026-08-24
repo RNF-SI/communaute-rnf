@@ -32,7 +32,7 @@
 
 		color:            white;
 		background-color: $color_action;
-		border-radius:    .4em;
+		border-radius:    $radius_sm;
 
 		button {
 			position:      relative;
@@ -43,7 +43,7 @@
 			width:         rem(10px);
 			height:        rem(10px);
 			border:        1px solid white;
-			border-radius: rem(4px);
+			border-radius: $radius_sm;
 
 			&::before,
 			&::after {

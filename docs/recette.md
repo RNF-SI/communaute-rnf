@@ -228,6 +228,64 @@ vert sur les quatre lignes.
 
 ---
 
+## 6 bis. La messagerie — **à deux**
+
+Les données de test contiennent déjà quatre conversations, pour que rien
+n'oblige à en écrire une avant de regarder. Entre les comptes nommés :
+
+| Conversation | Ce qu'elle montre |
+|---|---|
+| Rémi ↔ **Manon** | Un tête-à-tête, un tag vers une personne, un vers un document, un vers un groupe, un message **modifié**, et un dernier message **non lu par Manon** |
+| Alice + Rémi + Manon (+ Éric, parti) | Un fil **à plusieurs**, un message **supprimé**, **archivée** par Manon |
+| Rémi ↔ **Camille** | Le **tag grisé** : Camille attend à la porte du groupe privé |
+| Éric → **Manon** | La **boîte fermée** d'Éric, et deux **signalements** |
+
+Deux documents portent des titres qu'aucun autre contenu ne porte, pour que les
+tags ne soient pas ambigus : « **Guide des suivis partagés** » (groupe de test,
+public) et « **Note de cadrage du bureau** » (groupe privé).
+
+| À faire | Attendu |
+|---|---|
+| Se connecter en **Manon Membre**, regarder l'en-tête | Un compteur à côté de **Messages** |
+| En-tête → **Messages** | La page s'ouvre en deux colonnes : la liste à gauche, un texte d'invite à droite |
+| Ouvrir la conversation avec Rémi | Une barre « Nouveaux messages » devant le dernier ; le compteur retombe à zéro |
+| Dans ce fil | Un message porte « modifié » ; les tags sont des liens colorés avec une pastille de type |
+| Onglet **Archivées** | La conversation à plusieurs s'y trouve, avec un « Message supprimé » qui garde sa place et Éric qui l'a quittée |
+| Fiche d'**Éric Extérieur** | Pas de bouton « Écrire » : sa boîte est fermée |
+| Mais la conversation avec Éric, dans la boîte de Manon | Elle s'ouvre et on peut y répondre — fermer sa boîte n'interrompt pas ce qui est en cours |
+| Se connecter en **Rémi Référent**, ouvrir la conversation avec Camille | Les trois tags sont des **liens** : il est membre du groupe privé |
+| Se connecter en **Camille Candidate**, ouvrir la même | « Groupe privé de test » et « Note de cadrage du bureau » sont **grisés et non cliquables** ; « Guide des suivis partagés » reste un lien |
+| Fiche d'un membre → **Écrire** | Le formulaire s'ouvre avec cette personne déjà cochée |
+| Écrire un premier message | La conversation s'ouvre, le message y est |
+| Retourner sur la même fiche → **Écrire** | On retombe **dans la conversation existante**, pas sur un formulaire vierge |
+| Regarder l'en-tête de l'autre compte | Un compteur à côté de **Messages** ; il retombe à zéro une fois la conversation ouverte |
+| Dans un message, taper `@` puis les premières lettres d'un nom | Une liste propose des membres ; choisir insère « @Prénom Nom » **en texte** |
+| Taper `#` puis le début d'un titre de document | La liste propose documents, pages, actualités, discussions et groupes, avec le groupe d'origine en indication |
+| Envoyer et relire le message | Le tag est devenu un lien, avec une pastille qui dit son type |
+| **Taguer un document d'un groupe privé** dont l'autre n'est pas membre | Chez lui, le titre reste visible mais **grisé et non cliquable** ; chez vous, il est cliquable |
+| Écrire le tag **à la main**, sans passer par la liste | Il est reconnu pareil : rien ne dépend du JavaScript |
+| Citer `@quelqu'un` qui n'est pas dans la conversation | Un message éclair prévient que la citation ne l'atteint pas |
+| **Ajouter quelqu'un** à la conversation, puis regarder chez lui | Il lit **tout** le fil, y compris ce qui précède son arrivée |
+| Modifier puis supprimer son propre message | « modifié » apparaît ; supprimé, sa place reste et le texte devient « Message supprimé » |
+| Essayer de modifier le message de l'autre | Aucun bouton : il n'y a pas d'animateur dans une conversation privée |
+| **Archiver** une conversation, puis y faire écrire l'autre | Elle ressort de l'onglet « Archivées » : ranger n'est pas se désabonner |
+| **Quitter** une conversation | Elle disparaît de votre liste, vos messages restent chez l'autre, et il peut vous réécrire |
+| Mes paramètres → décocher **Accepter de recevoir des messages privés** | Sur votre fiche, le bouton « Écrire » disparaît ; les conversations en cours restent ouvertes |
+| Mes paramètres → réglage général | Une **cinquième ligne**, « Messages privés », réglée sur e-mail immédiat par défaut — et **aucune ligne « messages » sous les groupes** |
+| Filtrer la liste avec le nom de l'autre personne | La conversation remonte, même si le mot n'est dans aucun message |
+
+### Signaler, et ce que l'équipe voit
+
+| À faire | Attendu |
+|---|---|
+| Sous un message reçu → **Signaler** | Un écran montre **ce qui sera transmis** : le message et les quelques messages qui le précèdent |
+| Valider | Confirmation ; l'autre n'est pas prévenu |
+| Compte administrateur → Administration → **Signalements** | Le signalement, avec les copies. **Aucun lien n'ouvre la conversation** — c'est voulu |
+| Faire supprimer le message signalé par son auteur, recharger | Le signalement **garde sa copie** : il survit à ce qu'il signale |
+| **Marquer comme traité** | Il passe dans l'onglet « Traités », avec qui l'a traité ; on peut le rouvrir |
+
+---
+
 ## 7. L'administration
 
 | À faire | Attendu |

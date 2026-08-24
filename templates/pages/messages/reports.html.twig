@@ -1,0 +1,118 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'pages.administration.tabs.message_reports.name'|trans }} | {{ plateform.name }}{% endblock %}
+
+{#
+	Les signalements de messages privés.
+
+	Cette page ne lit **que** ce que chaque signalement porte : la copie du
+	message et celle des quelques messages qui le précédaient, faites au
+	moment du signalement. Elle n'ouvre aucune conversation, et c'est la
+	propriété à préserver en la modifiant — la promesse faite aux membres est
+	que personne ne lit leurs échanges.
+#}
+
+{% block main %}
+	<section class="main main__user-page main__user-page__administrator">
+		<div class="main--content content-container">
+			<div class="thin">
+				{% include 'components/app-flashes.html.twig' %}
+
+				<section>
+					<div class="panel">
+						<h1 class="h1">{{ 'pages.administration.tabs.message_reports.name'|trans }}</h1>
+					</div>
+				</section>
+
+				{% include 'contents/admin/partials/admin-tabs.html.twig' with {'tab': tab} %}
+
+				<p class="hint">{{ 'pages.administration.message_reports.scope'|trans }}</p>
+
+				<nav class="messaging--tabs">
+					<a class="{{ handled ? '' : 'is-active' }}" href="{{ path('administration_message_reports') }}">
+						{{ 'pages.administration.message_reports.pending'|trans }} ({{ pending }})
+					</a>
+					<a class="{{ handled ? 'is-active' : '' }}" href="{{ path('administration_message_reports', {'handled': 1}) }}">
+						{{ 'pages.administration.message_reports.handled'|trans }}
+					</a>
+				</nav>
+
+				{% if reports is empty %}
+					<p>{{ 'pages.administration.message_reports.empty'|trans }}</p>
+				{% else %}
+					<ul class="reports-list">
+						{% for report in reports %}
+							<li class="report">
+								<div class="report--head">
+									<span class="report--who">
+										{{ 'pages.administration.message_reports.against'|trans }}
+										{% if report.reported %}
+											<a href="{{ path('member', {'user_id': report.reported.id}) }}">{{ report.reportedName ?: report.reported.name }}</a>
+										{% else %}
+											{{ report.reportedName ?: 'pages.messages.unknown_author'|trans }}
+										{% endif %}
+									</span>
+									<span class="report--by">
+										{{ 'pages.administration.message_reports.by'|trans }}
+										{% if report.reporter %}
+											<a href="{{ path('member', {'user_id': report.reporter.id}) }}">{{ report.reporter.name }}</a>
+										{% else %}
+											{{ 'pages.messages.unknown_author'|trans }}
+										{% endif %}
+									</span>
+									<span class="report--date">{{ report.createdAt|ago }}</span>
+								</div>
+
+								{% if report.reason %}
+									<p class="report--reason">{{ report.reason }}</p>
+								{% endif %}
+
+								{# Le texte recopié, échappé : il n'est pas relu comme des
+								   tags, et il ne mène nulle part. #}
+								{% if report.context is not empty %}
+									<ol class="thread thread__copy">
+										{% for previous in report.context %}
+											<li class="message">
+												<div class="message--head">
+													<span class="message--author">{{ previous.author ?: 'pages.messages.unknown_author'|trans }}</span>
+												</div>
+												<div class="message--body">
+													{% if previous.body %}
+														{{ previous.body|nl2br }}
+													{% else %}
+														<em class="message--deleted">{{ 'pages.messages.deleted'|trans }}</em>
+													{% endif %}
+												</div>
+											</li>
+										{% endfor %}
+									</ol>
+								{% endif %}
+
+								<blockquote class="report--excerpt">{{ report.excerpt|nl2br }}</blockquote>
+
+								<div class="report--tools">
+									{% if report.isHandled %}
+										<span class="report--handled">
+											{{ 'pages.administration.message_reports.handled_by'|trans }}
+											{{ report.handledBy ? report.handledBy.name : '' }} — {{ report.handledAt|ago }}
+										</span>
+										<form method="post" action="{{ path('administration_message_report_handle', {'id': report.id}) }}">
+											<input type="hidden" name="_token" value="{{ csrf_token('message-reports') }}">
+											<input type="hidden" name="reopen" value="1">
+											<button type="submit" class="cta__inverted">{{ 'pages.administration.message_reports.reopen'|trans }}</button>
+										</form>
+									{% else %}
+										<form method="post" action="{{ path('administration_message_report_handle', {'id': report.id}) }}">
+											<input type="hidden" name="_token" value="{{ csrf_token('message-reports') }}">
+											<button type="submit" class="cta">{{ 'pages.administration.message_reports.handle'|trans }}</button>
+										</form>
+									{% endif %}
+								</div>
+							</li>
+						{% endfor %}
+					</ul>
+				{% endif %}
+			</div>
+		</div>
+	</section>
+{% endblock %}

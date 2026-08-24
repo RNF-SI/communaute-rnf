@@ -1,258 +1,360 @@
-// Groups Visualization Styles
+/**************************************************
+* VISUALISATION DES GROUPES
+**************************************************/
 
-// Toggle controls for groups page
+/**
+ * Le graphe des groupes et la bascule liste / graphe qui le surmonte.
+ *
+ * Cette feuille est une **seconde entrée webpack** (chargée par
+ * assets/js/groups-visualization.js, et seulement sur la page des groupes) :
+ * elle ne passe pas par app.scss, d'où les imports ci-dessous. Elle n'inclut
+ * volontairement ni les fontes ni `_setup/root-tokens`, qui écrivent des
+ * règles et se retrouveraient en double dans la page.
+ *
+ * Ce qu'elle contenait relevait d'une autre charte que celle de la
+ * plateforme : le bleu #007bff, les gris #6c757d / #dee2e6 / #f8f9fa et le
+ * spinner #3498db sont des valeurs Bootstrap, arrivées avec un copier-coller
+ * et jamais reprises. Sur un écran qui montre l'organisation du réseau, le
+ * bouton actif était bleu vif à côté du vert RNF de tout le reste.
+ */
+
+@import "_lib/tools";
+@import "_lib/mediaqueries";
+@import "_config/colors";
+@import "_config/tokens";
+
+/**************************************************
+* EN-TÊTE ET BASCULE DE VUE
+**************************************************/
+
 .groups-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-    margin-top: 2rem;
-    flex-wrap: wrap;
-    gap: 1rem;
+	display:       flex;
+	align-items:   center;
+	flex-wrap:     wrap;
+	gap:           $space_4;
 
-    .small-title {
-        margin: 0;
-    }
+	justify-content: space-between;
 
-    .groups-view-toggle {
-        display: flex;
-        gap: 0;
-        border: 1px solid #dee2e6;
-        border-radius: 6px;
-        overflow: hidden;
+	margin-top:    $space_6;
+	margin-bottom: $space_4;
 
-        .view-toggle-btn {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            background: #fff;
-            border: none;
-            color: #6c757d;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-
-            &:hover {
-                background: #f8f9fa;
-                color: #495057;
-            }
-
-            &.active {
-                background: #007bff;
-                color: white;
-            }
-
-            svg {
-                width: 16px;
-                height: 16px;
-            }
-        }
-    }
+	.small-title {
+		margin: 0;
+	}
 }
 
+/**
+ * Deux boutons soudés qui disent quelle vue est ouverte. C'est un groupe de
+ * boutons radio déguisé : l'état actif se lit à l'aplat, et le contour du
+ * groupe ne se dédouble pas au milieu.
+ */
+.groups-view-toggle {
+	display:       flex;
+
+	border:        1px solid $color_border_strong;
+	border-radius: $radius_md;
+	overflow:      hidden;
+
+	.view-toggle-btn {
+		display:          flex;
+		align-items:      center;
+		gap:              $space_2;
+
+		padding:          $space_2 $space_4;
+		min-height:       rem(40px);
+
+		font-family:      inherit;
+		font-size:        rem(14px);
+		font-weight:      500;
+
+		color:            $color_text_muted;
+		background:       $color_surface;
+		border:           0;
+		cursor:           pointer;
+
+		@include transition(color, background-color);
+
+		& + .view-toggle-btn {
+			border-left: 1px solid $color_border;
+		}
+
+		&:hover {
+			color:      $color_text;
+			background: $color_canvas;
+		}
+
+		&.active {
+			color:      white;
+			background: $color_action;
+		}
+
+		&:focus-visible {
+			// L'anneau doit passer par-dessus le bouton voisin : sans
+			// `position: relative`, l'`overflow: hidden` du groupe le rogne.
+			position: relative;
+			z-index:  1;
+
+			@include focus-ring;
+		}
+
+		svg {
+			width:  rem(16px);
+			height: rem(16px);
+		}
+	}
+}
+
+/**************************************************
+* LE GRAPHE
+**************************************************/
+
 .groups-view {
-    width: 100%;
+	width: 100%;
 }
 
 .groups-visualization {
-    .graph-bottom-controls {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: 1rem 0;
-        padding: 0 1rem;
 
-        .btn {
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            white-space: nowrap;
-        }
-    }
-    
-    .legend {
-        background: #f8f9fa;
-        padding: 1rem;
-        border-radius: 8px;
-        border: 1px solid #dee2e6;
-        margin-top: 1rem;
-        text-align: center;
+	.graph-bottom-controls {
+		display:         flex;
+		justify-content: center;
+		align-items:     center;
 
-        h3 {
-            margin: 0 0 1rem 0;
-            font-size: 1rem;
-            color: #495057;
-        }
+		margin:          $space_4 0;
+		padding:         0 $space_4;
 
-        .legend-item {
-            display: inline-flex;
-            align-items: center;
-            margin: 0 1rem 0.5rem 0;
-            font-size: 0.875rem;
+		.btn {
+			padding:     $space_2 $space_4;
+			font-size:   rem(14px);
+			white-space: nowrap;
+		}
+	}
 
-            &:last-child {
-                margin-right: 0;
-            }
+	.groups-graph {
+		position:      relative;
+		min-height:    rem(600px);
+		overflow:      hidden;
 
-            .legend-circle {
-                width: 16px;
-                height: 16px;
-                border-radius: 50%;
-                margin-right: 0.5rem;
-                border: 2px solid #fff;
+		background:    $color_surface;
+		border:        1px solid $color_border;
+		border-radius: $radius_md;
 
-                &--important {
-                    background-color: #DC8063;
-                }
+		box-shadow:    $shadow_sm;
 
-                &--normal {
-                    background-color: #0B885D;
-                }
-            }
+		svg {
+			cursor: grab;
 
-            .legend-line {
-                width: 20px;
-                height: 2px;
-                background-color: #8E8F94;
-                margin-right: 0.5rem;
-                opacity: 0.6;
-            }
-        }
-    }
+			&:active {
+				cursor: grabbing;
+			}
+		}
 
-    .groups-graph {
-        position: relative;
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        background: #fff;
-        overflow: hidden;
-        min-height: 600px;
+		.node {
+			cursor: pointer;
 
-        .loading {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 400px;
-            color: #6c757d;
+			@include transition(opacity);
 
-            .spinner {
-                width: 40px;
-                height: 40px;
-                border: 4px solid #f3f3f3;
-                border-top: 4px solid #3498db;
-                border-radius: 50%;
-                animation: spin 1s linear infinite;
-                margin-bottom: 1rem;
-            }
+			&:hover circle {
+				stroke-width: 3;
+				filter:       brightness(1.08);
+			}
 
-            @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-        }
+			/**
+			 * Le libellé et rien d'autre.
+			 *
+			 * Ne pas y remettre `stroke` ni `paint-order` : le JavaScript les
+			 * pose déjà par attribut de présentation, en noir translucide et
+			 * fin, calculé selon que le nœud porte un logo ou un aplat. Or une
+			 * règle CSS l'emporte sur un attribut de présentation SVG — un
+			 * liseré blanc écrit ici avait remplacé le halo noir sous un texte
+			 * blanc, et les noms de groupes devenaient illisibles sur les
+			 * pastilles claires.
+			 */
+			text {
+				user-select: none;
+			}
+		}
 
-        svg {
-            cursor: grab;
+		.link {
+			@include transition(stroke-width, stroke-opacity);
 
-            &:active {
-                cursor: grabbing;
-            }
-        }
+			&:hover {
+				stroke-width:   3;
+				stroke-opacity: .8;
+			}
+		}
+	}
 
-        .node {
-            cursor: pointer;
-            transition: all 0.3s ease;
+	/**
+	 * L'attente. Le disque tourne dans le vert de la plateforme, et il
+	 * s'immobilise pour qui a demandé moins de mouvement — le texte à côté
+	 * suffit alors à dire qu'on charge.
+	 */
+	.loading {
+		display:         flex;
+		flex-direction:  column;
+		justify-content: center;
+		align-items:     center;
 
-            &:hover circle {
-                stroke-width: 3;
-                filter: brightness(1.1);
-            }
+		height:          rem(400px);
+		color:           $color_text_muted;
 
-            text {
-                user-select: none;
-                text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
-            }
-        }
+		.spinner {
+			width:         rem(40px);
+			height:        rem(40px);
+			margin-bottom: $space_4;
 
-        .link {
-            transition: all 0.3s ease;
+			border:        3px solid $color_border;
+			border-top:    3px solid $color_action;
+			border-radius: $radius_circle;
 
-            &:hover {
-                stroke-width: 3;
-                stroke-opacity: 0.8;
-            }
-        }
-    }
-
-    .node-tooltip {
-        position: absolute;
-        background: rgba(0, 0, 0, 0.9);
-        color: white;
-        padding: 1rem;
-        border-radius: 8px;
-        font-size: 0.875rem;
-        max-width: 250px;
-        z-index: 1000;
-        pointer-events: none;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-
-        .tooltip-title {
-            margin: 0 0 0.5rem 0;
-            font-weight: bold;
-            font-size: 1rem;
-            color: #fff;
-        }
-
-        .tooltip-description {
-            margin: 0 0 0.5rem 0;
-            color: #ccc;
-            line-height: 1.4;
-        }
-
-        .tooltip-stats {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-            margin-bottom: 0.5rem;
-            font-size: 0.8rem;
-            color: #aaa;
-        }
-
-    }
+			animation:     groups-spin 1s linear infinite;
+		}
+	}
 }
 
-// Responsive adjustments
-@media (max-width: 768px) {
-    .groups-visualization {
-        .graph-bottom-controls {
-            margin: 0.5rem 0;
-        }
-        
-        .legend {
-            .legend-item {
-                display: flex;
-                justify-content: center;
-                margin: 0 0 0.5rem 0;
-                
-                &:last-child {
-                    margin-bottom: 0;
-                }
-            }
-        }
+@keyframes groups-spin {
+	to { transform: rotate(360deg); }
+}
 
-        .groups-graph {
-            min-height: 400px;
+/**************************************************
+* LÉGENDE
+**************************************************/
 
-            svg {
-                width: 100%;
-                height: auto;
-            }
-        }
+.groups-visualization .legend {
+	margin-top:    $space_4;
+	padding:       $space_4;
+	text-align:    center;
 
-        .node-tooltip {
-            max-width: 200px;
-            font-size: 0.8rem;
-        }
-    }
+	background:    $color_canvas;
+	border:        1px solid $color_border;
+	border-radius: $radius_md;
+
+	h3 {
+		margin:      0 0 $space_3;
+		font-size:   rem(15px);
+		font-weight: 600;
+		color:       $color_text_muted;
+	}
+
+	.legend-item {
+		display:      inline-flex;
+		align-items:  center;
+		margin:       0 $space_4 $space_2 0;
+		font-size:    rem(14px);
+
+		&:last-child {
+			margin-right: 0;
+		}
+	}
+
+	.legend-circle {
+		width:         rem(16px);
+		height:        rem(16px);
+		margin-right:  $space_2;
+
+		border:        2px solid $color_surface;
+		border-radius: $radius_circle;
+
+		// Les pastilles de la légende reprennent les couleurs de marque, pas
+		// leurs variantes accessibles : ce sont des repères graphiques, la
+		// signification est portée par le libellé qui les suit.
+		&--important {
+			background-color: $brand_copper;
+		}
+
+		&--normal {
+			background-color: $brand_green;
+		}
+	}
+
+	.legend-line {
+		width:            rem(20px);
+		height:           2px;
+		margin-right:     $space_2;
+		background-color: $color_border_strong;
+	}
+}
+
+/**************************************************
+* INFOBULLE
+**************************************************/
+
+.node-tooltip {
+	position:       absolute;
+	z-index:        $z_dropdown;
+	pointer-events: none;
+
+	max-width:      rem(250px);
+	padding:        $space_3 $space_4;
+
+	font-size:      rem(14px);
+	line-height:    1.45;
+
+	color:          white;
+	background:     rgba($color_grey_dark, .95);
+	border-radius:  $radius_md;
+	box-shadow:     $shadow_lg;
+
+	.tooltip-title {
+		margin:      0 0 $space_1;
+		font-size:   rem(15px);
+		font-weight: 600;
+		color:       white;
+	}
+
+	.tooltip-description {
+		margin:      0 0 $space_2;
+		color:       rgba(white, .82);
+	}
+
+	.tooltip-stats {
+		display:        flex;
+		flex-direction: column;
+		gap:            $space_1;
+		margin-bottom:  $space_2;
+
+		font-size:      rem(13px);
+		color:          rgba(white, .70);
+	}
+}
+
+/**************************************************
+* ÉCRANS ÉTROITS
+**************************************************/
+
+/**
+ * Le point de rupture vient des mixins du projet plutôt que d'un `768px`
+ * écrit ici : il valait 768 quand tout le reste bascule à 960, et le graphe
+ * passait en mode étroit deux cents pixels avant la page qui l'entoure.
+ */
+@include medium-or-less {
+	.groups-visualization {
+		.graph-bottom-controls {
+			margin: $space_2 0;
+		}
+
+		.legend .legend-item {
+			display:         flex;
+			justify-content: center;
+			margin:          0 0 $space_2;
+
+			&:last-child {
+				margin-bottom: 0;
+			}
+		}
+
+		.groups-graph {
+			min-height: rem(400px);
+
+			svg {
+				width:  100%;
+				height: auto;
+			}
+		}
+	}
+
+	.node-tooltip {
+		max-width: rem(200px);
+		font-size: rem(13px);
+	}
 }

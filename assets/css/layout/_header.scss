@@ -25,6 +25,11 @@
 	color:            $color_grey_medium;
 	background-color: white;
 
+	// L'en-tête est fixe et blanc, la page est d'un gris très clair : sans
+	// rien pour l'en séparer, le bord flottait au défilement. Une bordure
+	// plutôt qu'une ombre — l'ombre bavait sur les cartes blanches en dessous.
+	border-bottom:    1px solid $color_border;
+
 	height:           rem(70px);
 
 	& + main {
@@ -137,10 +142,12 @@
 		a {
 			display:         block;
 			margin:          0;
-			padding:         .5em .8em;
+			padding:         $space_3 $space_4;
 
 			color:           inherit;
 			text-decoration: none;
+
+			@include transition(color, background-color);
 
 			&:focus,
 			&:hover {
@@ -172,16 +179,41 @@
 		}
 
 		a {
+			position:        relative;
 			display:         inline-block;
 			margin:          0;
-			padding:         .4em 0;
+			padding:         $space_2 0;
 
 			color:           inherit;
 			text-decoration: none;
 
+			@include transition(color);
+
+			// Un trait qui pousse sous le lien plutôt qu'un soulignement qui
+			// apparaît d'un coup : c'est le même geste que les onglets
+			// d'administration, sur la même durée.
+			&::after {
+				content:          '';
+				position:         absolute;
+				left:             0;
+				right:            0;
+				bottom:           0;
+				height:           2px;
+
+				background-color: $color_action;
+				transform:        scaleX(0);
+				transform-origin: left center;
+
+				@include transition(transform);
+			}
+
 			&:focus,
 			&:hover {
-				text-decoration: underline;
+				color: $color_action;
+
+				&::after {
+					transform: scaleX(1);
+				}
 			}
 		}
 	}
@@ -231,28 +263,33 @@
 		white-space: nowrap;
 
 		max-height:  0;
-		transition:  max-height .5s ease-in-out;
 		overflow:    hidden;
-		@include shadow;
+
+		transition:  max-height $duration_slow $ease;
+
+		@include shadow_floating;
+		border-radius: $radius_md;
 
 		ul {
 			margin:           0;
-			padding:          .5rem;
+			padding:          $space_2;
 
 			background-color: white;
-			border-radius:    2px;
+			border:           1px solid $color_border;
+			border-radius:    $radius_md;
 
-			li {
-				&:not(:first-child) {
-					border-top: 1px solid $color_grey_border;
-				}
+			li:not(:first-child) {
+				border-top: 1px solid $color_border;
 			}
 
 			a {
 				display:         block;
-				padding:         .5rem .8rem;
+				padding:         $space_2 $space_3;
 
 				text-decoration: none;
+				border-radius:   $radius_sm;
+
+				@include transition(color, background-color);
 
 				&:hover,
 				&:focus {

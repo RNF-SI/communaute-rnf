@@ -73,6 +73,35 @@ class UserRepository extends ServiceEntityRepository {
 					->getResult();
 	}
 
+	/**
+	 * Les membres actifs dont le nom commence par ce qui a été tapé.
+	 *
+	 * Sert aux écrans de la messagerie, où l'on choisit à qui écrire : la
+	 * recherche se fait côté serveur, et la page se passe donc de JavaScript.
+	 *
+	 * @param string $query
+	 * @param int    $limit
+	 *
+	 * @return User[]
+	 */
+	public function searchActiveByName ( $query, $limit = 20 ) {
+		$query = trim( (string) $query );
+
+		if ( $query === '' ) {
+			return [];
+		}
+
+		return $this->createQueryBuilder( 'u' )
+					->andWhere( 'u.status = :status' )
+					->andWhere( 'u.name LIKE :needle OR u.displayName LIKE :needle' )
+					->setParameter( 'status', User::STATUS_ACTIVE )
+					->setParameter( 'needle', '%' . $query . '%' )
+					->orderBy( 'u.name', 'ASC' )
+					->setMaxResults( $limit )
+					->getQuery()
+					->getResult();
+	}
+
 	public function getCountries ( $filters = [] ) {
 		$qb = $this->createQueryBuilder( 'u' );
 

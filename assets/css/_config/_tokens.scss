@@ -1,0 +1,152 @@
+/**************************************************
+* TOKENS
+**************************************************/
+
+/**
+ * L'échelle du design : espacements, rayons, ombres, focus, durées.
+ *
+ * Avant ce fichier, chaque écran choisissait ses valeurs dans son coin — seize
+ * rayons différents, onze ombres, des espacements en 13 / 15 / 17 / 22px. Le
+ * résultat n'était pas laid, il était *incohérent* : deux blocs voisins écrits
+ * à six mois d'intervalle ne se ressemblaient pas.
+ *
+ * Ce qui est ici est volontairement court. Une échelle qu'on ne retient pas
+ * n'est pas suivie, et une échelle qu'on ne suit pas ne sert à rien.
+ *
+ * Chaque valeur existe deux fois : en variable Sass, parce que le reste du
+ * CSS est écrit ainsi et que `lighten()` a besoin d'une vraie couleur à la
+ * compilation ; et en propriété personnalisée sur `:root`, pour ce qui doit se
+ * lire à l'exécution — le JavaScript, un thème, un composant qui se décale.
+ * Les deux sortent de la même source : ne pas en modifier une seule.
+ */
+
+@use "sass:math";
+
+/**************************************************
+* ESPACEMENTS
+**************************************************/
+
+/**
+ * Une échelle en multiples de 4px. Elle ne descend pas plus bas : en dessous,
+ * l'œil ne fait plus la différence et on se met à discuter de 2px.
+ */
+
+$space_1:  rem(4px);
+$space_2:  rem(8px);
+$space_3:  rem(12px);
+$space_4:  rem(16px);
+$space_5:  rem(24px);
+$space_6:  rem(32px);
+$space_7:  rem(40px);
+$space_8:  rem(48px);
+$space_9:  rem(64px);
+$space_10: rem(80px);
+
+/**************************************************
+* RAYONS
+**************************************************/
+
+/**
+ * Trois rayons, plus le cercle. `$radius_sm` est le rayon par défaut : c'est
+ * celui que la messagerie et les tags s'étaient déjà donné, on l'étend au
+ * reste plutôt que de l'en faire revenir.
+ */
+
+$radius_sm:   rem(4px);   // champs, boutons, tags, vignettes
+$radius_md:   rem(6px);   // cartes, panneaux, blocs de contenu
+$radius_lg:   rem(10px);  // modales, bulles, ce qui flotte au-dessus
+$radius_full: 999px;      // pilules
+$radius_circle: 50%;      // avatars
+
+/**************************************************
+* OMBRES
+**************************************************/
+
+/**
+ * Trois niveaux, du posé au flottant. Deux couches par ombre : une courte et
+ * dense qui dessine le bord, une longue et diffuse qui donne la hauteur. Une
+ * ombre à une seule couche paraît toujours soit sale, soit absente.
+ *
+ * La teinte n'est pas du noir pur mais le gris sombre de la charte : une ombre
+ * noire sur un fond légèrement vert grisonne.
+ */
+
+$shadow_color: #1E1B2E; // le gris sombre de la charte, pas du noir pur
+
+$shadow_sm: 0 rem(1px) rem(2px) rgba($shadow_color, .06),
+			0 rem(1px) rem(3px) rgba($shadow_color, .08);
+
+$shadow_md: 0 rem(1px) rem(3px) rgba($shadow_color, .05),
+			0 rem(4px) rem(12px) rgba($shadow_color, .09);
+
+$shadow_lg: 0 rem(2px) rem(6px) rgba($shadow_color, .06),
+			0 rem(12px) rem(32px) rgba($shadow_color, .14);
+
+/**************************************************
+* FOCUS
+**************************************************/
+
+/**
+ * Où se trouve le clavier. Avant, la réponse était « nulle part » : les champs
+ * remplaçaient l'anneau du navigateur par un simple gris de bordure, et les
+ * cases à cocher le supprimaient sans rien mettre à la place.
+ *
+ * L'anneau est doublé — un trait plein, un halo — pour rester visible aussi
+ * bien sur blanc que sur un aplat vert.
+ */
+
+$focus_width:  rem(2px);
+$focus_offset: rem(2px);
+$focus_halo:   rem(4px);
+
+@mixin focus-ring($color: $color_action) {
+	outline:        $focus_width solid $color;
+	outline-offset: $focus_offset;
+	box-shadow:     0 0 0 ($focus_offset + $focus_width + $focus_halo) rgba($color, .22);
+}
+
+/**
+ * À poser sur ce qui a déjà un `box-shadow` : l'anneau seul, sans le halo qui
+ * écraserait l'ombre de la carte.
+ */
+@mixin focus-ring-flat($color: $color_action) {
+	outline:        $focus_width solid $color;
+	outline-offset: $focus_offset;
+}
+
+/**************************************************
+* MOUVEMENT
+**************************************************/
+
+$ease:          cubic-bezier(.4, 0, .2, 1);
+$duration_fast: .15s;
+$duration_base: .25s;
+$duration_slow: .4s;
+
+/**
+ * Rien d'essentiel ne doit dépendre d'une animation : ce mixin sert à écrire
+ * les transitions décoratives d'un seul geste, et `prefers-reduced-motion` les
+ * coupe toutes en un seul endroit (voir `_setup/_a11y.scss`).
+ */
+@mixin transition($properties...) {
+	$result: ();
+	@each $property in $properties {
+		$result: append($result, #{$property} $duration_base $ease, comma);
+	}
+	transition: $result;
+}
+
+/**************************************************
+* PROFONDEUR
+**************************************************/
+
+/**
+ * Les z-index de l'application, ensemble, pour qu'on cesse d'écrire 9999.
+ */
+
+$z_base:      1;
+$z_sticky:    50;
+$z_header:    100;
+$z_dropdown:  200;
+$z_overlay:   900;
+$z_tour:      1000;

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="{{ app.request ? app.request.locale : 'fr' }}">
 
 <head>
 	<meta charset="utf-8"/>
@@ -14,12 +14,24 @@
 		<link rel="apple-touch-icon" sizes="180x180" href="/media/favicon/apple-touch-icon.png">
 		<link rel="icon" type="image/png" sizes="32x32" href="/media/favicon/favicon-32x32.png">
 		<link rel="icon" type="image/png" sizes="16x16" href="/media/favicon/favicon-16x16.png">
-		<link rel="mask-icon" href="/media/favicon/safari-pinned-tab.svg" color="#ffffff">
+		<link rel="mask-icon" href="/media/favicon/safari-pinned-tab.svg" color="#0B885D">
 
-		<meta name="theme-color" content="#ffffff">
+		{# La couleur de la barre du navigateur sur mobile : le vert de la charte,
+		   pas le blanc par défaut du générateur de favicons. #}
+		<meta name="theme-color" content="#0B885D">
 	{% endblock %}
 	{% block stylesheets %}
-	<link href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,600,600i" rel="stylesheet">
+		{# Les fontes sont servies depuis le domaine (voir _config/_font-faces).
+		   Le <link> qui se trouvait ici allait chercher Open Sans chez Google —
+		   une famille appelée nulle part dans le CSS, donc une requête tierce
+		   bloquante et une adresse IP déposée chez un tiers, pour rien.
+
+		   Les deux fichiers préchargés sont ceux dont *toute* page a besoin :
+		   le texte courant et les titres, sous-ensemble latin. `crossorigin`
+		   est obligatoire même en même origine, les fontes étant toujours
+		   chargées en mode CORS. #}
+		<link rel="preload" href="{{ asset('build/fonts/jost/jost-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
+		<link rel="preload" href="{{ asset('build/fonts/arima/arima-madurai-700-latin.woff2') }}" as="font" type="font/woff2" crossorigin>
 		{{ encore_entry_link_tags('app') }}
 	{% endblock %}
 	{% if plateform.analytics %}
@@ -30,6 +42,10 @@
 <body>
 {% include 'layout/icons.svg.twig' %}
 
+{# Passer l'en-tête et le menu d'un coup. Invisible à la souris, premier
+   élément atteint au clavier. #}
+<a class="skip-link" href="#contenu">{{ 'ui.skip_to_content'|trans }}</a>
+
 {% block header %}
 	{% include 'layout/header.html.twig' %}
 {% endblock %}
@@ -38,7 +54,7 @@
    changement concerne. (#38) #}
 {% include 'components/notifications-notice.html.twig' %}
 
-<main>
+<main id="contenu" tabindex="-1">
 	{% block main %}
 		<section class="main">
 			<div class="main--header">

@@ -1,0 +1,96 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'pages.messages.new'|trans }} | {{ plateform.name }}{% endblock %}
+
+{#
+	Ouvrir une conversation.
+
+	On choisit à qui écrire en cherchant un nom : le serveur répond, on coche.
+	C'est une requête de plus qu'une liste qui se déroule toute seule, et c'est
+	ce qui permet à la page de fonctionner sans JavaScript — et de ne pas
+	télécharger l'annuaire du réseau pour écrire à une personne.
+
+	Rien n'est créé tant que rien n'est envoyé : pas de conversation vide.
+#}
+
+{% block main %}
+	<section class="main main__messages main__messages-new">
+		<div class="main--content content-container">
+			<div class="thin">
+				{% include 'components/app-flashes.html.twig' %}
+
+				<div class="panel">
+					<h1 class="h1">{{ 'pages.messages.new'|trans }}</h1>
+
+					<div class="panel--edit">
+						<a class="cta__inverted" href="{{ path('messages_index') }}">{{ 'pages.messages.back'|trans }}</a>
+					</div>
+				</div>
+
+				<form class="recipients--search" method="post" action="{{ path('messages_new') }}">
+					<input type="hidden" name="_token" value="{{ csrf_token('messages') }}">
+
+					{# Ce qui est déjà choisi voyage d'une soumission à l'autre. #}
+					{% for recipient in recipients %}
+						<input type="hidden" name="to[]" value="{{ recipient.id }}">
+					{% endfor %}
+					<input type="hidden" name="body" value="{{ body }}">
+
+					<label for="recipients-search">{{ 'pages.messages.search_people'|trans }}</label>
+					<input id="recipients-search" type="search" name="search" value="{{ search }}">
+					<button type="submit" name="search-submit" value="1" class="cta__inverted">
+						{{ 'pages.messages.search_submit'|trans }}
+					</button>
+				</form>
+
+				<form class="messages-new--form" method="post" action="{{ path('messages_new') }}">
+					<input type="hidden" name="_token" value="{{ csrf_token('messages') }}">
+
+					<h2 class="h2">{{ 'pages.messages.recipients'|trans }}</h2>
+
+					{% if recipients is empty and candidates is empty %}
+						<p class="hint">{{ 'pages.messages.pick_people'|trans }}</p>
+					{% endif %}
+
+					{% if recipients is not empty %}
+						<ul class="recipients--chosen">
+							{% for recipient in recipients %}
+								<li>
+									<label>
+										<input type="checkbox" name="to[]" value="{{ recipient.id }}" checked>
+										{{ recipient.name }}
+									</label>
+								</li>
+							{% endfor %}
+						</ul>
+					{% endif %}
+
+					{% if candidates is not empty %}
+						{# `candidates` arrive déjà débarrassé de ceux qui sont cochés
+						   au-dessus : le tri est fait côté PHP. #}
+						<h3 class="h3">{{ 'pages.messages.results'|trans }}</h3>
+						<ul class="recipients--candidates">
+							{% for candidate in candidates %}
+								<li>
+									<label>
+										<input type="checkbox" name="to[]" value="{{ candidate.id }}">
+										{{ candidate.name }}
+										{% if candidate.organisation %}
+											<span class="recipients--hint">{{ candidate.organisation }}</span>
+										{% endif %}
+									</label>
+								</li>
+							{% endfor %}
+						</ul>
+					{% endif %}
+
+					{% include 'components/message-composer.html.twig' with {'id': 'new-body', 'body': body, 'rows': 6} only %}
+
+					<div class="form-row form-row__submit">
+						<button type="submit" class="cta">{{ 'pages.messages.send'|trans }}</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</section>
+{% endblock %}

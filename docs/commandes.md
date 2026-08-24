@@ -203,6 +203,18 @@ Remplace les données personnelles de tous les comptes par des données
 inventées : nom, adresse, téléphone, fonction, structure, réserves,
 biographie, mots de passe, jetons.
 
+Le contenu libre — discussions, pages, actualités, noms de documents — est
+laissé tel quel et peut encore nommer des gens ; la commande le dit en
+terminant.
+
+**Les messages privés font exception** : leur texte est réécrit, ainsi que les
+copies portées par les signalements. Une discussion de groupe a été lue par
+tout un groupe ; un message privé ne l'a été que par deux personnes, et une
+copie de production traîne sur des postes et des préproductions. Ce qui reste
+d'une conversation sur une copie : qui a parlé à qui, quand, combien de fois —
+de quoi éprouver la messagerie, rien de plus. Un message que quelqu'un avait
+effacé le reste.
+
 ```bash
 php bin/console app:db:anonymize --dry-run
 php bin/console app:db:anonymize --force
