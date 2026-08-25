@@ -131,6 +131,15 @@ services:
       $transport: "@postmark_bulk"
       $params: "%plateform%"
 
+  # La file mémoire fait partir les e-mails à la fin de la requête : en ligne
+  # de commande, cela veut dire « après que le résumé a marqué ce qu'il croyait
+  # envoyé ». Le transport réel n'existe que si une file est configurée, d'où
+  # le « @? ». (#38)
+  App\Service\MailSpool:
+    arguments:
+      $mailer: "@mailer"
+      $transport: "@?swiftmailer.transport.real"
+
   # Le transport des discussions porte le second jeton Postmark : la commande
   # de contrôle doit l'éprouver lui, pas le mailer par défaut. (#14)
   App\Command\MailCheckCommand:

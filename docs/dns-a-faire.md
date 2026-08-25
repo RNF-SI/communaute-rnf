@@ -11,11 +11,39 @@ domaines différents**, selon le type de message.
 | Ce qui part | Depuis | Variable |
 |---|---|---|
 | Résumé, demande d'adhésion, mot de passe oublié | `si@rnfrance.org` | `POSTMARK_SENDER` |
+| **Page, actualité, document, message privé** — à chaud | `si@rnfrance.org` | `POSTMARK_SENDER` |
 | **Messages de discussion** | `noreply@lists.reserves-naturelles.org` | `POSTMARK_LIST_DOMAIN` |
 
 Les deux doivent être autorisés. Un seul des deux configuré donne **une moitié
 d'e-mails qui arrive** — le pire cas pour diagnostiquer, parce qu'on conclut
-que « les e-mails marchent ».
+que « les e-mails marchent ». C'est exactement ce qui s'est produit : le
+message de contrôle « discussion » arrivait, celui d'un message privé non, et
+les deux passent pourtant par le même jeton Postmark.
+
+## Avant le DNS : l'adresse doit être confirmée dans Postmark
+
+**Deux autorisations distinctes, et celle-ci vient en premier.** Le DNS dit aux
+*destinataires* que Postmark a le droit d'écrire au nom du domaine. La
+*Sender Signature* dit à **Postmark** qu'il a le droit d'employer cette adresse
+en `From`. Sans elle, rien ne part du tout : le message est refusé à l'entrée,
+et le DNS n'a pas son mot à dire.
+
+Constaté sur la préproduction, par `app:mail:check --to=…` :
+
+```
+ÉCHEC  Contenu et messages privés  si@rnfrance.org
+       The 'From' address you supplied (si@rnfrance.org) is not a Sender
+       Signature on your account. (ErrorCode 400)
+```
+
+À faire dans Postmark, **Sender Signatures** : ajouter `si@rnfrance.org` et
+confirmer le lien reçu — ou, mieux, **vérifier le domaine `rnfrance.org`**, ce
+qui autorise d'un coup toutes ses adresses et pose en même temps la clé DKIM
+de l'étape 2. Le second chemin fait donc les deux travaux à la fois.
+
+⚠️ **Le compte Postmark de la préproduction et celui de la production.** Une
+signature confirmée sur l'un ne l'est pas sur l'autre : si les deux serveurs
+sont distincts, la vérification est à refaire des deux côtés.
 
 ## Le problème, en trois phrases
 

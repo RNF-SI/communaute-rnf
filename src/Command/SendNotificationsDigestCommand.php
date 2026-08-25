@@ -7,6 +7,7 @@ use App\Entity\User;
 use App\Notification\NotificationRhythm;
 use App\Service\EmailSender;
 use App\Service\HashGenerator;
+use App\Service\MailSpool;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
@@ -56,13 +57,19 @@ class SendNotificationsDigestCommand extends Command {
 
 	private $router;
 
+	/**
+	 * @var \App\Service\MailSpool
+	 */
+	private $spool;
+
 	public function __construct (
 			EntityManagerInterface $manager,
 			EmailSender $mailer,
 			Environment $twig,
 			ParameterBagInterface $parameters,
 			HashGenerator $hashGenerator,
-			UrlGeneratorInterface $router
+			UrlGeneratorInterface $router,
+			MailSpool $spool
 	) {
 		$this->manager       = $manager;
 		$this->mailer        = $mailer;
@@ -70,6 +77,7 @@ class SendNotificationsDigestCommand extends Command {
 		$this->parameters    = $parameters;
 		$this->hashGenerator = $hashGenerator;
 		$this->router        = $router;
+		$this->spool         = $spool;
 
 		parent::__construct();
 	}
@@ -219,7 +227,20 @@ class SendNotificationsDigestCommand extends Command {
 			}
 
 			try {
-				$this->send( $recipient, $notifications );
+				// Swiftmailer est en file mémoire : sans ce contrôle, on
+				// marquait comme envoyé ce qui n'était que mis en file, et le
+				// refus de Postmark arrivait après la fin de la commande, sans
+				// personne pour l'entendre.
+				if ( !$this->send( $recipient, $notifications ) ) {
+					$io->warning( sprintf(
+							'#%d : refusé à l\'envoi. Rien n\'est marqué, le prochain lancement réessaiera.',
+							$recipient->getId()
+					) );
+
+					$failed++;
+
+					continue;
+				}
 
 				if ( !$keep ) {
 					$this->markAsSent( $notifications );
@@ -409,6 +430,10 @@ class SendNotificationsDigestCommand extends Command {
 	/**
 	 * @param \App\Entity\User $recipient
 	 * @param Notification[]   $notifications
+	 *
+	 * @return bool whether there is nothing left to retry — a refused
+	 *              transport says FALSE, an address that will never accept
+	 *              anything says TRUE, because tomorrow would refuse it too
 	 */
 	private function send ( User $recipient, array $notifications ) {
 		$message = $this->twig->render( 'emails/notifications-digest.html.twig', [
@@ -423,7 +448,7 @@ class SendNotificationsDigestCommand extends Command {
 				UrlGeneratorInterface::ABSOLUTE_URL
 		);
 
-		$this->mailer->send(
+		$queued = $this->mailer->send(
 				[ $this->parameters->get( 'plateform' )[ 'from' ] => $this->parameters->get( 'plateform' )[ 'name' ] ],
 				$recipient->getEmail(),
 				$this->mailer->getSubjectFromTitle( $message ),
@@ -436,6 +461,19 @@ class SendNotificationsDigestCommand extends Command {
 						'Auto-Submitted'        => 'auto-generated',
 				]
 		);
+
+		// Le garde de #14 refuse une adresse qui ne peut rien recevoir et rend
+		// zéro. Ce n'est pas une panne : demain la refuserait pareil, et on ne
+		// veut pas la retenter chaque jour jusqu'à la fin des temps.
+		if ( $queued < 1 ) {
+			return TRUE;
+		}
+
+		$flushed = $this->spool->flush();
+
+		// Pas de file : l'envoi a déjà eu lieu à l'appel ci-dessus, et son
+		// compte a été rendu. Rien à conclure de plus.
+		return ( $flushed === NULL ) || ( $flushed > 0 );
 	}
 
 	/**

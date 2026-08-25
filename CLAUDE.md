@@ -451,6 +451,15 @@ destinataire inactif. `BulkTransport` ne lisait que le code HTTP : il rendait
 Il lit désormais chaque verdict et retient le premier refus (`getLastError()`),
 qu'`app:mail:check` affiche.
 
+**Et « remis au transport » ne veut pas dire envoyé.** Swiftmailer tourne en
+**file mémoire** : `send()` rend le nombre de destinataires sans avoir joint
+Postmark, l'envoi n'ayant lieu qu'à la fin de la requête. C'est ce qu'il faut
+sur une page — personne n'attend un aller-retour — et c'est faux en ligne de
+commande, où le résumé marquait `emailedAt` sur ce qui n'était que mis en file.
+`Service\MailSpool` vide la file quand l'appelant a besoin de savoir, et
+distingue **NULL (pas de file, l'envoi a déjà eu lieu) de 0 (rien n'est
+sorti)** — les confondre ferait renvoyer chaque jour un résumé déjà parti.
+
 **Trois chemins, mais surtout trois couples jeton + expéditeur.** Les
 discussions écrivent depuis `noreply@POSTMARK_LIST_DOMAIN` — il faut bien que
 le `Reply-To` revienne quelque part —, le contenu à chaud et le résumé depuis

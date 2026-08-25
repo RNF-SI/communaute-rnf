@@ -5,6 +5,7 @@ namespace App\Command;
 use App\Postmark\BulkTransport;
 use App\Service\EmailSender;
 use App\Service\MailDeliverability;
+use App\Service\MailSpool;
 use Swift_Message;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -51,19 +52,29 @@ class MailCheckCommand extends Command {
 	private $bulk;
 
 	/**
+	 * @var \App\Service\MailSpool
+	 */
+	private $spool;
+
+	/**
 	 * Le transport des discussions, pas le mailer : c'est lui qui porte le
 	 * second jeton, et c'est lui qu'il faut éprouver.
+	 *
+	 * Et la file, parce que « remis au transport » ne veut rien dire quand le
+	 * transport est une file mémoire : il faut la vider pour savoir.
 	 */
 	public function __construct (
 			ParameterBagInterface $parameters,
 			MailDeliverability $deliverability,
 			EmailSender $sender,
-			BulkTransport $bulk
+			BulkTransport $bulk,
+			MailSpool $spool
 	) {
 		$this->parameters     = $parameters;
 		$this->deliverability = $deliverability;
 		$this->sender         = $sender;
 		$this->bulk           = $bulk;
+		$this->spool          = $spool;
 
 		parent::__construct();
 	}
@@ -258,12 +269,27 @@ class MailCheckCommand extends Command {
 			// Le garde de #14 refuse une adresse qui ne peut rien recevoir, et
 			// renvoie 0 sans rien dire : c'est le cas à ne pas confondre avec
 			// une panne de transport.
-			return $sent > 0
-					? [ MailDeliverability::OK, 'remis au transport' ]
-					: [
-							MailDeliverability::WARNING,
-							'rien envoyé — adresse jugée non délivrable, ou livraison désactivée dans cet environnement',
-					];
+			if ( $sent < 1 ) {
+				return [
+						MailDeliverability::WARNING,
+						'rien envoyé — adresse jugée non délivrable, ou livraison désactivée dans cet environnement',
+				];
+			}
+
+			// **« Remis au transport » ne prouvait rien.** Swiftmailer est en
+			// file mémoire : il rend le nombre de destinataires sans avoir
+			// joint Postmark, et le refus arrivait à la fin de la commande,
+			// après que le tableau avait annoncé OK. On vide la file ici, pour
+			// que le compte rendu parle de ce qui est parti.
+			$flushed = $this->spool->flush();
+
+			if ( $flushed === NULL ) {
+				return [ MailDeliverability::OK, 'remis au transport (pas de file dans cet environnement)' ];
+			}
+
+			return $flushed > 0
+					? [ MailDeliverability::OK, 'accepté par Postmark' ]
+					: [ MailDeliverability::FAILED, 'refusé à la sortie de la file — jeton, ou expéditeur non autorisé' ];
 		}
 		catch ( Throwable $error ) {
 			return [ MailDeliverability::FAILED, $error->getMessage() ];

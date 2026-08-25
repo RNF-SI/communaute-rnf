@@ -90,6 +90,14 @@ retour HTTP 200.
 (Rappel du tableau ci-dessus : en dev et en test, les deux premiers passent eux
 aussi par `MAILER_URL`, grâce au transport de remplacement.)
 
+⚠️ **« Remis au transport » ne veut pas dire « envoyé » non plus.** Swiftmailer
+est configuré en **file mémoire** : `send()` rend le nombre de destinataires
+sans avoir joint Postmark, et l'envoi n'a lieu qu'à la fin de la requête — ou
+de la commande. Le résumé quotidien marquait donc `emailedAt` sur des e-mails
+mis en file, dont le refus arrivait après la fin de la commande, sans personne
+pour l'entendre. `MailSpool` vide la file au moment voulu ; ce qui n'est pas
+sorti n'est plus marqué, et le lendemain réessaie.
+
 ⚠️ **Un HTTP 200 de Postmark ne veut pas dire « envoyé ».** L'API par lot répond
 200 en portant un verdict **par message** : `ErrorCode 400 — Sender signature
 not confirmed`, `ErrorCode 406 — recipient inactive`… Le transport ne regardait
