@@ -21,6 +21,7 @@ use App\Entity\Skill;
 use App\Entity\User;
 use App\Entity\Usergroup;
 use App\Entity\UsergroupMembership;
+use App\Notification\NotificationRhythm;
 use App\Service\SlugGenerator;
 use Ramsey\Uuid\Uuid;
 use Doctrine\Bundle\FixturesBundle\Fixture;
@@ -1167,6 +1168,52 @@ class AppFixtures extends Fixture {
 			$parue->setCreatedAt( new \DateTime( '-1 hour' ) );
 			$parue->setByEmail( FALSE );
 			$manager->persist( $parue );
+
+			/**
+			 * DEUX NOTIFICATIONS QUI ATTENDENT UN RÉSUMÉ
+			 *
+			 * Les trois précédentes sont posées `byEmail = FALSE` : elles
+			 * garnissent la page des notifications, et rien d'autre. Sur une
+			 * préproduction fraîchement chargée, `app:notifications:digest`
+			 * ne trouvait donc **rien**, quelle que soit la configuration
+			 * d'envoi — un zéro qu'on lit comme une panne d'e-mail.
+			 *
+			 * Celles-ci attendent pour de bon, et à deux rythmes : la
+			 * quotidienne part le jour même, l'hebdomadaire attend son lundi.
+			 * C'est le couple minimal pour éprouver la commande, puisque le
+			 * contrôle est autant « l'hebdomadaire est emporté un lundi » que
+			 * « il est retenu les six autres jours ». (#34, #38)
+			 *
+			 * Elles vont à Manon, qui n'est animatrice de rien : le résumé
+			 * d'un compte ordinaire est celui qu'on veut regarder.
+			 */
+			$quotidienne = new Notification();
+			$quotidienne->setRecipient( $member );
+			$quotidienne->setAuthor( $referent );
+			$quotidienne->setUsergroup( $group );
+			$quotidienne->setType( Notification::ARTICLE_CREATE );
+			$quotidienne->setTitle( $article->getTitle() );
+			$quotidienne->setUrl( sprintf(
+					'/groups/%s/articles/%s',
+					$group->getSlug(),
+					$article->getSlug()
+			) );
+			$quotidienne->setCreatedAt( new \DateTime( '-4 hours' ) );
+			$quotidienne->setByEmail( TRUE );
+			$quotidienne->setRhythm( NotificationRhythm::DAILY );
+			$manager->persist( $quotidienne );
+
+			$hebdomadaire = new Notification();
+			$hebdomadaire->setRecipient( $member );
+			$hebdomadaire->setAuthor( $referent );
+			$hebdomadaire->setUsergroup( $group );
+			$hebdomadaire->setType( Notification::DOCUMENT_CREATE );
+			$hebdomadaire->setTitle( 'Protocole de suivi des amphibiens' );
+			$hebdomadaire->setUrl( sprintf( '/groups/%s/documents', $group->getSlug() ) );
+			$hebdomadaire->setCreatedAt( new \DateTime( '-5 hours' ) );
+			$hebdomadaire->setByEmail( TRUE );
+			$hebdomadaire->setRhythm( NotificationRhythm::WEEKLY );
+			$manager->persist( $hebdomadaire );
 		}
 
 		// Une arborescence de dossiers, pour éprouver le classement. (#8)

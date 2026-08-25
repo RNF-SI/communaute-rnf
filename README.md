@@ -52,7 +52,7 @@ réseau :
 php bin/console app:notifications:digest --day=2026-08-31 --dry-run
 
 # le vrai e-mail, à une seule adresse, sans rien consommer
-php bin/console app:notifications:digest --day=2026-08-31 --only=vous@rnfrance.org --keep
+php bin/console app:notifications:digest --day=2026-08-31 --only=votre.adresse@rnfrance.org --keep
 ```
 
 ## Installation

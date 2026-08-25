@@ -131,12 +131,41 @@ rebonds durs que de comptes. Trois options y répondent, et elles font travaille
 la vraie commande plutôt qu'une démonstration à côté.
 
 **1. Avoir de l'hebdomadaire en attente.** Rien ne se voit s'il n'y a rien à
-voir :
+voir — et c'est de loin la raison la plus fréquente d'un résumé qui « ne part
+pas ».
+
+Les fixtures s'en chargent : **Manon Membre** (`membre@…`) reçoit au chargement
+une notification en attente de résumé **quotidien** et une en attente de résumé
+**hebdomadaire**. Il n'y a donc rien à préparer sur une préproduction
+fraîchement chargée. Les trois autres notifications des fixtures, elles, sont
+posées sans e-mail : elles garnissent la page des notifications et ne partent
+jamais.
+
+À la main, pour un autre compte :
 
 1. dans `/user/parameters/edit`, régler une catégorie — « Documents », par
    exemple — sur **résumé hebdomadaire**, pour un groupe ou en réglage général ;
 2. faire publier dans ce groupe le contenu correspondant, avec **un autre
-   compte** (personne n'est notifié de ce qu'il publie lui-même).
+   compte** : personne n'est notifié de ce qu'il publie lui-même, et publier
+   seul ne produit donc rien du tout.
+
+⚠️ **Les comptes de test ne reçoivent que si `TEST_ACCOUNTS_EMAIL` était posée
+au chargement des fixtures.** Sans elle leurs adresses restent en
+`@example.org`, que `MailGuard` refuse avant l'envoi. C'est au chargement que
+les adresses sont figées : poser la variable après ne change rien, il faut
+recharger.
+
+**Qui peut recevoir quoi.** Les six comptes nommés sont tous actifs et tous
+membres du groupe **communauté** — donc tous notifiables par ce qui y paraît.
+Dans les trois groupes de référence, en revanche :
+
+| Compte | `groupe-de-test`, `commission-de-test`, `groupe-prive-de-test` |
+|---|---|
+| `+admin`, `+referent` | animateurs — mais auteurs le plus souvent, donc non notifiés de leurs propres dépôts |
+| `+membre` | membre simple : **le compte à regarder** |
+| `+candidat` | en attente sur le groupe privé — jamais notifié |
+| `+banni` | banni des trois — jamais notifié |
+| `+exterieur` | membre d'aucun — jamais notifié |
 
 **2. Regarder ce qui attend, sans rien envoyer.** `--day` se place un lundi —
 n'importe quel lundi, passé ou à venir :
@@ -169,7 +198,7 @@ Aucun des trois n'est un problème de transport : pour cela, `app:mail:check`.
 **3. Recevoir le vrai e-mail, à une seule adresse :**
 
 ```bash
-php bin/console app:notifications:digest --day=2026-08-31 --only=vous@rnfrance.org --keep
+php bin/console app:notifications:digest --day=2026-08-31 --only=antoine.schlegel+membre@rnfrance.org --keep
 ```
 
 - `--only` restreint l'envoi à ce compte. **C'est la protection à ne pas
@@ -196,7 +225,7 @@ La production tomberait avec.
 Trois façons de s'en prémunir, à combiner :
 
 1. **Ne viser qu'un compte**, ce qui ne demande aucune configuration :
-   `app:notifications:digest --only=vous@rnfrance.org`. C'est le premier
+   `app:notifications:digest --only=votre.adresse@rnfrance.org`. C'est le premier
    réflexe, et le seul qui protège aussi d'une erreur de manipulation.
 2. **Rediriger tout vers une seule adresse réelle.** Dans
    `config/packages/prod/swiftmailer.yaml` de la préproduction :

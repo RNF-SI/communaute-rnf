@@ -107,7 +107,7 @@ n'envoie plus rien.
 php bin/console app:notifications:digest --day=2026-08-31 --dry-run
 
 # 2. Le vrai e-mail, à un seul compte, un lundi, sans rien consommer.
-php bin/console app:notifications:digest --day=2026-08-31 --only=vous@rnfrance.org --keep
+php bin/console app:notifications:digest --day=2026-08-31 --only=votre.adresse@rnfrance.org --keep
 ```
 
 Chaque ligne dit ce qui part et ce qui reste :
@@ -127,9 +127,12 @@ Ces options font travailler **la commande elle-même**, pas une démonstration �
 côté : une seconde mécanique d'envoi finirait par diverger de celle qui part la
 nuit, et l'essai dirait alors le contraire de la production.
 
-Pour qu'il y ait de l'hebdomadaire à voir, il en faut en attente : régler une
-catégorie sur « résumé hebdomadaire » dans `/user/parameters/edit`, puis publier
-une page ou une actualité dans le groupe concerné. Voir
+Pour qu'il y ait de l'hebdomadaire à voir, il en faut en attente. Les fixtures
+en posent : **Manon Membre** (`membre@…`) reçoit au chargement une notification
+en attente de résumé quotidien et une en attente de résumé hebdomadaire. À la
+main, régler une catégorie sur « résumé hebdomadaire » dans
+`/user/parameters/edit`, puis publier dans le groupe concerné **avec un autre
+compte** — personne n'est notifié de ce qu'il publie lui-même. Voir
 [`tester-les-emails.md`](tester-les-emails.md).
 
 ⚠️ **`--keep` n'est pas une option de production.** Sans `--only` la commande la
