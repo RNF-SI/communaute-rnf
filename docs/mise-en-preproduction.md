@@ -93,8 +93,13 @@ TEST_ACCOUNTS_EMAIL=recette@rnfrance.org    # NOUVEAU — sans lui, les six comp
                                             # de test restent en @example.org et
                                             # ne reçoivent aucun e-mail
 
-POSTMARK_SENDER=noreply@rnfrance.org        # vide = les demandes d'adhésion
-POSTMARK_SERVER_TOKEN=…                     # échouent (cf. #4)
+POSTMARK_SENDER=communaute-staging@lists.reserves-naturelles.org
+                                            # PAS une adresse @rnfrance.org :
+                                            # le compte Postmark ne l'autorise
+                                            # pas et refuse l'envoi à l'entrée.
+                                            # Voir dns-a-faire.md. Vide = les
+                                            # demandes d'adhésion échouent (#4)
+POSTMARK_SERVER_TOKEN=…
 POSTMARK_BULK_TOKEN=…                       # vide = aucun e-mail de discussion,
                                             # silencieusement
 

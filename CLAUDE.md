@@ -465,9 +465,17 @@ discussions écrivent depuis `noreply@POSTMARK_LIST_DOMAIN` — il faut bien que
 le `Reply-To` revienne quelque part —, le contenu à chaud et le résumé depuis
 `POSTMARK_SENDER`. Deux chemins partagent donc le jeton sans partager
 l'expéditeur : un domaine autorisé chez Postmark et l'autre non, et les
-discussions arrivent pendant que les messages privés se font refuser. C'est
+discussions arrivent pendant que le contenu à chaud se fait refuser. C'est
 pourquoi `app:mail:check --to` envoie **trois** messages et non deux : éprouver
 les jetons ne suffit pas.
+
+C'est exactement ce qui s'est produit le 25 août 2026, et la sortie est
+documentée dans `docs/dns-a-faire.md` : le compte Postmark employé est celui de
+Naturadapt, plafonné à cinq domaines, tous pris — `rnfrance.org` ne pouvait pas
+y être ajouté. La plateforme écrit donc depuis `lists.reserves-naturelles.org`,
+que ce compte autorise déjà. `POSTMARK_SENDER` porte une adresse **différente
+par environnement** (`communaute-staging@…` en préproduction), pour qu'on les
+distingue dans le journal Postmark.
 
 Le changement de défaut ne se voit pas tout seul : la migration pose
 `noticePending` sur les comptes existants, `components/notifications-notice`
