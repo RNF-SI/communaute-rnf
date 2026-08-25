@@ -32,23 +32,27 @@ plateforme envoie est mis en quarantaine**.
       compte déclenche l'indexation. À poser une fois pour toutes :
 
       ```bash
-      sudo chown -R DEPLOYEUR:UTILISATEUR_WEB public/media/cache var/cache var/log var/files
       sudo apt-get install -y acl
-      sudo setfacl -R -m g:UTILISATEUR_WEB:rwX -m d:g:UTILISATEUR_WEB:rwX \
-           public/media/cache var/cache var/log var/files
+      ./bin/fix-permissions.sh          # devine l'utilisateur du serveur web
+      ./bin/fix-permissions.sh www-data # ou nommez-le
       ```
 
-      ⚠️ **Ne jamais inclure `var/sessions/` dans ce `chown`.** C'est la seule
-      partie de `var/` où la propriété a un sens à elle seule : le gestionnaire
-      de sessions de PHP refuse de lire un fichier `sess_*` dont le
+      Le script fait le `chown` et les ACL sur les quatre répertoires
+      concernés, **et rien d'autre**. Il refuse de terminer s'il trouve un
+      fichier de session appartenant à quelqu'un d'autre que le serveur web,
+      en disant quoi faire.
+
+      ⚠️ **Ne jamais inclure `var/sessions/` dans un `chown`** — c'est
+      pourquoi le script nomme les répertoires un par un plutôt que `var/` en
+      bloc, et pourquoi il vaut mieux le lancer que retaper la commande.
+
+      C'est la seule partie de `var/` où la propriété a un sens à elle seule :
+      le gestionnaire de sessions de PHP refuse de lire un fichier `sess_*` dont le
       propriétaire n'est pas le processus, quels que soient les droits et les
       ACL. Chowner ces fichiers au déployeur rend « Failed to start the
       session » sur **toutes** les pages, y compris celles qu'on croit
       publiques. Le remède : `rm -f var/sessions/<env>/sess_*`, le serveur web
       les recrée à son nom — au prix d'une déconnexion générale.
-
-      C'est pour cela que la commande écrit les répertoires un par un plutôt
-      que `var/` en bloc.
 
       **Le `d:` est le point important** : il pose une règle par défaut, si bien
       que tout fichier créé ensuite dans ces répertoires est inscriptible par le
@@ -496,9 +500,20 @@ Trois choses à retenir, parce qu'aucune ne se devine :
 3. **Le remède est un `rm`**, pas un `chown` de plus : les sessions sont
    jetables, le serveur web les recrée à son nom.
 
-`app:preflight` le détecte depuis : il signale un fichier `sess_*` appartenant à
-celui qui lance la console, ce qui n'arrive jamais autrement — aucune commande
-n'ouvre de session.
+**Trois choses ont été posées depuis, et une seule empêche la panne.**
+
+- `bin/fix-permissions.sh` nomme les répertoires à sa place — un script ne se
+  trompe pas de cible, une commande recopiée si.
+- `app:preflight` **montre** qui possède les fichiers de session, à côté de
+  l'utilisateur de la console. Il ne peut pas en juger : il ignore sous quel
+  utilisateur tourne le serveur web, et en développement les deux sont le même.
+- `App\Session\ResilientFileSessionHandler` fait qu'une lecture qui échoue rend
+  une session **vide** au lieu de FALSE. C'est la seule des trois qui empêche
+  vraiment la panne : le visiteur repart déconnecté, se reconnecte, PHP
+  régénère l'identifiant, et le fichier suivant appartient à qui de droit. La
+  plateforme se répare d'elle-même, personne par personne — et chaque échec est
+  journalisé, pour ne pas troquer une panne bruyante contre des déconnexions
+  inexplicables.
 
 ### Rattacher un serveur existant au dépôt
 

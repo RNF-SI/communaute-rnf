@@ -112,6 +112,20 @@ services:
 
   # Même transport en lot que les discussions, mais l'adresse d'expédition de
   # la plateforme : on ne répond pas à une page. (#40)
+  # La session est ouverte à chaque requête : un fichier illisible ferait
+  # tomber toutes les pages, y compris la connexion. Ce gestionnaire rend une
+  # session vide plutôt que FALSE, et le journalise. L'enveloppe
+  # `StrictSessionHandler` est celle que pose `session.handler.native_file` :
+  # on remplace le fond, pas la mécanique.
+  App\Session\ResilientFileSessionHandler:
+    arguments:
+      $savePath: '%session.save_path%'
+      $logger: '@?logger'
+
+  app.session.handler:
+    class: Symfony\Component\HttpFoundation\Session\Storage\Handler\StrictSessionHandler
+    arguments: [ '@App\Session\ResilientFileSessionHandler' ]
+
   App\Service\ContentSender:
     arguments:
       $transport: "@postmark_bulk"

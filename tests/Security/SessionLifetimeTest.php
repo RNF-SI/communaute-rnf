@@ -38,12 +38,18 @@ class SessionLifetimeTest extends TestCase {
 	 * PHP décidait seul : son save_path, partagé, et son gc_maxlifetime de
 	 * 1440 secondes. Sur Debian, un cron balaie ce répertoire selon le php.ini
 	 * de la CLI — celui d'un voisin suffisait à nous déconnecter.
+	 *
+	 * Le gestionnaire n'est plus `session.handler.native_file` mais le nôtre,
+	 * qui l'enveloppe : une lecture qui échoue rend une session vide au lieu de
+	 * FALSE, faute de quoi un seul fichier illisible met toute la plateforme à
+	 * terre. Ce qui compte ici n'a pas changé — un gestionnaire **explicite**,
+	 * écrivant dans notre propre répertoire.
 	 */
 	public function testSessionsAreStoredInOurOwnDirectory () {
 		$session = $this->sessionConfig();
 
 		$this->assertSame(
-				'session.handler.native_file',
+				'app.session.handler',
 				$session[ 'handler_id' ] ?? NULL,
 				'Assert the session handler is ours, not whatever php.ini names'
 		);

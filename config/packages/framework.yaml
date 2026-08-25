@@ -20,7 +20,11 @@ framework:
         # pas celui du serveur web : un voisin réglé plus court effaçait nos
         # fichiers de session. D'où les déconnexions au bout de quelques
         # minutes d'inactivité, sans rien dans les journaux.
-        handler_id: session.handler.native_file
+        # Notre gestionnaire, et non `session.handler.native_file` : il rend
+        # une session vide plutôt que FALSE quand le fichier est illisible.
+        # Sans lui, un `sess_*` appartenant à un autre utilisateur met toute
+        # la plateforme à terre. Voir App\Session\ResilientFileSessionHandler.
+        handler_id: app.session.handler
         save_path: '%kernel.project_dir%/var/sessions/%kernel.environment%'
         # Surtout pas %kernel.cache_dir% : `cache:clear` déconnecterait tout le
         # monde à chaque déploiement.
