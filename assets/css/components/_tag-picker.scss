@@ -1,0 +1,210 @@
+/**************************************************
+* INSÉRER UN LIEN DANS UN MESSAGE
+**************************************************/
+
+/**
+ * Le panneau du bouton « Insérer un lien ».
+ *
+ * Il s'ouvre vers le haut : le champ de message est en bas d'un fil, et une
+ * liste qui descendrait sortirait de l'écran. Il flotte au-dessus de la page
+ * plutôt que de la pousser, pour que le message qu'on est en train d'écrire
+ * reste visible pendant qu'on cherche quoi y mettre.
+ */
+
+.message-composer--tools {
+	position:  relative;
+	margin:    $space_2 0 0;
+
+	// Posé par le gabarit, retiré par le JavaScript : sans lui, le bouton ne
+	// ferait rien.
+	&[hidden] {
+		display: none;
+	}
+}
+
+.tag-picker--open {
+	padding:       $space_1 $space_3;
+
+	font-size:     rem(14px);
+	color:         $color_action;
+	background:    transparent;
+	border:        1px solid $color_border_strong;
+	border-radius: $radius_full;
+	cursor:        pointer;
+
+	@include transition(background-color, color, border-color);
+
+	&::before {
+		content:      '\1F5D7'; // 🗗
+		margin-right: $space_1;
+	}
+
+	&:hover {
+		color:        $color_action_dark;
+		border-color: $color_action;
+		background:   $color_canvas;
+	}
+
+	&[aria-expanded='true'] {
+		color:        $color_surface;
+		background:   $color_action;
+		border-color: $color_action;
+	}
+}
+
+.tag-picker {
+	position:      absolute;
+	z-index:       30;
+	bottom:        calc(100% + #{$space_2});
+	left:          0;
+
+	width:         rem(400px);
+	max-width:     calc(100vw - #{$space_5});
+	padding:       $space_3;
+
+	background:    $color_surface;
+	border:        1px solid $color_border;
+	border-radius: $radius_lg;
+	box-shadow:    $shadow_lg;
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+.tag-picker--head {
+	display:         flex;
+	align-items:     baseline;
+	justify-content: space-between;
+	gap:             $space_2;
+	margin-bottom:   $space_3;
+}
+
+.tag-picker--title {
+	margin:      0;
+	font-size:   rem(15px);
+	line-height: 1.3;
+}
+
+.tag-picker--close {
+	padding:     0 $space_1;
+
+	font-size:   rem(20px);
+	line-height: 1;
+	color:       $color_text_muted;
+	background:  transparent;
+	border:      0;
+	cursor:      pointer;
+
+	&:hover {
+		color: $color_text;
+	}
+}
+
+.tag-picker--filters {
+	display:       flex;
+	flex-flow:     row wrap;
+	gap:           $space_2;
+	margin-bottom: $space_3;
+}
+
+.tag-picker--field {
+	display:   flex;
+	flex-flow: column;
+	gap:       $space_1;
+	flex:      1 1 rem(150px);
+	min-width: 0;
+
+	> span {
+		font-size: rem(13px);
+		color:     $color_text_muted;
+	}
+
+	input,
+	select {
+		width:     100%;
+		min-width: 0;
+		font-size: rem(15px);
+	}
+}
+
+.tag-picker--state {
+	margin:    0 0 $space_2;
+	font-size: rem(14px);
+	color:     $color_text_muted;
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+.tag-picker--list {
+	margin:     0;
+	padding:    0;
+	max-height: rem(260px);
+	overflow-y: auto;
+	list-style: none;
+}
+
+/**
+ * Un résultat porte la même pastille que le tag qu'il produira : on
+ * reconnaît dans la liste ce qu'on lira ensuite dans le message. Ce n'est pas
+ * la couleur seule qui distingue un document d'une discussion.
+ */
+.tag-picker--item {
+	display:       flex;
+	align-items:   baseline;
+	gap:           $space_2;
+	padding:       $space_2 $space_2;
+
+	border-radius: $radius_sm;
+	cursor:        pointer;
+
+	&::before {
+		flex:        0 0 auto;
+		font-weight: 400;
+		color:       $color_text_muted;
+	}
+
+	&[data-kind='group']::before { content: '\2317'; }       // ⌗
+	&[data-kind='document']::before { content: '\1F5CE'; }   // 🗎
+	&[data-kind='page']::before { content: '\1F5CB'; }       // 🗋
+	&[data-kind='article']::before { content: '\1F5DE'; }    // 🗞
+	&[data-kind='discussion']::before { content: '\1F5E9'; } // 🗩
+
+	&.is-active,
+	&:hover {
+		background: $color_canvas;
+	}
+}
+
+.tag-picker--label {
+	flex:          1 1 auto;
+	min-width:     0;
+
+	font-size:     rem(15px);
+	overflow:      hidden;
+	text-overflow: ellipsis;
+	white-space:   nowrap;
+}
+
+.tag-picker--hint-item {
+	flex:          0 1 auto;
+	min-width:     0;
+
+	font-size:     rem(13px);
+	color:         $color_text_muted;
+	overflow:      hidden;
+	text-overflow: ellipsis;
+	white-space:   nowrap;
+}
+
+.tag-picker--hint {
+	margin:      $space_3 0 0;
+	padding-top: $space_2;
+
+	font-size:   rem(13px);
+	line-height: 1.4;
+	color:       $color_text_muted;
+	border-top:  1px solid $color_border;
+}

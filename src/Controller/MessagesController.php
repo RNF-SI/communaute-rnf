@@ -9,6 +9,7 @@ use App\Entity\User;
 use App\Security\ConversationVoter;
 use App\Security\UserVoter;
 use App\Service\ConversationManager;
+use App\Service\Tagging\TaggedThing;
 use App\Service\Tagging\TagParser;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -545,6 +546,39 @@ class MessagesController extends AbstractController {
 
 		return new JsonResponse( [
 				'suggestions' => $tags->suggest( $prefix, $request->query->get( 'q', '' ), $this->getUser() ),
+		] );
+	}
+
+	/**
+	 * Ce que montre le bouton « Insérer un lien », qui fait au clic ce que la
+	 * liste des tags fait à la frappe.
+	 *
+	 * Même service, mêmes droits, et surtout même syntaxe : c'est le serveur
+	 * qui rend le texte à écrire — « #Titre », ou « #"Titre : à rallonge" »
+	 * quand le titre ne se relit pas nu. Le navigateur n'a pas à connaître la
+	 * grammaire d'un tag ; s'il la connaissait, elle finirait par diverger de
+	 * celle qui la relit.
+	 *
+	 * @Route("/messages/picker", name="messages_picker", methods={"GET"})
+	 *
+	 * @param \Symfony\Component\HttpFoundation\Request $request
+	 * @param \App\Service\Tagging\TagParser            $tags
+	 *
+	 * @return \Symfony\Component\HttpFoundation\JsonResponse
+	 */
+	public function picker ( Request $request, TagParser $tags ) {
+		$this->denyAccessUnlessGranted( UserVoter::LOGGED );
+
+		$kind = $request->query->get( 'kind' );
+
+		// Un type inconnu vaut « tous les types » plutôt qu'une erreur : la
+		// requête vient d'une liste déroulante, pas d'une API publique.
+		if ( !in_array( $kind, TaggedThing::kinds(), TRUE ) ) {
+			$kind = NULL;
+		}
+
+		return new JsonResponse( [
+				'suggestions' => $tags->pick( $request->query->get( 'q', '' ), $kind, $this->getUser() ),
 		] );
 	}
 

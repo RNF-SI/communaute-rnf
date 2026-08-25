@@ -232,8 +232,17 @@ actualité ou une discussion. Comme les mentions de #37, **rien n'est stocké
 d'autre que ce qui a été tapé** : le lien est refait à chaque affichage. Le
 message reste lisible tel quel, aucune table de liaison ne se désynchronise, et
 un tag écrit à la main vaut un tag inséré par la liste de suggestions. Ce qu'on
-y perd : un contenu renommé perd son lien, et un titre à ponctuation interne
-(« Guide : gestion ») n'est reconnu que jusqu'à cette ponctuation.
+y perd : un contenu renommé perd son lien.
+
+**Deux formes, et une seule décide laquelle.** Un titre nu s'arrête à la
+première ponctuation interne — c'est ce qui rend « @Jeanne, tu peux ? » à sa
+virgule —, si bien que « Guide : gestion » n'était adressable d'aucune façon.
+`#"Guide : gestion"` dit où le titre finit. Trois paires se lisent (droite,
+chevrons, courbes), aucune ne franchit une fin de ligne : un guillemet resté
+ouvert avalerait le message. `TagScanner::write()` choisit la forme, et
+`readable()` retire les guillemets à l'affichage — ils appartiennent au tag,
+pas à la phrase. Le `@` **ne les lit pas** et ne doit pas l'apprendre : c'est
+le même scanner que `MentionParser` emploie pour les notifications.
 
 **Le rendu dépend de qui lit.** Le même message affiche un lien pour un membre
 du groupe où vit le document, et un tag grisé (`.msg-tag__locked`, titre
@@ -255,6 +264,26 @@ Côté navigateur, `assets/js/ui/message-tags.js` propose une liste après `@` o
 qui écrit peut lui-même ouvrir. C'est du confort : sans JavaScript, on tape le
 tag à la main et il est reconnu pareil, et le choix des destinataires passe par
 une recherche serveur plutôt que par une liste déroulante.
+
+**Le bouton « Insérer un lien »** (`assets/js/ui/tag-picker.js`,
+`/messages/picker`) fait au clic ce que la frappe fait au clavier : il écrit un
+tag, et rien d'autre. Pas de pièce jointe, pas de téléversement — un message
+privé reste du texte. Trois différences avec la liste de suggestions, et
+chacune tient à ce qu'on ne fait pas le même geste : le mot cherché peut être
+n'importe où dans le titre et non seulement au début, une recherche vide est
+légitime et rend les derniers contenus déposés, et les types sont parcourus
+l'un après l'autre pour qu'un seul n'occupe pas le panneau. Le filtre des
+droits, lui, est le même — sans quoi un panneau qu'on feuillette sans rien
+taper serait un annuaire des groupes privés.
+
+**C'est le serveur qui dit comment s'écrit un tag.** Chaque suggestion porte un
+`insert` (`TagScanner::write()`), et le navigateur le recopie sans jamais
+recomposer la syntaxe. S'il la connaissait, elle finirait par diverger de celle
+qui la relit — et le premier titre biscornu donnerait un tag mort. Le bouton
+est caché tant que le JavaScript ne l'a pas allumé : la phrase d'aide dit déjà
+comment taper le tag à la main, et un bouton mort vaut moins qu'un bouton
+absent. Tout son libellé vit dans le gabarit, en Twig ; le JavaScript ne
+remplit que la liste.
 
 ### Notification settings (#34, #38)
 **Cinq catégories, mais pas partout.** `NotificationCategory::all()` donne les

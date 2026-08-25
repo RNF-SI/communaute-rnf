@@ -33,10 +33,14 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
  * part. C'est pour cela que rien n'est mis en cache ici : deux lecteurs n'ont
  * pas le même message sous les yeux.
  *
- * Limite connue : un titre qui contient une ponctuation interne (« Guide :
- * gestion ») n'est reconnu que jusqu'à cette ponctuation, et le tag retombe
- * alors en texte simple. Élargir ce que peut contenir un tag reviendrait à
- * avaler la phrase qui le suit.
+ * Un titre nu s'arrête à la première ponctuation interne — c'est ce qui rend
+ * « merci @Jeanne, tu peux ? » à sa virgule —, si bien que « Guide : gestion »
+ * n'était adressable d'aucune façon. La forme entre guillemets,
+ * « #"Guide : gestion" », dit où le titre finit ; `TagScanner::write()`
+ * décide laquelle des deux écrire, et c'est elle que le bouton « Insérer un
+ * lien » demande au serveur plutôt que de recomposer la syntaxe côté
+ * navigateur. Les guillemets appartiennent au tag, pas au message : ils sont
+ * consommés à la lecture et retirés à l'affichage.
  */
 class TagParser {
 	/**
@@ -44,6 +48,16 @@ class TagParser {
 	 * choisit plus, on relit.
 	 */
 	private const SUGGESTIONS = 8;
+
+	/**
+	 * Combien le bouton « Insérer un lien » montre par type quand il les
+	 * parcourt tous, et combien il en montre quand on l'a restreint à un
+	 * seul. Parcourir cinq types tient dans un panneau ; en fouiller un seul
+	 * demande de la place.
+	 */
+	private const PICKS = 6;
+
+	private const PICKS_ALONE = 20;
 
 	/**
 	 * @var \Doctrine\ORM\EntityManagerInterface
@@ -85,7 +99,10 @@ class TagParser {
 		// Et « # » n'ouvre pas de tag après « / » ni après « & » : sans quoi
 		// l'ancre d'une adresse collée dans un message, et la moindre entité
 		// numérique du genre &#039;, se liraient comme des tags.
-		$this->things = new TagScanner( '#', 8, '\p{L}\p{N}._\-\/&' );
+		// Et il lit la forme entre guillemets, que « @ » ignore : un nom de
+		// personne n'a pas de ponctuation interne, un titre de document en a
+		// souvent.
+		$this->things = new TagScanner( '#', 8, '\p{L}\p{N}._\-\/&', TRUE );
 	}
 
 	/**
@@ -157,7 +174,11 @@ class TagParser {
 							$chunk,
 							$things,
 							function ( TaggedThing $thing, $matched ) use ( $escape ) {
-								return $this->thingLink( $thing, $escape( $matched ) );
+								// `readable` retire les guillemets : ils
+								// disent où le titre finit, ce qui ne
+								// regarde que la lecture. Le message, lui,
+								// garde ce qui a été écrit.
+								return $this->thingLink( $thing, $escape( $this->things->readable( $matched ) ) );
 							},
 							$escape
 					);
@@ -173,7 +194,7 @@ class TagParser {
 	 * @param \App\Entity\User $viewer celui qui écrit — on ne lui propose que
 	 *                                 ce qu'il peut lui-même ouvrir
 	 *
-	 * @return array[] [ { label, kind, hint } ]
+	 * @return array[] [ { label, kind, hint, insert } ]
 	 */
 	public function suggest ( $prefix, $query, User $viewer = NULL ) {
 		$query = trim( (string) $query );
@@ -202,9 +223,10 @@ class TagParser {
 			}
 
 			$found[] = [
-					'label' => $user->getName(),
-					'kind'  => 'member',
-					'hint'  => (string) $user->getOrganisation(),
+					'label'  => $user->getName(),
+					'kind'   => 'member',
+					'hint'   => (string) $user->getOrganisation(),
+					'insert' => $this->people->write( $user->getName() ),
 			];
 		}
 
@@ -231,15 +253,7 @@ class TagParser {
 					continue;
 				}
 
-				$group = $thing->getGroup();
-
-				$found[] = [
-						'label' => $thing->getTitle(),
-						'kind'  => $thing->getKind(),
-						'hint'  => ( $group && ( $thing->getKind() !== TaggedThing::GROUP ) )
-								? (string) $group->getName()
-								: '',
-				];
+				$found[] = $this->described( $thing );
 
 				if ( count( $found ) >= self::SUGGESTIONS ) {
 					return $found;
@@ -248,6 +262,77 @@ class TagParser {
 		}
 
 		return $found;
+	}
+
+	/**
+	 * Ce que propose le bouton « Insérer un lien ».
+	 *
+	 * Trois différences avec la liste qui s'ouvre en tapant « # », et chacune
+	 * tient à ce qu'on ne fait pas le même geste. On ne tape pas un titre
+	 * qu'on connaît : on fouille un fonds. Donc le mot cherché peut être
+	 * n'importe où dans le titre et non seulement au début ; donc une
+	 * recherche vide est légitime, et rend ce qui vient d'être déposé ; donc
+	 * les types sont parcourus l'un après l'autre, de sorte qu'un seul type
+	 * abondant ne remplisse pas le panneau à lui seul.
+	 *
+	 * Ce qui ne change pas, et qui compte : on ne propose que ce que celui
+	 * qui écrit peut lui-même ouvrir. Sans quoi le panneau deviendrait un
+	 * annuaire des groupes privés.
+	 *
+	 * @param string           $query
+	 * @param string|null      $kind   un type parmi TaggedThing::kinds(), ou
+	 *                                 NULL pour les parcourir tous
+	 * @param \App\Entity\User $viewer celui qui écrit
+	 *
+	 * @return array[] [ { label, kind, hint, insert } ]
+	 */
+	public function pick ( $query, $kind = NULL, User $viewer = NULL ) {
+		$query = trim( (string) $query );
+		$kinds = ( $kind === NULL ) ? TaggedThing::kinds() : [ $kind ];
+		$limit = ( $kind === NULL ) ? self::PICKS : self::PICKS_ALONE;
+		$found = [];
+
+		foreach ( $kinds as $one ) {
+			$taken = 0;
+
+			foreach ( $this->browseThings( $one, $query, $limit ) as $thing ) {
+				if ( !$this->mayRead( $thing ) ) {
+					continue;
+				}
+
+				$found[] = $this->described( $thing );
+
+				if ( ++$taken >= $limit ) {
+					break;
+				}
+			}
+		}
+
+		return $found;
+	}
+
+	/**
+	 * Un contenu tel qu'une liste le montre, et le texte exact à écrire pour
+	 * le désigner.
+	 *
+	 * `insert` vient du scanner et non du navigateur : la syntaxe d'un tag
+	 * est connue d'un seul endroit, celui qui la relira.
+	 *
+	 * @param \App\Service\Tagging\TaggedThing $thing
+	 *
+	 * @return array
+	 */
+	private function described ( TaggedThing $thing ) {
+		$group = $thing->getGroup();
+
+		return [
+				'label'  => $thing->getTitle(),
+				'kind'   => $thing->getKind(),
+				'hint'   => ( $group && ( $thing->getKind() !== TaggedThing::GROUP ) )
+						? (string) $group->getName()
+						: '',
+				'insert' => $this->things->write( $thing->getTitle() ),
+		];
 	}
 
 	/**
@@ -423,6 +508,52 @@ class TagParser {
 										->setMaxResults( self::SUGGESTIONS * 4 )
 										->getQuery()
 										->getResult() );
+	}
+
+	/**
+	 * Ce qu'un type contient, pour le panneau : le mot cherché n'importe où
+	 * dans le titre, ou les derniers déposés si l'on n'a rien cherché.
+	 *
+	 * @param string $kind
+	 * @param string $query
+	 * @param int    $limit ce que l'appelant retiendra — on en demande
+	 *                      davantage, le filtre des droits en retire
+	 *
+	 * @return \App\Service\Tagging\TaggedThing[]
+	 */
+	private function browseThings ( $kind, $query, $limit ) {
+		$field   = $this->titleField( $kind );
+		$builder = $this->queryFor( $kind );
+
+		if ( $query === '' ) {
+			// Le plus récent d'abord : ce qu'on vient de déposer est ce
+			// qu'on a le plus de raisons d'envoyer à quelqu'un.
+			$builder->orderBy( 'e.createdAt', 'DESC' );
+		}
+		else {
+			$builder->andWhere( 'e.' . $field . ' LIKE :needle' )
+					->setParameter( 'needle', '%' . $this->escapeLike( $query ) . '%' )
+					->orderBy( 'e.' . $field, 'ASC' );
+		}
+
+		return $this->wrap( $kind, $builder->setMaxResults( $limit * 4 )
+										   ->getQuery()
+										   ->getResult() );
+	}
+
+	/**
+	 * Ce que quelqu'un a tapé, rendu inoffensif pour un LIKE.
+	 *
+	 * Sans cela, un « % » dans la recherche ramènerait tout le fonds, et un
+	 * « _ » n'importe quel caractère. Ce n'est pas une faille — le paramètre
+	 * reste lié — mais une recherche qui ne cherche pas.
+	 *
+	 * @param string $query
+	 *
+	 * @return string
+	 */
+	private function escapeLike ( $query ) {
+		return addcslashes( (string) $query, '%_\\' );
 	}
 
 	/**

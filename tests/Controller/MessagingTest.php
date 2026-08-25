@@ -429,6 +429,128 @@ class MessagingTest extends WebTestCase {
 	}
 
 	/**************************************************
+	 * LE BOUTON « INSÉRER UN LIEN »
+	 *************************************************/
+
+	/**
+	 * Le panneau parcourt le fonds au lieu de compléter une frappe, ce qui le
+	 * rendrait bien pire s'il montrait ce qu'on n'a pas le droit d'ouvrir : ce
+	 * serait un annuaire des groupes privés, feuilletable sans rien taper.
+	 */
+	public function testThePickerNeverOffersWhatTheWriterCannotOpen () {
+		$secret = $this->document( Usergroup::PRIVATE );
+		$open   = $this->document( Usergroup::PUBLIC );
+
+		$this->logIn( $this->user( 'Jeanne Réserve' ) );
+
+		$labels = $this->picked( '?q=Tagtest' );
+
+		$this->assertContains( $open->getTitle(), $labels );
+		$this->assertNotContains( $secret->getTitle(), $labels );
+	}
+
+	/**
+	 * On clique le bouton sans avoir rien à taper : le panneau doit répondre
+	 * quelque chose, sans quoi il s'ouvrirait vide.
+	 */
+	public function testThePickerAnswersBeforeAnythingIsTyped () {
+		$open = $this->document( Usergroup::PUBLIC );
+
+		$this->logIn( $this->user( 'Jeanne Réserve' ) );
+
+		$this->assertContains( $open->getTitle(), $this->picked( '?q=' ) );
+	}
+
+	/**
+	 * On ne tape pas un titre qu'on connaît, on fouille : le mot cherché peut
+	 * être au milieu du titre, là où la liste du « # » colle au début.
+	 */
+	public function testThePickerFindsAWordInsideTheTitle () {
+		$document = $this->document( Usergroup::PUBLIC, 'Tagtest gestion des mares' );
+
+		$this->logIn( $this->user( 'Jeanne Réserve' ) );
+
+		$this->assertContains( $document->getTitle(), $this->picked( '?q=gestion+des+mares' ) );
+	}
+
+	public function testThePickerRestrictsToTheAskedKind () {
+		$document = $this->document( Usergroup::PUBLIC );
+
+		$this->logIn( $this->user( 'Jeanne Réserve' ) );
+
+		$this->client->request( 'GET', '/messages/picker?q=&kind=group' );
+
+		$kinds = array_unique( array_column(
+				json_decode( $this->client->getResponse()->getContent(), TRUE )[ 'suggestions' ],
+				'kind'
+		) );
+
+		$this->assertNotContains( 'document', $kinds );
+	}
+
+	/**
+	 * Le cœur de l'affaire. Un titre à ponctuation interne ne se relit pas nu
+	 * — le tag s'arrêterait au premier deux-points —, donc le serveur rend un
+	 * `insert` entre guillemets. Écrit tel quel dans un message, il doit
+	 * donner un lien.
+	 *
+	 * C'est cette boucle-là qu'il faut garder : ce que le bouton propose
+	 * d'écrire, l'affichage doit le relire. Si le navigateur recomposait le
+	 * tag de son côté, les deux divergeraient au premier titre biscornu.
+	 */
+	public function testWhatThePickerOffersToWriteComesBackAsALink () {
+		$document = $this->document( Usergroup::PUBLIC, 'Tagtest : gestion des mares' );
+
+		$author    = $this->user( 'Jeanne Réserve' );
+		$recipient = $this->user( 'Paul Martin' );
+
+		$this->logIn( $author );
+
+		$this->client->request( 'GET', '/messages/picker?q=Tagtest&kind=document' );
+
+		$offered = NULL;
+
+		foreach ( json_decode( $this->client->getResponse()->getContent(), TRUE )[ 'suggestions' ] as $one ) {
+			if ( $one[ 'label' ] === $document->getTitle() ) {
+				$offered = $one[ 'insert' ];
+			}
+		}
+
+		$this->assertSame( '#"' . $document->getTitle() . '"', $offered );
+
+		$this->writeTo( $author, $recipient, 'Regarde ' . $offered . ' avant jeudi.' );
+
+		$conversation = $this->conversationsOf( $author )[ 0 ];
+
+		$this->client->request( 'GET', '/messages?conversation=' . $conversation->getId() );
+		$content = $this->client->getResponse()->getContent();
+
+		$this->assertStringContainsString( 'msg-tag__content', $content );
+
+		// Les guillemets disent où le titre finit : ils ne sont pas montrés au
+		// lecteur, le titre l'est. On regarde le texte du lien lui-même — le
+		// corps brut, lui, reparaît tel qu'il a été écrit dans le formulaire de
+		// modification, guillemets compris, et c'est très bien ainsi.
+		$this->assertStringContainsString( '>#' . $document->getTitle() . '</a>', $content );
+	}
+
+	/**
+	 * @param string $query la chaîne de requête, « ? » compris
+	 *
+	 * @return string[] les titres proposés
+	 */
+	private function picked ( $query ) {
+		$this->client->request( 'GET', '/messages/picker' . $query );
+
+		$this->assertEquals( 200, $this->client->getResponse()->getStatusCode() );
+
+		return array_column(
+				json_decode( $this->client->getResponse()->getContent(), TRUE )[ 'suggestions' ],
+				'label'
+		);
+	}
+
+	/**************************************************
 	 * SIGNALER
 	 *************************************************/
 

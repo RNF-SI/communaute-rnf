@@ -46,6 +46,7 @@ import './ui/groups-search';
 import './ui/add-form';
 import './ui/link-order-change';
 import './ui/message-tags';
+import './ui/tag-picker';
 //
 import './user/profile';
 import './user/dashboard';

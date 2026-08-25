@@ -8,13 +8,26 @@
 
 	`data-tags` branche la liste de suggestions. Sans JavaScript, le champ
 	reste un champ : on écrit le tag à la main et il est reconnu pareil.
+
+	Le bouton « Insérer un lien » fait au clic ce que la frappe fait au
+	clavier : il écrit un tag dans le champ, et rien d'autre. Il est donc
+	caché tant que le JavaScript ne l'a pas allumé — un bouton mort vaut moins
+	qu'un bouton absent, puisque la phrase d'aide dit déjà comment taper le
+	tag à la main.
+
+	Tout le libellé du panneau est ici, en Twig : le JavaScript ne remplit que
+	la liste des résultats. Une traduction n'a pas à voyager dans un fichier
+	.js pour être affichée.
 #}
+{% set composer_id = id|default('message-body') %}
+{% set picker_id   = composer_id ~ '-picker' %}
+
 <div class="message-composer">
-	<label class="message-composer--label" for="{{ id|default('message-body') }}">
+	<label class="message-composer--label" for="{{ composer_id }}">
 		{{ label|default('pages.messages.write'|trans) }}
 	</label>
 
-	<textarea id="{{ id|default('message-body') }}"
+	<textarea id="{{ composer_id }}"
 			  class="message-composer--input"
 			  name="body"
 			  rows="{{ rows|default(4) }}"
@@ -22,6 +35,60 @@
 			  data-tags="{{ path('messages_suggestions') }}"
 			  data-tags-hint="{{ 'pages.messages.tags_hint'|trans }}"
 			  placeholder="{{ 'pages.messages.placeholder'|trans }}">{{ body|default('') }}</textarea>
+
+	<div class="message-composer--tools" hidden>
+		<button type="button"
+				class="tag-picker--open"
+				aria-expanded="false"
+				aria-controls="{{ picker_id }}">{{ 'pages.messages.insert.open'|trans }}</button>
+
+		<div class="tag-picker"
+			 id="{{ picker_id }}"
+			 hidden
+			 role="dialog"
+			 aria-label="{{ 'pages.messages.insert.title'|trans }}"
+			 data-picker="{{ path('messages_picker') }}"
+			 data-picker-for="{{ composer_id }}">
+
+			<div class="tag-picker--head">
+				<h2 class="tag-picker--title">{{ 'pages.messages.insert.title'|trans }}</h2>
+
+				<button type="button"
+						class="tag-picker--close"
+						aria-label="{{ 'pages.messages.insert.close'|trans }}">&times;</button>
+			</div>
+
+			<div class="tag-picker--filters">
+				<label class="tag-picker--field">
+					<span>{{ 'pages.messages.insert.search'|trans }}</span>
+					<input type="search"
+						   class="tag-picker--search"
+						   autocomplete="off"
+						   placeholder="{{ 'pages.messages.insert.placeholder'|trans }}">
+				</label>
+
+				<label class="tag-picker--field">
+					<span>{{ 'pages.messages.insert.kind'|trans }}</span>
+					<select class="tag-picker--kind">
+						<option value="">{{ 'pages.messages.insert.all'|trans }}</option>
+						{% for kind in ['group', 'document', 'page', 'article', 'discussion'] %}
+							<option value="{{ kind }}">{{ ('pages.messages.insert.kinds.' ~ kind)|trans }}</option>
+						{% endfor %}
+					</select>
+				</label>
+			</div>
+
+			<p class="tag-picker--state"
+			   role="status"
+			   data-empty="{{ 'pages.messages.insert.empty'|trans }}"
+			   data-failed="{{ 'pages.messages.insert.failed'|trans }}"
+			   data-loading="{{ 'pages.messages.insert.loading'|trans }}"></p>
+
+			<ul class="tag-picker--list" role="listbox" aria-label="{{ 'pages.messages.insert.title'|trans }}"></ul>
+
+			<p class="tag-picker--hint">{{ 'pages.messages.insert.hint'|trans }}</p>
+		</div>
+	</div>
 
 	<p class="message-composer--hint">{{ 'pages.messages.tags_hint'|trans }}</p>
 </div>

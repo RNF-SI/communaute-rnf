@@ -31,6 +31,27 @@ class TagScanner {
 	public const MAX_LABELS = 50;
 
 	/**
+	 * La forme entre guillemets : « #"Guide : gestion des mares" ».
+	 *
+	 * Elle existe parce qu'un nom nu s'arrête à la première ponctuation
+	 * interne — c'est ce qui permet à « merci @Jeanne, tu peux ? » de garder
+	 * sa virgule —, si bien qu'un titre à deux points n'était adressable
+	 * d'aucune façon. Les guillemets disent où le nom finit ; la question ne
+	 * se pose plus.
+	 *
+	 * Trois paires, parce qu'on écrit en français : le guillemet droit, les
+	 * chevrons, et les guillemets courbes que dépose un copier-coller depuis
+	 * un traitement de texte. Aucune ne franchit une fin de ligne : un
+	 * guillemet resté ouvert avalerait le reste du message.
+	 */
+	private const QUOTED = '"[^"\n]{1,200}"|«[^»\n]{1,200}»|“[^”\n]{1,200}”';
+
+	/**
+	 * Ce qui encadre un nom, et l'espace qui traîne à l'intérieur.
+	 */
+	private const QUOTES = '/^["«“][ \x{00A0}]*|[ \x{00A0}]*["»”]$/u';
+
+	/**
 	 * @var string « @ » ou « # »
 	 */
 	private $prefix;
@@ -41,24 +62,40 @@ class TagScanner {
 	private $pattern;
 
 	/**
+	 * @var bool ce scanner-ci lit-il la forme entre guillemets ?
+	 */
+	private $quoted;
+
+	/**
 	 * @param string $prefix   le caractère qui ouvre un tag
 	 * @param int    $maxWords combien de mots un tag peut compter
 	 * @param string $notAfter classe de caractères après lesquels le préfixe
 	 *                         n'ouvre pas un tag
+	 * @param bool   $quoted   accepter aussi la forme entre guillemets, qui
+	 *                         porte les titres que le comptage de mots ne
+	 *                         sait pas atteindre
 	 */
-	public function __construct ( $prefix, $maxWords = 4, $notAfter = '\p{L}\p{N}._\-' ) {
+	public function __construct ( $prefix, $maxWords = 4, $notAfter = '\p{L}\p{N}._\-', $quoted = FALSE ) {
 		$this->prefix = $prefix;
+		$this->quoted = (bool) $quoted;
 
 		$word = '[\p{L}\p{N}][\p{L}\p{N}\'’.\-]*';
-
-		$this->pattern = sprintf(
-				'/(?<![%s%s])%s(%s(?:[ \x{00A0}]+%s){0,%d})/u',
-				$notAfter,
-				preg_quote( $prefix, '/' ),
-				preg_quote( $prefix, '/' ),
+		$run  = sprintf(
+				'(?P<words>%s(?:[ \x{00A0}]+%s){0,%d})',
 				$word,
 				$word,
 				max( 0, $maxWords - 1 )
+		);
+
+		// Les guillemets d'abord : « #"Jean" » doit se lire comme un nom
+		// entre guillemets, non comme un tag vide suivi de texte.
+		$this->pattern = sprintf(
+				'/(?<![%s%s])%s(?:%s%s)/u',
+				$notAfter,
+				preg_quote( $prefix, '/' ),
+				preg_quote( $prefix, '/' ),
+				$this->quoted ? '(?P<quoted>' . self::QUOTED . ')|' : '',
+				$run
 		);
 	}
 
@@ -107,28 +144,16 @@ class TagScanner {
 
 			$out .= $onText( substr( $text, $offset, $start - $offset ) );
 
-			$subject = NULL;
-			$read    = NULL;
+			$found = $this->read( $matches, $subjects );
 
-			foreach ( $this->labels( $matches[ 1 ][ 0 ] ) as $label => $candidate ) {
-				$key = $this->fold( $label );
-
-				if ( isset( $subjects[ $key ] ) ) {
-					$subject = $subjects[ $key ];
-					$read    = $candidate;
-
-					break;
-				}
-			}
-
-			if ( ( $subject === NULL ) || ( $read === NULL ) || ( $read === '' ) ) {
+			if ( $found === NULL ) {
 				$out .= $onText( $matched );
 				$offset = $start + strlen( $matched );
 
 				continue;
 			}
 
-			$consumed = $this->prefix . $read;
+			list( $subject, $consumed ) = $found;
 
 			$out .= $onTag( $subject, $consumed );
 			$offset = $start + strlen( $consumed );
@@ -148,17 +173,193 @@ class TagScanner {
 	public function labelsIn ( $text ) {
 		$labels = [];
 
-		if ( !preg_match_all( $this->pattern, (string) $text, $matches ) ) {
+		if ( !preg_match_all( $this->pattern, (string) $text, $all, PREG_SET_ORDER ) ) {
 			return [];
 		}
 
-		foreach ( $matches[ 1 ] as $candidate ) {
-			foreach ( array_keys( $this->labels( $candidate ) ) as $label ) {
+		foreach ( $all as $matches ) {
+			$quoted = $this->captured( $matches, 'quoted' );
+
+			// Entre guillemets, il n'y a rien à deviner : le nom est celui
+			// qu'on a encadré, et lui seul. C'est tout l'intérêt de la forme.
+			if ( $quoted !== NULL ) {
+				$label = $this->unquote( $quoted );
+
+				if ( $label !== '' ) {
+					$labels[ $this->fold( $label ) ] = $label;
+				}
+
+				continue;
+			}
+
+			foreach ( array_keys( $this->labels( (string) $this->captured( $matches, 'words' ) ) ) as $label ) {
 				$labels[ $this->fold( $label ) ] = $label;
 			}
 		}
 
 		return array_slice( $labels, 0, self::MAX_LABELS, TRUE );
+	}
+
+	/**
+	 * Ce que ce tag désigne dans le dictionnaire, et le texte exact qu'il
+	 * occupe — celui-là seul est consommé, ce qui le suivait dans la phrase
+	 * est rendu intact.
+	 *
+	 * @param array $matches  ce que le motif a capturé
+	 * @param array $subjects ce que le texte peut nommer, indexé par nom replié
+	 *
+	 * @return array|null [ mixed $subject, string $consumed ]
+	 */
+	private function read ( array $matches, array $subjects ) {
+		$quoted = $this->captured( $matches, 'quoted' );
+
+		if ( $quoted !== NULL ) {
+			$key = $this->fold( $this->unquote( $quoted ) );
+
+			// Les guillemets font partie du tag : les laisser hors du texte
+			// consommé les rendrait au message comme s'ils étaient à lui.
+			return isset( $subjects[ $key ] )
+					? [ $subjects[ $key ], $this->prefix . $quoted ]
+					: NULL;
+		}
+
+		foreach ( $this->labels( (string) $this->captured( $matches, 'words' ) ) as $label => $candidate ) {
+			$key = $this->fold( $label );
+
+			if ( isset( $subjects[ $key ] ) && ( $candidate !== '' ) ) {
+				return [ $subjects[ $key ], $this->prefix . $candidate ];
+			}
+		}
+
+		return NULL;
+	}
+
+	/**
+	 * Un groupe nommé du motif, ou NULL s'il n'a pas participé.
+	 *
+	 * Les deux formes de capture se présentent ici : avec
+	 * PREG_OFFSET_CAPTURE, un groupe est une paire dont le décalage vaut -1
+	 * quand il n'a rien pris ; sans, c'est une chaîne, vide dans le même cas.
+	 *
+	 * @param array  $matches
+	 * @param string $name
+	 *
+	 * @return string|null
+	 */
+	private function captured ( array $matches, $name ) {
+		if ( !isset( $matches[ $name ] ) ) {
+			return NULL;
+		}
+
+		$value = $matches[ $name ];
+
+		if ( is_array( $value ) ) {
+			return ( $value[ 1 ] === -1 ) ? NULL : $value[ 0 ];
+		}
+
+		return ( $value === '' ) ? NULL : $value;
+	}
+
+	/**
+	 * Le nom que ces guillemets encadrent.
+	 *
+	 * Retiré à l'expression régulière et non à substr() : chevrons et
+	 * guillemets courbes tiennent sur plusieurs octets, et substr()
+	 * trancherait au milieu.
+	 *
+	 * @param string $quoted
+	 *
+	 * @return string
+	 */
+	private function unquote ( $quoted ) {
+		$label = preg_replace( self::QUOTES, '', (string) $quoted );
+
+		return preg_replace( '/[\s\x{00A0}]+/u', ' ', trim( (string) $label ) );
+	}
+
+	/**
+	 * Le tag à écrire pour désigner ce nom-ci : nu quand il se relit tel
+	 * quel, entre guillemets sinon.
+	 *
+	 * C'est ici que le bouton « Insérer un lien » et la main de celui qui
+	 * tape se rejoignent. Le serveur ne devine pas la syntaxe côté
+	 * navigateur : il la donne, et elle est celle que ce même scanner relira.
+	 *
+	 * @param string $label
+	 *
+	 * @return string
+	 */
+	public function write ( $label ) {
+		$label = $this->unquote( $label );
+
+		if ( $label === '' ) {
+			return '';
+		}
+
+		if ( $this->reads( $label ) ) {
+			return $this->prefix . $label;
+		}
+
+		if ( !$this->quoted ) {
+			// Ce scanner ne sait pas lire de guillemets : le tag nu est ce
+			// qu'on peut faire de mieux, et le titre reste lisible.
+			return $this->prefix . $label;
+		}
+
+		// Un titre qui porte déjà l'une des paires est encadré par une autre.
+		foreach ( [ [ '"', '"' ], [ '«', '»' ], [ '“', '”' ] ] as $pair ) {
+			if ( ( mb_strpos( $label, $pair[ 0 ] ) === FALSE ) && ( mb_strpos( $label, $pair[ 1 ] ) === FALSE ) ) {
+				return $this->prefix . $pair[ 0 ] . $label . $pair[ 1 ];
+			}
+		}
+
+		// Trois paires déjà dans le titre : il n'y a plus rien à emprunter.
+		return $this->prefix . $label;
+	}
+
+	/**
+	 * Ce nom nu, précédé du préfixe, se relit-il en entier ?
+	 *
+	 * La question est posée au motif lui-même plutôt qu'à une liste de
+	 * ponctuations : c'est la seule façon que la réponse ne dérive pas du
+	 * jour où le motif changera.
+	 *
+	 * @param string $label
+	 *
+	 * @return bool
+	 */
+	private function reads ( $label ) {
+		$text = $this->prefix . $label;
+
+		if ( !preg_match( $this->pattern, $text, $matches ) || ( $matches[ 0 ] !== $text ) ) {
+			return FALSE;
+		}
+
+		// Le motif a tout pris, encore faut-il que labels() en tire le nom
+		// entier : « #Note v1. » se lit, « Note v1. » doit s'y trouver.
+		return array_key_exists( $label, $this->labels( (string) $this->captured( $matches, 'words' ) ) );
+	}
+
+	/**
+	 * Le tag tel qu'on le montre à celui qui lit : sans ses guillemets.
+	 *
+	 * Ils disent où le nom finit, ce qui n'intéresse que la lecture ; les
+	 * afficher ferait payer au lecteur une syntaxe qui ne le regarde pas. Le
+	 * message conserve, lui, ce qui a été écrit.
+	 *
+	 * @param string $consumed le texte du tag, préfixe compris
+	 *
+	 * @return string
+	 */
+	public function readable ( $consumed ) {
+		$consumed = (string) $consumed;
+		$label    = mb_substr( $consumed, mb_strlen( $this->prefix ) );
+
+		if ( !preg_match( '/^["«“]/u', $label ) ) {
+			return $consumed;
+		}
+
+		return $this->prefix . $this->unquote( $label );
 	}
 
 	/**

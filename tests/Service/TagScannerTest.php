@@ -62,6 +62,16 @@ class TagScannerTest extends TestCase {
 		);
 	}
 
+	/**
+	 * Le scanner de la messagerie pour les contenus, construit comme
+	 * TagParser le construit : huit mots, et la forme entre guillemets.
+	 *
+	 * @return \App\Service\Tagging\TagScanner
+	 */
+	private function things () {
+		return new TagScanner( '#', 8, '\p{L}\p{N}._\-\/&', TRUE );
+	}
+
 	/**************************************************
 	 * OÙ COMMENCE ET OÙ S'ARRÊTE UN TAG
 	 *************************************************/
@@ -233,5 +243,183 @@ class TagScannerTest extends TestCase {
 		);
 
 		$this->assertSame( '&lt;script&gt;', $rendered );
+	}
+
+	/**************************************************
+	 * LA FORME ENTRE GUILLEMETS
+	 *************************************************/
+
+	/**
+	 * Un titre nu s'arrête à la première ponctuation interne — c'est ce qui
+	 * rend « @Jeanne, tu peux ? » à sa virgule. Un document appelé « Guide :
+	 * gestion des mares » n'était donc adressable d'aucune façon.
+	 */
+	public function testAPunctuatedTitleIsNotReadableBare () {
+		$scanner = $this->things();
+
+		$this->assertSame(
+				'#Guide : gestion des mares',
+				$this->render( $scanner, '#Guide : gestion des mares', [ 'Guide : gestion des mares' ] )
+		);
+	}
+
+	public function testQuotesSayWhereTheTitleEnds () {
+		$scanner = $this->things();
+
+		$this->assertSame(
+				'lire [Guide : gestion des mares|#"Guide : gestion des mares"] ce soir',
+				$this->render( $scanner, 'lire #"Guide : gestion des mares" ce soir', [ 'Guide : gestion des mares' ] )
+		);
+	}
+
+	/**
+	 * On écrit en français, et un copier-coller depuis un traitement de texte
+	 * dépose des guillemets courbes. Les trois paires se lisent.
+	 */
+	public function testEveryPairOfQuotesIsRead () {
+		$scanner = $this->things();
+
+		foreach ( [ '#«Bilan (2025)»', '#“Bilan (2025)”', '#"Bilan (2025)"' ] as $written ) {
+			$this->assertSame(
+					'[Bilan (2025)|' . $written . ']',
+					$this->render( $scanner, $written, [ 'Bilan (2025)' ] )
+			);
+		}
+	}
+
+	/**
+	 * Un guillemet resté ouvert avalerait le reste du message : il ne
+	 * franchit pas la fin de ligne, et le texte reste du texte.
+	 */
+	public function testAnUnclosedQuoteDoesNotSwallowTheMessage () {
+		$scanner = $this->things();
+
+		$this->assertSame(
+				'il a dit #"bonjour et puis rien',
+				$this->render( $scanner, 'il a dit #"bonjour et puis rien', [ 'bonjour' ] )
+		);
+	}
+
+	public function testQuotesAroundNothingKnownStayText () {
+		$scanner = $this->things();
+
+		$this->assertSame(
+				'dit #"Inconnu au bataillon" tiens',
+				$this->render( $scanner, 'dit #"Inconnu au bataillon" tiens', [ 'Autre chose' ] )
+		);
+	}
+
+	/**
+	 * Le « @ » ne connaît pas les guillemets, et ne doit pas les apprendre :
+	 * un nom de personne n'a pas de ponctuation interne, et MentionParser lit
+	 * les mentions d'une discussion avec ce scanner-là. Une divergence d'un
+	 * caractère donnerait un lien à l'affichage là où la notification n'aurait
+	 * prévenu personne.
+	 */
+	public function testTheMentionScannerIgnoresQuotes () {
+		$scanner = $this->scanner();
+
+		$this->assertSame(
+				'salut @"Jeanne Réserve" !',
+				$this->render( $scanner, 'salut @"Jeanne Réserve" !', [ 'Jeanne Réserve' ] )
+		);
+	}
+
+	public function testQuotedTitlesAreListedForTheOneQueryToTheBase () {
+		$scanner = $this->things();
+
+		$this->assertSame(
+				[ 'guide : gestion des mares' => 'Guide : gestion des mares' ],
+				$scanner->labelsIn( 'voir #"Guide : gestion des mares" merci' )
+		);
+	}
+
+	/**************************************************
+	 * ÉCRIRE UN TAG, POUR LE BOUTON « INSÉRER UN LIEN »
+	 *************************************************/
+
+	public function testWritesABareTagWhenTheTitleReadsBack () {
+		$scanner = $this->things();
+
+		$this->assertSame( '#Plan de gestion 2026', $scanner->write( 'Plan de gestion 2026' ) );
+	}
+
+	public function testWritesQuotesOnlyWhenTheTitleNeedsThem () {
+		$scanner = $this->things();
+
+		$this->assertSame( '#"Guide : gestion des mares"', $scanner->write( 'Guide : gestion des mares' ) );
+		$this->assertSame( '#"Bilan (2025)"', $scanner->write( 'Bilan (2025)' ) );
+	}
+
+	/**
+	 * Huit mots au plus dans un titre nu ; au-delà, les guillemets disent où
+	 * il finit, sans quoi le tag ne désignerait que son début.
+	 */
+	public function testWritesQuotesWhenTheTitleRunsPastTheWordCount () {
+		$scanner = $this->things();
+
+		$long = 'Un titre de neuf mots un deux trois quatre cinq';
+
+		$this->assertSame( '#"' . $long . '"', $scanner->write( $long ) );
+	}
+
+	public function testBorrowsAnotherPairWhenTheTitleCarriesQuotes () {
+		$scanner = $this->things();
+
+		$this->assertSame( '#«Le "vrai" bilan»', $scanner->write( 'Le "vrai" bilan' ) );
+	}
+
+	/**
+	 * Ce que le bouton écrit, le scanner doit le relire : c'est la seule
+	 * propriété qui compte, et elle vaut pour les deux formes.
+	 */
+	public function testWhatItWritesItReadsBack () {
+		$scanner = $this->things();
+
+		$titles = [
+				'Plan de gestion 2026',
+				'Guide : gestion des mares',
+				'Bilan (2025)',
+				'Le "vrai" bilan',
+				'Compte rendu — réunion du 3',
+				'Zones humides & prairies',
+				'Un titre de neuf mots un deux trois quatre cinq',
+		];
+
+		foreach ( $titles as $title ) {
+			$this->assertSame(
+					'voir [' . $title . '|' . $scanner->write( $title ) . '] merci',
+					$this->render( $scanner, 'voir ' . $scanner->write( $title ) . ' merci', [ $title ] ),
+					$title
+			);
+		}
+	}
+
+	public function testTheMentionScannerWritesBareTags () {
+		$scanner = $this->scanner();
+
+		$this->assertSame( '@Jeanne Réserve', $scanner->write( 'Jeanne Réserve' ) );
+	}
+
+	/**************************************************
+	 * CE QUE LE LECTEUR VOIT
+	 *************************************************/
+
+	/**
+	 * Les guillemets disent où le titre finit, ce qui ne regarde que la
+	 * lecture. Le message garde ce qui a été écrit, l'affichage montre le
+	 * titre.
+	 */
+	public function testTheReaderIsNotShownTheQuotes () {
+		$scanner = $this->things();
+
+		$this->assertSame( '#Guide : gestion des mares', $scanner->readable( '#"Guide : gestion des mares"' ) );
+		$this->assertSame( '#Guide : gestion des mares', $scanner->readable( '#«Guide : gestion des mares»' ) );
+	}
+
+	public function testABareTagIsShownAsItWasWritten () {
+		$scanner = $this->things();
+
+		$this->assertSame( '#Suivi avifaune', $scanner->readable( '#Suivi avifaune' ) );
 	}
 }
