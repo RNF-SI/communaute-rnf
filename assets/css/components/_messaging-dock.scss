@@ -1,0 +1,610 @@
+/**************************************************
+* LE DOCK DE LA MESSAGERIE
+**************************************************/
+
+/**
+ * Les conversations qu'on garde ouvertes en bas de l'écran pendant qu'on lit
+ * autre chose.
+ *
+ * Le dock est **posé au-dessus de la page, jamais dans son flux** : rien de
+ * ce qui suit ne déplace un paragraphe ni ne change une hauteur. C'est ce qui
+ * lui permet d'apparaître sur n'importe quelle page sans en redessiner
+ * aucune.
+ *
+ * Il est `hidden` tant que le JavaScript ne l'a pas allumé — un dock mort ne
+ * vaut pas mieux qu'un dock absent, la page `/messages` faisant le même
+ * travail entièrement côté serveur.
+ *
+ * Sur un écran étroit, une seule fenêtre tient, et elle prend toute la
+ * largeur : deux fenêtres de 200 pixels côte à côte ne se lisent pas.
+ */
+
+.dock {
+	position:  fixed;
+	right:     $space_4;
+	bottom:    0;
+	z-index:   $z_dock;
+
+	display:   flex;
+	flex-flow: row-reverse nowrap;
+	align-items: flex-end;
+	gap:       $space_3;
+
+	// Le conteneur ne doit rien intercepter : entre deux fenêtres, la page
+	// reste cliquable. Chaque enfant reprend la main.
+	pointer-events: none;
+
+	> * {
+		pointer-events: auto;
+	}
+
+	@include medium-or-less {
+		right: $space_2;
+		left:  $space_2;
+	}
+}
+
+/**************************************************
+* LA BULLE
+**************************************************/
+
+.dock--launcher {
+	position:      relative;
+
+	display:       flex;
+	align-items:   center;
+	justify-content: center;
+	width:         rem(52px);
+	height:        rem(52px);
+	margin-bottom: $space_4;
+	padding:       0;
+
+	border:        none;
+	border-radius: $radius_circle;
+	background-color: $color_action;
+	color:         white;
+	cursor:        pointer;
+
+	@include transition(background-color, transform);
+	box-shadow: $shadow_lg;
+
+	&:hover,
+	&:focus-visible {
+		background-color: $color_action_dark;
+	}
+
+	&[aria-expanded="true"] {
+		background-color: $color_action_dark;
+	}
+}
+
+/**
+ * La pastille de la bulle, et celle de l'avatar dans l'en-tête : même objet,
+ * deux endroits. Elle est rendue même à zéro, simplement cachée — le direct
+ * la remplit sans recharger la page, et il lui faut un élément où écrire.
+ */
+.dock--badge,
+.header--badge {
+	position:      absolute;
+	top:           rem(-2px);
+	right:         rem(-2px);
+
+	min-width:     rem(20px);
+	padding:       0 rem(5px);
+
+	border:        2px solid $color_surface;
+	border-radius: $radius_full;
+	background-color: $color_danger;
+
+	color:         white;
+	font-size:     rem(11px);
+	font-weight:   600;
+	line-height:   rem(18px);
+	text-align:    center;
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+/**
+ * Dans l'en-tête, la pastille se pose sur le rond de l'avatar. Le bouton qui
+ * porte l'avatar sert d'origine : il n'était pas positionné, la pastille
+ * serait partie se coller au coin de la fenêtre.
+ */
+.header--user-menu .toggle-button {
+	position: relative;
+}
+
+/**************************************************
+* LE PANNEAU
+**************************************************/
+
+.dock--panel {
+	position:      absolute;
+	right:         0;
+	bottom:        rem(76px);
+
+	display:       flex;
+	flex-flow:     column nowrap;
+	width:         rem(320px);
+	max-height:    min(rem(440px), 70vh);
+
+	background-color: $color_surface;
+	border:        1px solid $color_border;
+	border-radius: $radius_lg;
+	box-shadow:    $shadow_lg;
+	overflow:      hidden;
+
+	&[hidden] {
+		display: none;
+	}
+
+	@include medium-or-less {
+		right: 0;
+		left:  0;
+		width: auto;
+	}
+}
+
+.dock--panel-head {
+	display:       flex;
+	align-items:   center;
+	justify-content: space-between;
+	gap:           $space_2;
+	padding:       $space_3 $space_4;
+
+	border-bottom: 1px solid $color_border;
+}
+
+.dock--panel-title {
+	margin:      0;
+	font-size:   rem(16px);
+	font-weight: 600;
+}
+
+.dock--panel-close,
+.dock-window--tool,
+.dock-toast--close {
+	padding:    0 $space_1;
+	border:     none;
+	background: none;
+	color:      $color_text_muted;
+	font-size:  rem(18px);
+	line-height: 1;
+	cursor:     pointer;
+	text-decoration: none;
+
+	&:hover,
+	&:focus-visible {
+		color: $color_text;
+	}
+}
+
+.dock--conversations {
+	@include clearulli(true);
+
+	flex:       1 1 auto;
+	overflow-y: auto;
+}
+
+.dock--panel-empty {
+	margin:    0;
+	padding:   $space_5 $space_4;
+	color:     $color_text_muted;
+	font-size: rem(14px);
+	text-align: center;
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+.dock--panel-foot {
+	display:       flex;
+	justify-content: space-between;
+	gap:           $space_2;
+	padding:       $space_3 $space_4;
+
+	border-top:    1px solid $color_border;
+	font-size:     rem(14px);
+}
+
+/**************************************************
+* UNE LIGNE DE LA LISTE
+**************************************************/
+
+.dock-row {
+	border-bottom: 1px solid $color_border;
+
+	&:last-child {
+		border-bottom: none;
+	}
+}
+
+.dock-row--open {
+	display:     flex;
+	align-items: center;
+	gap:         $space_3;
+	width:       100%;
+	padding:     $space_3 $space_4;
+
+	border:      none;
+	background:  none;
+	text-align:  left;
+	cursor:      pointer;
+
+	@include transition(background-color);
+
+	&:hover,
+	&:focus-visible {
+		background-color: $color_canvas;
+	}
+}
+
+.dock-row--text {
+	// `min-width: 0` sur un enfant de flex : sans lui, un extrait long refuse
+	// de se tronquer et pousse la date hors du panneau.
+	flex:      1 1 auto;
+	min-width: 0;
+	display:   flex;
+	flex-flow: column nowrap;
+}
+
+.dock-row--who {
+	overflow:      hidden;
+	white-space:   nowrap;
+	text-overflow: ellipsis;
+
+	color:         $color_text;
+	font-size:     rem(14px);
+
+	.dock-row__unread & {
+		font-weight: 600;
+	}
+}
+
+.dock-row--excerpt {
+	overflow:      hidden;
+	white-space:   nowrap;
+	text-overflow: ellipsis;
+
+	color:         $color_text_muted;
+	font-size:     rem(13px);
+}
+
+.dock-row--when {
+	flex:      0 0 auto;
+	color:     $color_text_muted;
+	font-size: rem(11px);
+}
+
+/**
+ * Le visage, ou le disque coloré qui en tient lieu. La teinte vient du
+ * serveur, prise au même filtre que les gabarits Twig : un même nom ne change
+ * pas de couleur selon qui le dessine.
+ */
+.dock-face {
+	flex:          0 0 auto;
+	display:       flex;
+	align-items:   center;
+	justify-content: center;
+	width:         rem(36px);
+	height:        rem(36px);
+	overflow:      hidden;
+
+	border-radius: $radius_circle;
+	background-color: $color_canvas;
+
+	img {
+		width:      100%;
+		height:     100%;
+		object-fit: cover;
+	}
+
+	&.dock-face__empty {
+		background-color: var(--color, #{$color_border});
+		color:            white;
+		font-weight:      600;
+		font-size:        rem(15px);
+	}
+}
+
+/**************************************************
+* UNE FENÊTRE
+**************************************************/
+
+.dock--stack {
+	display:     flex;
+	flex-flow:   row-reverse nowrap;
+	align-items: flex-end;
+	gap:         $space_3;
+}
+
+.dock-window {
+	display:       flex;
+	flex-flow:     column nowrap;
+	width:         rem(300px);
+	height:        rem(400px);
+	max-height:    70vh;
+
+	background-color: $color_surface;
+	border:        1px solid $color_border;
+	border-top-left-radius:  $radius_lg;
+	border-top-right-radius: $radius_lg;
+	border-bottom: none;
+	box-shadow:    $shadow_lg;
+	overflow:      hidden;
+
+	@include medium-or-less {
+		width: 100%;
+	}
+
+	// Repliée, il ne reste que la barre de titre : c'est elle qu'on clique
+	// pour la rouvrir.
+	&.dock-window__folded {
+		height: auto;
+
+		.dock-window--body,
+		.dock-window--reply {
+			display: none;
+		}
+	}
+
+	// Un message est arrivé dans une fenêtre repliée. L'animation ne joue pas
+	// pour qui a demandé moins de mouvement.
+	&.dock-window__ringing .dock-window--head {
+		background-color: $color_success_surface;
+	}
+}
+
+.dock-window--head {
+	display:       flex;
+	align-items:   center;
+	gap:           $space_2;
+	padding:       $space_2 $space_3;
+
+	border-bottom: 1px solid $color_border;
+	background-color: $color_canvas;
+
+	@include transition(background-color);
+}
+
+.dock-window--title {
+	flex:          1 1 auto;
+	min-width:     0;
+	overflow:      hidden;
+	white-space:   nowrap;
+	text-overflow: ellipsis;
+
+	padding:       0;
+	border:        none;
+	background:    none;
+	text-align:    left;
+	cursor:        pointer;
+
+	color:         $color_text;
+	font-size:     rem(14px);
+	font-weight:   600;
+}
+
+.dock-window--dot {
+	flex:          0 0 auto;
+	width:         rem(8px);
+	height:        rem(8px);
+
+	border-radius: $radius_circle;
+	background-color: $color_danger;
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+.dock-window--tools {
+	flex:        0 0 auto;
+	display:     flex;
+	align-items: center;
+	gap:         $space_1;
+}
+
+.dock-window--body {
+	flex:       1 1 auto;
+	display:    flex;
+	flex-flow:  column nowrap;
+	gap:        $space_2;
+	padding:    $space_3;
+
+	overflow-y: auto;
+}
+
+.dock-window--hint,
+.dock-window--warning,
+.dock-window--more {
+	margin:     0;
+	color:      $color_text_muted;
+	font-size:  rem(12px);
+	text-align: center;
+}
+
+.dock-window--warning {
+	color: $color_danger;
+}
+
+/**************************************************
+* UN MESSAGE
+**************************************************/
+
+.dock-message {
+	display:   flex;
+	flex-flow: column nowrap;
+	max-width: 85%;
+
+	&.dock-message__mine {
+		align-self: flex-end;
+		align-items: flex-end;
+	}
+}
+
+.dock-message--who {
+	color:     $color_text_muted;
+	font-size: rem(11px);
+}
+
+.dock-message--bubble {
+	padding:       $space_2 $space_3;
+
+	border-radius: $radius_lg;
+	background-color: $color_canvas;
+
+	font-size:     rem(14px);
+	// Un message privé est du texte : un mot sans espace — une adresse
+	// collée — ne doit pas élargir la bulle jusqu'à sortir de la fenêtre.
+	overflow-wrap: break-word;
+	word-break:    break-word;
+
+	.dock-message__mine & {
+		background-color: $color_success_surface;
+	}
+}
+
+.dock-message--gone {
+	color: $color_text_muted;
+}
+
+.dock-message--when {
+	color:     $color_text_muted;
+	font-size: rem(11px);
+}
+
+/**************************************************
+* LE CHAMP
+**************************************************/
+
+.dock-window--reply {
+	display:     flex;
+	align-items: flex-end;
+	gap:         $space_2;
+	padding:     $space_2 $space_3 $space_3;
+
+	border-top:  1px solid $color_border;
+
+	// Le champ porte la liste de suggestions des tags, qui se pose en
+	// absolu : c'est ce conteneur qui lui sert de repère.
+	position:    relative;
+
+	&.dock-window--reply__busy {
+		opacity:        .6;
+		pointer-events: none;
+	}
+
+	/**
+	 * La liste des tags s'ouvre **vers le haut**. Elle se pose en absolu sans
+	 * coordonnées ailleurs dans l'application, où le champ est au-dessus
+	 * d'elle et le flux suffit ; ici le conteneur est un `flex`, dont la
+	 * position statique d'un enfant absolu est le coin haut-gauche — la liste
+	 * serait partie couvrir le champ, puis sortir par le bas de l'écran.
+	 */
+	.mentions-suggestions {
+		bottom:        100%;
+		left:          $space_3;
+		right:         $space_3;
+		max-width:     none;
+		margin-bottom: $space_1;
+	}
+}
+
+.dock-window--field {
+	flex:       1 1 auto;
+	min-width:  0;
+	max-height: rem(120px);
+	padding:    $space_2;
+
+	border:        1px solid $color_border_strong;
+	border-radius: $radius_md;
+	font-size:     rem(14px);
+	resize:        none;
+}
+
+.dock-window--send {
+	flex:          0 0 auto;
+	padding:       $space_2 $space_3;
+
+	border:        none;
+	border-radius: $radius_md;
+	background-color: $color_action;
+	color:         white;
+	font-size:     rem(13px);
+	cursor:        pointer;
+
+	@include transition(background-color);
+
+	&:hover,
+	&:focus-visible {
+		background-color: $color_action_dark;
+	}
+}
+
+/**************************************************
+* CE QUI S'ANNONCE EN PASSANT
+**************************************************/
+
+.dock--toasts {
+	position:  absolute;
+	right:     0;
+	bottom:    rem(76px);
+
+	display:   flex;
+	flex-flow: column nowrap;
+	gap:       $space_2;
+	width:     rem(300px);
+
+	@include medium-or-less {
+		right: 0;
+		left:  0;
+		width: auto;
+	}
+}
+
+.dock-toast {
+	display:       flex;
+	align-items:   baseline;
+	gap:           $space_2;
+	padding:       $space_3;
+
+	background-color: $color_surface;
+	border:        1px solid $color_border;
+	border-left:   3px solid $color_action;
+	border-radius: $radius_md;
+	box-shadow:    $shadow_md;
+
+	font-size:     rem(13px);
+}
+
+.dock-toast--group {
+	flex:      0 0 auto;
+	color:     $color_text_muted;
+	font-size: rem(11px);
+}
+
+.dock-toast--link {
+	flex:          1 1 auto;
+	min-width:     0;
+	overflow:      hidden;
+	white-space:   nowrap;
+	text-overflow: ellipsis;
+}
+
+/**
+ * Ce que le dock cesse d'animer pour qui a demandé moins de mouvement. La
+ * couleur de la barre de titre, elle, reste : c'est un repère, pas une
+ * animation.
+ */
+@media (prefers-reduced-motion: reduce) {
+	.dock--launcher,
+	.dock-window--head,
+	.dock-row--open,
+	.dock-window--send {
+		transition: none;
+	}
+}

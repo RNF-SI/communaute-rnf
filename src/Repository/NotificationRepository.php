@@ -27,10 +27,100 @@ class NotificationRepository extends ServiceEntityRepository {
 	 * @return int
 	 */
 	public function countUnread ( User $user ) {
+		return $this->countUnreadWhere( $user );
+	}
+
+	/**
+	 * Les notifications non lues qui ne sont pas de ces types-là.
+	 *
+	 * Sert Ã  retirer `message:new` du compteur de l'en-tÃªte : un message
+	 * privÃ© y a dÃ©jÃ  sa propre ligne, et le compter deux fois ferait mentir
+	 * la pastille qui additionne les deux. La page des notifications, elle,
+	 * continue de les lister â c'est son histoire.
+	 *
+	 * @param \App\Entity\User $user
+	 * @param string[]         $types
+	 *
+	 * @return int
+	 */
+	public function countUnreadExcept ( User $user, array $types ) {
+		return $this->countUnreadWhere( $user, $types, FALSE );
+	}
+
+	/**
+	 * Les notifications non lues qui sont de ces types-lÃ .
+	 *
+	 * @param \App\Entity\User $user
+	 * @param string[]         $types
+	 *
+	 * @return int
+	 */
+	public function countUnreadOfTypes ( User $user, array $types ) {
+		if ( empty( $types ) ) {
+			return 0;
+		}
+
+		return $this->countUnreadWhere( $user, $types, TRUE );
+	}
+
+	/**
+	 * @param \App\Entity\User $user
+	 * @param string[]         $types
+	 * @param bool             $among TRUE pour garder ces types, FALSE pour les Ã©carter
+	 *
+	 * @return int
+	 */
+	private function countUnreadWhere ( User $user, array $types = [], $among = TRUE ) {
+		$builder = $this->createQueryBuilder( 'n' )
+						->select( 'COUNT(n.id)' )
+						->andWhere( 'n.recipient = :user' )
+						->andWhere( 'n.readAt IS NULL' )
+						->setParameter( 'user', $user );
+
+		if ( !empty( $types ) ) {
+			$builder->andWhere( $among ? 'n.type IN (:types)' : 'n.type NOT IN (:types)' )
+					->setParameter( 'types', $types );
+		}
+
+		return (int) $builder->getQuery()->getSingleScalarResult();
+	}
+
+	/**
+	 * Les notifications non lues arrivées depuis celle que le dock connaît
+	 * déjà — ce qu'il annonce sans recharger la page.
+	 *
+	 * Bornée par un identifiant, comme le flux des messages : c'est le seul
+	 * repère qui ne dépende ni de l'horloge du navigateur ni de deux
+	 * enregistrements de la même seconde.
+	 *
+	 * @param \App\Entity\User $user
+	 * @param int              $since
+	 * @param int              $limit
+	 *
+	 * @return Notification[] de la plus ancienne à la plus récente
+	 */
+	public function findUnreadSince ( User $user, $since, $limit = 20 ) {
+		return $this->createQueryBuilder( 'n' )
+					->andWhere( 'n.recipient = :user' )
+					->andWhere( 'n.readAt IS NULL' )
+					->andWhere( 'n.id > :since' )
+					->setParameter( 'user', $user )
+					->setParameter( 'since', (int) $since )
+					->orderBy( 'n.id', 'ASC' )
+					->setMaxResults( $limit )
+					->getQuery()
+					->getResult();
+	}
+
+	/**
+	 * @param \App\Entity\User $user
+	 *
+	 * @return int
+	 */
+	public function lastIdFor ( User $user ) {
 		return (int) $this->createQueryBuilder( 'n' )
-						  ->select( 'COUNT(n.id)' )
+						  ->select( 'COALESCE(MAX(n.id), 0)' )
 						  ->andWhere( 'n.recipient = :user' )
-						  ->andWhere( 'n.readAt IS NULL' )
 						  ->setParameter( 'user', $user )
 						  ->getQuery()
 						  ->getSingleScalarResult();

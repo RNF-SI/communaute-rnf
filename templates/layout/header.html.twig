@@ -35,7 +35,17 @@
 	<div class="header--user">
 		{% if is_granted(constant('App\\Security\\UserVoter::LOGGED')) %}
 			<div class="header--user-menu">
-				<button class="toggle-button" type="button" data-toggle-element="sibling">{% include 'contents/user/user--tiny.html.twig' with {'user':app.user} %}</button>
+				{# La pastille est rendue mÃªme Ã  zÃ©ro, simplement cachÃ©e : le direct
+				   la remplit sans recharger la page, et il lui faut un Ã©lÃ©ment oÃ¹
+				   Ã©crire quand le premier message arrive. Ce qu'elle compte, ce sont
+				   les conversations et les notifications, un message privÃ© n'y Ã©tant
+				   comptÃ© qu'une fois â voir UnreadCounts. #}
+				{% set pending = unread_total() %}
+				<button class="toggle-button" type="button" data-toggle-element="sibling">{% include 'contents/user/user--tiny.html.twig' with {'user':app.user} %}<span
+						class="header--badge"
+						data-unread="total"
+						data-unread-label="{{ 'pages.user.waiting'|trans|escape('html_attr') }}"
+						{{ pending ? '' : 'hidden' }}>{{ pending }}</span></button>
 				<div class="links" aria-hidden="true">
 					{% set headerUserOptions = render(controller( 'App\\Controller\\AppController::headerUserOptions' )) %}
 

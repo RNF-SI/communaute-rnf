@@ -313,6 +313,9 @@ forms:
 
 pages:
     user:
+        # Ce que la pastille de l’avatar annonce à un lecteur d’écran : elle
+        # additionne les conversations et les notifications en attente.
+        waiting: "%count% élément(s) en attente"
         login:
             title: "Connectez-vous"
             subtitle: "Si vous avez déjà un compte"
@@ -642,6 +645,7 @@ pages:
             no_file: "Aucun fichier n’est attaché à ce document."
             talk:
                 title: "Ce qui en a été dit"
+                discussions: "Discussions qui en parlent"
                 pages: "Pages qui y renvoient"
                 empty: "Personne n’en a encore parlé dans ce groupe."
                 ask: "En discuter"
@@ -782,6 +786,21 @@ pages:
         box_closed: "Ce membre n’accepte pas les messages privés."
         placeholder: "Écrivez votre message…"
         tags_hint: "Tapez « @ » pour citer une personne, « # » pour renvoyer vers un groupe, un document, une page, une actualité ou une discussion."
+        dock:
+            open: "Ouvrir la messagerie"
+            stack: "Conversations ouvertes"
+            window: "Conversation"
+            loading: "Chargement…"
+            failed: "Cette conversation n’a pas pu être chargée. La messagerie complète, elle, reste accessible."
+            failed_send: "Le message n’est pas parti. Réessayez, ou passez par la messagerie."
+            more: "Voir le début de la conversation"
+            first: "Votre premier message ouvrira la conversation."
+            close: "Fermer"
+            open_full: "Ouvrir en grand"
+            open_full_title: "Ouvrir cette conversation dans la messagerie"
+            placeholder: "Écrire un message…"
+            all: "Toutes mes conversations"
+            waiting: "%count% conversation(s) en attente"
         insert:
             open: "Insérer un lien"
             title: "Insérer un lien vers un contenu"

@@ -3,19 +3,36 @@
     <li><a href="{{ path('user_dashboard') }}">{{ 'pages.user.dashboard.link'|trans }}</a></li>
     <li><a href="{{ path('member', {'user_id':app.user.id}) }}">{{ 'pages.user.profile.link'|trans }}</a></li>
     <li><a href="{{ path('user_groups') }}">{{ 'pages.user.my_groups.link'|trans }}</a></li>
-    <li><a href="{{ path('user_discussions') }}">{{ 'pages.user.my_discussions.link'|trans }}</a></li>
+    {#
+        Les trois compteurs. Chacun est rendu mÃªme Ã  zÃ©ro, simplement cachÃ© :
+        c'est ce que le direct remplit sans recharger la page.
+
+        « Mes discussions » ne compte pas des discussions non lues â rien en
+        base ne suit la lecture d'une discussion de groupe. Il compte les
+        notifications de discussion en attente, c'est-Ã -dire un sous-ensemble
+        de la ligne « Notifications », qu'il dÃ©taille sans s'y ajouter. Qui
+        a coupÃ© les notifications d'un groupe ne verra donc pas ce groupe
+        compter : c'est la limite assumÃ©e du seul repÃ¨re qui existe.
+    #}
+    <li>
+        <a href="{{ path('user_discussions') }}">
+            {{ 'pages.user.my_discussions.link'|trans }}
+            {% set discussing = unread_discussions() %}
+            <span class="notifications-count" data-unread="discussions" {{ discussing ? '' : 'hidden' }}>{{ discussing }}</span>
+        </a>
+    </li>
     <li>
         <a href="{{ path('messages_index') }}">
             {{ 'pages.messages.link'|trans }}
             {% set waiting = unread_messages() %}
-            {% if waiting > 0 %}<span class="notifications-count">{{ waiting }}</span>{% endif %}
+            <span class="notifications-count" data-unread="messages" {{ waiting ? '' : 'hidden' }}>{{ waiting }}</span>
         </a>
     </li>
     <li>
         <a href="{{ path('user_notifications') }}">
             {{ 'pages.user.notifications.link'|trans }}
             {% set unread = unread_notifications() %}
-            {% if unread > 0 %}<span class="notifications-count">{{ unread }}</span>{% endif %}
+            <span class="notifications-count" data-unread="notifications" {{ unread ? '' : 'hidden' }}>{{ unread }}</span>
         </a>
     </li>
     <li><a href="{{ path('user_parameters_edit') }}">{{ 'pages.user.parameters_edit.link'|trans }}</a></li>

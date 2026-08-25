@@ -86,6 +86,32 @@ Two parallel mechanisms:
 - **Form login** — email/password via `LoginFormAuthenticator`, `UserChecker`.
 - **RNF external auth** — single sign-on against the GeoNature API (`RnfAuthService`, `RnfAuthenticatorGuard`, `RnfUserProvider`, `RnfAuthController`), configured via `RNF_AUTH_*` env vars.
 
+**Rester connecté, c'est la session PHP et rien d'autre.** Ni « remember me »,
+ni jeton persistant : `RnfAuthService` range les données SSO dans la session, et
+`RnfAuthenticatorGuard::supportsRememberMe()` rend `FALSE`. Ce que règle le bloc
+`session` de `config/packages/framework.yaml` est donc, très exactement, la
+durée pendant laquelle on reste connecté — rien ne rattrape son expiration.
+
+Deux valeurs par défaut de PHP déconnectaient tout le monde toutes les vingt
+minutes : `gc_maxlifetime` à 1440 secondes, et un `save_path` partagé avec les
+autres sites de la machine, que le cron de Debian balaie selon le `php.ini` de
+la **CLI**. La plateforme écrit maintenant dans `var/sessions/<env>` — surtout
+pas dans `%kernel.cache_dir%`, où un `cache:clear` déconnecterait tout le monde
+à chaque déploiement — et ramasse elle-même. `SESSION_LIFETIME` (30 jours) règle
+d'un seul geste le cookie et le fichier : les laisser diverger, c'est présenter
+un cookie valide pour une session déjà effacée.
+
+`SessionCookieRefreshSubscriber` repousse l'échéance du cookie à chaque page
+vue, parce que PHP ne l'émet qu'en créant la session : sans lui les trente jours
+se compteraient depuis la connexion et non depuis la dernière visite. Il lit sa
+portée dans `session.storage.options`, la **même source** que celle qui a posé
+le cookie d'origine — deux lectures qui divergeraient fabriqueraient un second
+cookie que le navigateur garderait à côté du premier.
+
+`refreshUser()` retombe sur la base quand il n'y a pas de session SSO : c'est ce
+qui fait vivre la connexion par mot de passe au-delà de la première requête. Ne
+pas le « simplifier » en rendant `loadUserByUsername` seul maître.
+
 ### Authorization
 Voter-based, per resource type: `GroupVoter`, `GroupArticleVoter`, `GroupDiscussionVoter`, `GroupDocumentVoter`, `GroupFileVoter`, `GroupPageVoter`, `UserVoter`, `ConversationVoter`.
 
@@ -224,6 +250,77 @@ fait. La page d'administration (`/administration/message-reports`) lit ces
 copies et **n'interroge jamais la messagerie** : c'est la propriété à préserver
 en la modifiant. Corollaire voulu : effacer le message après coup n'efface pas
 ce qui a été signalé.
+
+### Le dock, et le direct
+
+Les conversations restent **ouvertes en bas de l'écran pendant qu'on lit autre
+chose**. Le dock (`templates/components/messaging-dock.html.twig`,
+`assets/js/messaging/dock.js`) **double la page `/messages`, il ne la remplace
+pas** : tout ce qu'il fait s'y fait aussi, en HTML, sans une ligne de
+JavaScript. C'est ce qui l'autorise à n'être que du confort — il est rendu
+`hidden` et c'est le JavaScript qui l'allume, un dock mort ne valant pas mieux
+qu'un dock absent. Il ne s'affiche pas sur `/messages` elle-même.
+
+**La plateforme n'est pas une application d'une seule page.** Chaque lien
+recharge tout, dock compris. Une conversation « reste » ouverte parce qu'elle
+est **rouverte** : `sessionStorage` note ce qui était là, `restore()` le
+remonte au chargement suivant. Corollaire à ne pas perdre en relisant : une
+fenêtre **repliée** charge son fil avec `read=0`, sinon chaque navigation la
+marquerait lue et les messages arrivés pendant qu'elle était réduite
+disparaîtraient du compteur sans qu'on les ait regardés.
+
+**C'est un sondage, pas une connexion ouverte** (`assets/js/messaging/live.js`,
+route `messages_live`). SSE ou WebSocket immobiliseraient un processus PHP par
+onglet, et la plateforme tourne derrière PHP-FPM : quinze personnes connectées
+suffiraient à faire attendre la seizième. Trois précautions rendent le sondage
+tenable — **un seul onglet interroge** (bail dans `localStorage`, les autres
+écoutent par `BroadcastChannel`), **le rythme suit ce qu'on regarde** (3 s
+devant un fil déplié, 10 s onglet actif, 60 s onglet caché, plus rien après une
+demi-heure), et **la réponse ordinaire est vide** : deux `COUNT`. La liste des
+conversations ne repart qu'en cas de changement, et **entière** plutôt qu'en
+différences — cela répare tout seul un dock qui aurait manqué un tour.
+
+Le curseur est un **identifiant de message, borné au flux du lecteur**
+(`findSinceFor`), pas le dernier identifiant de la table : avancer sur les
+messages des autres ferait sauter, un jour, celui d'une transaction validée
+dans le désordre. Ne pas faire avancer le curseur depuis la réponse à un envoi
+— l'onglet d'à côté, où la même conversation peut être ouverte, ne verrait
+jamais le message arriver.
+
+**Le corps d'un message part en HTML déjà rendu** (`Messaging\DockPresenter`),
+jamais en texte. Ce n'est pas une facilité : le rendu d'un tag **dépend de qui
+lit**, et ce tri se fait lecteur par lecteur, côté PHP. Le dock ne recompose
+donc jamais un message et n'en met rien en cache.
+
+Côté droits, **rien de neuf** : chaque route repasse par `ConversationVoter`,
+qui ne court-circuite pas pour `ROLE_ADMIN`. Une messagerie qui s'ouvrirait
+plus largement par une route JSON que par sa propre page n'aurait pas une
+porte, elle en aurait deux.
+
+### Ce qui attend quelqu'un (`Service\UnreadCounts`)
+
+Trois nombres et un total, comptés **une seule fois et au même endroit** : la
+pastille sur l'avatar, le détail ligne par ligne dans le menu, et ce que
+renvoie `/messages/live` en sont trois lectures. Deux façons de compter
+finiraient par diverger d'une unité, et c'est l'écart qu'un lecteur remarque.
+
+**Un message privé n'est compté qu'une fois**, bien qu'il ouvre deux lignes en
+base — une conversation non lue *et* une notification `message:new`. Le
+compteur des notifications écarte donc ce type (`countUnreadExcept`) : sans
+cela la pastille dirait « 2 » pour un seul message reçu. La page des
+notifications, elle, continue de les lister — ce qu'elle montre est une
+histoire, pas un compteur.
+
+**« Mes discussions » détaille, il ne s'ajoute pas.** Rien en base ne suit la
+lecture d'une discussion de groupe ; le nombre affiché est celui des
+notifications de discussion en attente, c'est-à-dire un sous-ensemble de la
+ligne « Notifications ». D'où son absence du total, et sa limite assumée : qui
+a coupé les notifications d'un groupe ne verra pas ce groupe compter.
+
+Chaque endroit qui porte un de ces nombres le rend **même à zéro, simplement
+caché**, et se signale par `data-unread` : sans élément, `messaging/badge.js`
+n'aurait rien à remplir quand le premier message arrive. Ce fichier ne calcule
+aucun nombre — il recopie ce que le serveur renvoie.
 
 ### Tags dans un message (`Tagging\TagParser`)
 

@@ -44,6 +44,8 @@
 
 		{% if is_granted(constant('App\\Security\\ConversationVoter::CONTACT'), user) %}
 			<a class="user--write" href="{{ path('messages_new', {'to': user.id}) }}"
+			   data-dock-user="{{ user.id }}"
+			   data-dock-name="{{ user.name|escape('html_attr') }}"
 			   title="{{ 'pages.messages.write_to'|trans|escape('html_attr') }}">
 				<span>{{ 'pages.messages.write_to'|trans }}</span>
 			</a>

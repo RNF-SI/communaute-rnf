@@ -148,5 +148,9 @@ $z_base:      1;
 $z_sticky:    50;
 $z_header:    100;
 $z_dropdown:  200;
+// Le dock de la messagerie : au-dessus de la page, sous ce qui la couvre.
+// Une conversation ouverte ne doit pas passer devant une modale, ni
+// devant la visite guidée — qui, elle, montre justement la bulle du dock.
+$z_dock:      800;
 $z_overlay:   900;
 $z_tour:      1000;

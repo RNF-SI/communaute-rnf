@@ -36,7 +36,12 @@
 					{# Écrire par la plateforme : le seul chemin qui marche même
 					   quand l'adresse n'est pas publiée. #}
 					{% if is_granted(constant('App\\Security\\ConversationVoter::CONTACT'), user) %}
-						<a class="cta" href="{{ path('messages_new', {'to': user.id}) }}">{{ 'pages.messages.write_to'|trans }}</a>
+						{# Un vrai lien vers la page, que le dock intercepte quand il est lÃ  : sans
+						   JavaScript, le clic mÃ¨ne oÃ¹ il a toujours menÃ©. #}
+						<a class="cta"
+						   href="{{ path('messages_new', {'to': user.id}) }}"
+						   data-dock-user="{{ user.id }}"
+						   data-dock-name="{{ user.name|escape('html_attr') }}">{{ 'pages.messages.write_to'|trans }}</a>
 					{% elseif not user.isMessagesOpen %}
 						<div class="hint">{{ 'pages.messages.box_closed'|trans }}</div>
 					{% endif %}

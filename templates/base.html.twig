@@ -95,6 +95,11 @@
 		 }|json_encode|escape('html_attr') }}"></div>
 {% endif %}
 
+{# Les conversations qu'on garde ouvertes en bas de l'Ã©cran pendant qu'on lit
+   autre chose. Le dÃ©cor est posÃ© ici et allumÃ© par le JavaScript ; la page
+   `/messages` reste entiÃ¨re sans lui. #}
+{% include 'components/messaging-dock.html.twig' %}
+
 {% block javascripts %}
 	{{ encore_entry_script_tags('app') }}
 {% endblock %}

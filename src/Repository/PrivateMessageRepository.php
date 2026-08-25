@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Conversation;
 use App\Entity\PrivateMessage;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -105,6 +106,61 @@ class PrivateMessageRepository extends ServiceEntityRepository {
 					  ->getResult();
 
 		return $found ? $found[ 0 ] : NULL;
+	}
+
+	/**
+	 * Ce qui s'est écrit, dans les conversations de quelqu'un, depuis le
+	 * message qu'il connaît déjà.
+
+	 * C'est la seule requête que le sondage du dock fait à chaque tour.
+	 * Elle est bornée par un identifiant et non par une date : deux messages
+	 * de la même seconde ne se marchent pas dessus, et l'index de la clé
+	 * primaire suffit.
+	 *
+	 * Le curseur reste **le flux de ce lecteur** et non le dernier
+	 * identifiant de la table : avancer sur les messages des autres ferait
+	 * sauter, un jour ou l'autre, celui d'une transaction validée dans le
+	 * désordre.
+	 *
+	 * @param \App\Entity\User $user
+	 * @param int              $since
+	 * @param int              $limit
+	 *
+	 * @return PrivateMessage[] du plus ancien au plus récent
+	 */
+	public function findSinceFor ( User $user, $since, $limit = 200 ) {
+		return $this->createQueryBuilder( 'm' )
+					->innerJoin( 'm.conversation', 'c' )
+					->innerJoin( 'c.participants', 'mine' )
+					->andWhere( 'mine.user = :user' )
+					->andWhere( 'mine.leftAt IS NULL' )
+					->andWhere( 'm.id > :since' )
+					->setParameter( 'user', $user )
+					->setParameter( 'since', (int) $since )
+					->orderBy( 'm.id', 'ASC' )
+					->setMaxResults( $limit )
+					->getQuery()
+					->getResult();
+	}
+
+	/**
+	 * Le dernier identifiant du flux de ce lecteur — le curseur d'où repart
+	 * un dock qui vient de s'ouvrir.
+	 *
+	 * @param \App\Entity\User $user
+	 *
+	 * @return int 0 quand il n'a jamais rien reçu
+	 */
+	public function lastIdFor ( User $user ) {
+		return (int) $this->createQueryBuilder( 'm' )
+						  ->select( 'COALESCE(MAX(m.id), 0)' )
+						  ->innerJoin( 'm.conversation', 'c' )
+						  ->innerJoin( 'c.participants', 'mine' )
+						  ->andWhere( 'mine.user = :user' )
+						  ->andWhere( 'mine.leftAt IS NULL' )
+						  ->setParameter( 'user', $user )
+						  ->getQuery()
+						  ->getSingleScalarResult();
 	}
 
 	/**

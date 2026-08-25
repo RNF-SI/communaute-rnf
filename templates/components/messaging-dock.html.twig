@@ -1,0 +1,108 @@
+{#
+	Le dock de la messagerie : les conversations qu'on garde ouvertes en bas
+	de l'écran pendant qu'on lit autre chose.
+
+	Ce gabarit ne pose qu'un décor vide — la bulle, le panneau, la pile de
+	fenêtres — et tout ce dont le JavaScript a besoin pour le remplir : les
+	adresses, le jeton, et les libellés. Ces libellés sont ici, en Twig, et
+	non dans un fichier .js : une traduction n'a pas à voyager pour être
+	affichée, et un fichier compilé ne se relit pas.
+
+	Il est rendu `hidden`, et c'est `dock.js` qui l'allume. Sans JavaScript,
+	un dock mort ne vaut pas mieux qu'un dock absent : la page `/messages`,
+	elle, marche entièrement côté serveur, et c'est vers elle que mènent tous
+	les liens qui traversent la plateforme.
+
+	Les adresses sont des gabarits. Le routeur exige un nombre là où le
+	JavaScript veut un trou : on lui donne donc une sentinelle, qu'on remplace
+	ensuite par un jeton. C'est le routeur qui sait où vivent ces routes ; une
+	adresse écrite en dur dans le JavaScript serait la première chose à mentir
+	le jour où un préfixe change.
+#}
+{#
+	Pas de dock sur la messagerie elle-même : deux fenêtres flottantes posées
+	par-dessus le fil qu'on est en train de lire se marcheraient dessus, et
+	la page fait déjà, en grand, tout ce que le dock fait en petit. Ce qui
+	était ouvert n'est pas perdu pour autant — `sessionStorage` le garde, et
+	la page suivante le remonte.
+#}
+{% if is_granted(constant('App\\Security\\UserVoter::LOGGED')) and app.request.get('_route') != 'messages_index' %}
+	{% set sentinel = 987654321 %}
+	{% set waiting  = unread_messages() %}
+
+	<div class="dock"
+		 id="messaging-dock"
+		 hidden
+		 data-live="{{ path('messages_live') }}"
+		 data-thread="{{ path('messages_dock_thread', {'id': sentinel})|replace({(sentinel): '__id__'}) }}"
+		 data-send="{{ path('messages_dock_send', {'id': sentinel})|replace({(sentinel): '__id__'}) }}"
+		 data-read="{{ path('messages_dock_read', {'id': sentinel})|replace({(sentinel): '__id__'}) }}"
+		 data-start="{{ path('messages_dock_start', {'id': sentinel})|replace({(sentinel): '__id__'}) }}"
+		 data-with="{{ path('messages_dock_with', {'id': sentinel})|replace({(sentinel): '__id__'}) }}"
+		 data-suggestions="{{ path('messages_suggestions') }}"
+		 data-index="{{ path('messages_index') }}"
+		 data-token="{{ csrf_token('messages') }}"
+		 data-labels="{{ {
+			 'window':          'pages.messages.dock.window'|trans,
+			 'loading':         'pages.messages.dock.loading'|trans,
+			 'failed':          'pages.messages.dock.failed'|trans,
+			 'failed_send':     'pages.messages.dock.failed_send'|trans,
+			 'more':            'pages.messages.dock.more'|trans,
+			 'first':           'pages.messages.dock.first'|trans,
+			 'close':           'pages.messages.dock.close'|trans,
+			 'open_full':       'pages.messages.dock.open_full'|trans,
+			 'open_full_title': 'pages.messages.dock.open_full_title'|trans,
+			 'send':            'pages.messages.send'|trans,
+			 'write':           'pages.messages.write'|trans,
+			 'placeholder':     'pages.messages.dock.placeholder'|trans,
+			 'none':            'pages.messages.empty'|trans,
+			 'deleted':         'pages.messages.deleted'|trans
+		 }|json_encode|escape('html_attr') }}">
+
+		{# Les fenêtres ouvertes. Remplies par le JavaScript, jamais par le
+		   serveur : ce qui est ouvert dépend de l'onglet, pas du compte. #}
+		<div class="dock--stack" role="region" aria-label="{{ 'pages.messages.dock.stack'|trans }}"></div>
+
+		<div class="dock--panel" id="dock-panel" hidden>
+			<div class="dock--panel-head">
+				<h2 class="dock--panel-title">{{ 'pages.messages.title'|trans }}</h2>
+
+				<button type="button"
+						class="dock--panel-close"
+						aria-label="{{ 'pages.messages.dock.close'|trans }}">&times;</button>
+			</div>
+
+			<ul class="dock--conversations"></ul>
+
+			<p class="dock--panel-empty">{{ 'pages.messages.dock.loading'|trans }}</p>
+
+			<div class="dock--panel-foot">
+				<a class="dock--panel-all" href="{{ path('messages_index') }}">{{ 'pages.messages.dock.all'|trans }}</a>
+				<a class="dock--panel-new" href="{{ path('messages_new') }}">{{ 'pages.messages.new'|trans }}</a>
+			</div>
+		</div>
+
+		<button type="button"
+				class="dock--launcher"
+				aria-expanded="false"
+				aria-controls="dock-panel"
+				aria-label="{{ 'pages.messages.dock.open'|trans }}">
+			<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
+				<use xlink:href="#chat"/>
+			</svg>
+
+			{# Rendu même à zéro, simplement caché : sans cela il n'y aurait
+			   rien à remplir quand le premier message arrive. #}
+			<span class="dock--badge"
+				  data-unread="messages"
+				  data-unread-label="{{ 'pages.messages.dock.waiting'|trans|escape('html_attr') }}"
+				  {{ waiting ? '' : 'hidden' }}>{{ waiting }}</span>
+		</button>
+
+		{# Ce qui s'annonce en passant : une actualité, une page, un message
+		   dans une discussion. Jamais un message privé — le dock le montre
+		   déjà, et l'annoncer par-dessus ferait deux bulles pour une phrase
+		   reçue. #}
+		<div class="dock--toasts" aria-live="polite"></div>
+	</div>
+{% endif %}

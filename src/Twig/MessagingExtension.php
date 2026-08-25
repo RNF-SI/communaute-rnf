@@ -2,10 +2,9 @@
 
 namespace App\Twig;
 
-use App\Entity\Conversation;
 use App\Entity\User;
 use App\Service\Tagging\TagParser;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Service\UnreadCounts;
 use Symfony\Component\Security\Core\Security;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
@@ -23,9 +22,9 @@ use Twig\TwigFunction;
  */
 class MessagingExtension extends AbstractExtension {
 	/**
-	 * @var \Doctrine\ORM\EntityManagerInterface
+	 * @var \App\Service\UnreadCounts
 	 */
-	private $manager;
+	private $counts;
 
 	/**
 	 * @var \Symfony\Component\Security\Core\Security
@@ -37,8 +36,8 @@ class MessagingExtension extends AbstractExtension {
 	 */
 	private $tags;
 
-	public function __construct ( EntityManagerInterface $manager, Security $security, TagParser $tags ) {
-		$this->manager  = $manager;
+	public function __construct ( UnreadCounts $counts, Security $security, TagParser $tags ) {
+		$this->counts   = $counts;
 		$this->security = $security;
 		$this->tags     = $tags;
 	}
@@ -63,11 +62,7 @@ class MessagingExtension extends AbstractExtension {
 	public function unreadMessages () {
 		$user = $this->security->getUser();
 
-		if ( !$user instanceof User ) {
-			return 0;
-		}
-
-		return $this->manager->getRepository( Conversation::class )->countUnread( $user );
+		return $this->counts->forUser( $user instanceof User ? $user : NULL )[ 'messages' ];
 	}
 
 	/**

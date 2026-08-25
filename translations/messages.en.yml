@@ -202,6 +202,7 @@ forms:
 
 pages:
     user:
+        waiting: "%count% item(s) waiting"
         login:
             title: "Log in"
             subtitle: "If you already have an account"
@@ -513,6 +514,7 @@ pages:
             no_file: "No file is attached to this document."
             talk:
                 title: "What was said about it"
+                discussions: "Discussions mentioning it"
                 pages: "Pages linking to it"
                 empty: "Nobody has talked about it in this group yet."
                 ask: "Start a discussion about it"
@@ -670,6 +672,21 @@ pages:
         box_closed: "This member does not accept private messages."
         placeholder: "Write your message…"
         tags_hint: "Type « @ » to name someone, « # » to point at a group, a document, a page, a news item or a discussion."
+        dock:
+            open: "Open messages"
+            stack: "Open conversations"
+            window: "Conversation"
+            loading: "Loading…"
+            failed: "This conversation could not be loaded. The full messaging page still works."
+            failed_send: "The message did not go out. Try again, or use the messaging page."
+            more: "See the start of the conversation"
+            first: "Your first message will open the conversation."
+            close: "Close"
+            open_full: "Open in full"
+            open_full_title: "Open this conversation in the messaging page"
+            placeholder: "Write a message…"
+            all: "All my conversations"
+            waiting: "%count% conversation(s) waiting"
         insert:
             open: "Insert a link"
             title: "Insert a link to some content"

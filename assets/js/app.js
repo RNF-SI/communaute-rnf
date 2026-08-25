@@ -48,6 +48,12 @@ import './ui/link-order-change';
 import './ui/message-tags';
 import './ui/tag-picker';
 //
+// Le direct de la messagerie. `badge` s'abonne au chargement du module,
+// `dock` allume le moteur : dans cet ordre, sans quoi la pastille manquerait
+// le premier tour.
+import './messaging/badge';
+import './messaging/dock';
+//
 import './user/profile';
 import './user/dashboard';
 import './user/notifications-settings';
