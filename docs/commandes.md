@@ -54,14 +54,18 @@ php bin/console app:mail:check --to=vous@rnfrance.org
 
 | Option | Effet |
 |---|---|
-| `--to=adresse` | envoie **un vrai message par chacun des deux chemins**, et dit lequel a abouti |
+| `--to=adresse` | envoie **un vrai message par chacun des trois chemins**, et dit lequel a abouti |
 
 Sans `--to`, n'écrit et n'envoie rien. Sort en code 1 s'il manque un
-enregistrement DNS.
+enregistrement DNS, ou si un chemin a été refusé.
 
-Les deux chemins portent **deux jetons Postmark différents** : l'un peut
-fonctionner pendant que l'autre est muet. C'est pour cela que `--to` en envoie
-deux.
+**Trois chemins, parce que c'est le couple jeton + expéditeur qui compte.** Deux
+jetons Postmark différents, dont l'un peut être muet pendant que l'autre
+fonctionne ; et le transport en lot sert **deux expéditeurs** — le domaine de
+liste pour les discussions, l'adresse de la plateforme pour le contenu et les
+messages privés. Le compte rendu donne l'expéditeur de chaque ligne et, en cas
+de refus, la phrase que Postmark a répondue (« Sender signature not
+confirmed… »), qui n'était affichée nulle part.
 
 Voir [`delivrabilite-emails.md`](delivrabilite-emails.md) et
 [`dns-a-faire.md`](dns-a-faire.md).

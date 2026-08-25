@@ -20,9 +20,11 @@ Pour éprouver les deux chemins d'envoi pour de vrai :
 php bin/console app:mail:check --to=vous@rnfrance.org
 ```
 
-Deux messages partent, un par chemin, et le compte rendu dit lequel a abouti.
-**Les deux chemins portent deux jetons Postmark différents** : l'un peut
-fonctionner pendant que l'autre est muet, ce qui s'était produit en #4.
+Trois messages partent, un par chemin, et le compte rendu dit lequel a abouti,
+**avec l'adresse d'expédition de chacun** et, en cas de refus, la phrase que
+Postmark a répondue. Deux jetons différents — l'un peut être muet pendant que
+l'autre fonctionne (#4) —, et **trois** chemins, parce que le transport en lot
+sert deux expéditeurs distincts.
 
 ⚠️ En production, le garde de #14 refuse les adresses en `@example.org` : un
 `--to` vers une adresse de test y sera rejeté, et le compte rendu le dira.
@@ -71,13 +73,28 @@ vérifier ce jeton.
 
 ## Ce qui part, et par quel chemin
 
-| E-mail | Service | Transport |
-|---|---|---|
-| Message de discussion | `DiscussionSender` | `BulkTransport` → **API Postmark en direct** |
-| Résumé quotidien, demande d'adhésion, mot de passe oublié, inscription | `EmailSender` | Swift_Mailer → `MAILER_URL` |
+**Ce n'est pas le jeton qui décide seul : c'est le couple jeton + expéditeur.**
 
-(Rappel du tableau ci-dessus : en dev et en test, le premier passe lui aussi par
-`MAILER_URL`, grâce au transport de remplacement.)
+| E-mail | Service | Transport / jeton | Expéditeur |
+|---|---|---|---|
+| Message de discussion | `DiscussionSender` | `BulkTransport` → API Postmark | `noreply@POSTMARK_LIST_DOMAIN` |
+| Page, actualité, document, **message privé** — à chaud | `ContentSender` | `BulkTransport` → API Postmark | **`POSTMARK_SENDER`** |
+| Résumé, demande d'adhésion, mot de passe oublié, inscription | `EmailSender` | Swift_Mailer → `MAILER_URL` | `POSTMARK_SENDER` |
+
+Les deux premiers partagent le jeton et **pas** l'adresse d'expédition. C'est le
+piège : un domaine de liste autorisé chez Postmark et une adresse de plateforme
+qui ne l'est pas, et les messages de discussion arrivent pendant que les
+messages privés se font refuser — même jeton, même transport, même code de
+retour HTTP 200.
+
+(Rappel du tableau ci-dessus : en dev et en test, les deux premiers passent eux
+aussi par `MAILER_URL`, grâce au transport de remplacement.)
+
+⚠️ **Un HTTP 200 de Postmark ne veut pas dire « envoyé ».** L'API par lot répond
+200 en portant un verdict **par message** : `ErrorCode 400 — Sender signature
+not confirmed`, `ErrorCode 406 — recipient inactive`… Le transport ne regardait
+que le code HTTP, et rendait « tout est parti ». Il lit désormais chaque
+verdict, retient le premier refus, et `app:mail:check` l'affiche.
 
 ## En local : un collecteur, jamais Postmark
 

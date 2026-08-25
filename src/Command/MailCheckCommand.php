@@ -27,12 +27,17 @@ use Throwable;
  * Trois choses, dans l'ordre où elles cassent :
  *
  * 1. le DNS du domaine d'envoi — SPF, DKIM, Return-Path, DMARC ;
- * 2. la configuration des deux chemins d'envoi ;
- * 3. sur demande, un vrai message par chacun de ces deux chemins.
+ * 2. la configuration des chemins d'envoi ;
+ * 3. sur demande, un vrai message par chacun d'eux.
  *
- * Deux chemins, parce que la plateforme envoie par deux transports avec deux
- * jetons différents : l'un peut fonctionner pendant que l'autre est muet,
- * c'est exactement ce qui s'était produit en #4.
+ * **Trois chemins, et c'est le couple jeton + expéditeur qui compte.** Deux
+ * transports portent deux jetons différents, et l'un peut fonctionner pendant
+ * que l'autre est muet — c'est ce qui s'était produit en #4. Mais le transport
+ * en lot est emprunté par deux chemins qui n'écrivent pas depuis la même
+ * adresse : les discussions depuis le domaine de liste, le contenu à chaud —
+ * page, actualité, document, message privé — depuis l'adresse de la
+ * plateforme. Un domaine autorisé et l'autre non, et le premier arrive pendant
+ * que le second se fait refuser message par message.
  */
 class MailCheckCommand extends Command {
 	protected static $defaultName = 'app:mail:check';
@@ -68,8 +73,9 @@ class MailCheckCommand extends Command {
 				->setDescription( 'Check that this environment can actually deliver e-mail' )
 				->setHelp(
 						"Reads nothing but the DNS and the configuration unless --to is given.\n"
-						. "With --to, sends one real message through each of the two paths, so that\n"
-						. "a working transactional token and a silent bulk one can be told apart."
+						. "With --to, sends one real message through each of the three paths, so that\n"
+						. "a working token with a refused sender address can be told apart from a\n"
+						. "silent transport."
 				)
 				->addOption(
 						'to',
@@ -127,7 +133,7 @@ class MailCheckCommand extends Command {
 		/**
 		 * 2. LA CONFIGURATION
 		 */
-		$io->section( 'Les deux chemins d’envoi' );
+		$io->section( 'Les chemins d’envoi' );
 
 		$io->table(
 				[ '', 'Chemin', 'Détail' ],
@@ -165,31 +171,64 @@ class MailCheckCommand extends Command {
 		$to = $input->getOption( 'to' );
 
 		if ( !$to ) {
-			$io->note( 'Aucun envoi : relancer avec --to=adresse@exemple.org pour éprouver les deux chemins.' );
+			$io->note( 'Aucun envoi : relancer avec --to=adresse@exemple.org pour éprouver les trois chemins.' );
 
 			return $blocked > 0 ? 1 : 0;
 		}
 
-		$io->section( sprintf( 'Deux messages vers %s', $to ) );
+		$io->section( sprintf( 'Trois messages vers %s', $to ) );
 
+		/**
+		 * TROIS CHEMINS, PAS DEUX
+		 *
+		 * Ce qui compte n'est pas le jeton seul : c'est le **couple** jeton +
+		 * adresse d'expédition. Le contenu à chaud — page, actualité, document,
+		 * message privé — emprunte le transport en lot des discussions, mais
+		 * l'adresse d'expédition de la plateforme. Ce couple-là n'était éprouvé
+		 * par rien.
+		 *
+		 * Le cas rencontré : le message de discussion arrive, celui d'un
+		 * message privé non. Les deux passent par le même jeton, la différence
+		 * tient à l'expéditeur — et le contrôle disait « les deux chemins
+		 * fonctionnent » pendant que le troisième était muet.
+		 */
 		$transactional = $this->sendTransactional( $to, $platform, $environment );
-		$discussion    = $this->sendBulk( $to, $postmark, $environment );
+		$discussion    = $this->sendBulk( $to, $postmark, $environment, $this->listSender( $postmark ), 'discussion' );
+		$content       = $this->sendBulk( $to, $postmark, $environment, $platform[ 'from' ], 'contenu' );
 
 		$io->table(
-				[ '', 'Chemin', 'Résultat' ],
+				[ '', 'Chemin', 'Expéditeur', 'Résultat' ],
 				[
-						[ $this->badge( $transactional[ 0 ] ), 'Transactionnel', $transactional[ 1 ] ],
-						[ $this->badge( $discussion[ 0 ] ), 'Discussions', $discussion[ 1 ] ],
+						[
+								$this->badge( $transactional[ 0 ] ),
+								'Résumé, adhésion, mot de passe',
+								$platform[ 'from' ] ?: '—',
+								$transactional[ 1 ],
+						],
+						[
+								$this->badge( $discussion[ 0 ] ),
+								'Messages de discussion',
+								$this->listSender( $postmark ) ?: '—',
+								$discussion[ 1 ],
+						],
+						[
+								$this->badge( $content[ 0 ] ),
+								'Contenu et messages privés',
+								$platform[ 'from' ] ?: '—',
+								$content[ 1 ],
+						],
 				]
 		);
 
 		$failed = ( $transactional[ 0 ] === MailDeliverability::FAILED )
-				  || ( $discussion[ 0 ] === MailDeliverability::FAILED );
+				  || ( $discussion[ 0 ] === MailDeliverability::FAILED )
+				  || ( $content[ 0 ] === MailDeliverability::FAILED );
 
 		if ( !$failed ) {
 			$io->success(
-					'Les deux messages ont été remis au transport. Reste à vérifier qu’ils arrivent : '
-					. 'regarder la boîte de réception, et le dossier indésirables.'
+					'Les trois messages ont été acceptés. Reste à vérifier qu’ils arrivent : '
+					. 'regarder la boîte de réception, et le dossier indésirables. '
+					. 'Trois objets différents s’y distinguent — transactionnel, discussion, contenu.'
 			);
 		}
 
@@ -235,33 +274,62 @@ class MailCheckCommand extends Command {
 	 * @param string $to
 	 * @param array  $postmark
 	 * @param string $environment
+	 * @param string $from        l'expéditeur propre à ce chemin
+	 * @param string $path
 	 *
 	 * @return array status, detail
 	 */
-	private function sendBulk ( $to, array $postmark, $environment ) {
+	private function sendBulk ( $to, array $postmark, $environment, $from, $path ) {
 		if ( empty( $postmark[ 'bulk_token' ] ) && ( $environment === 'prod' ) ) {
 			return [ MailDeliverability::FAILED, 'POSTMARK_BULK_TOKEN vide — le transport ne fait rien, en silence' ];
 		}
 
-		$from = 'noreply@' . ( $postmark[ 'list_domain' ] ?: 'localhost' );
+		if ( empty( $from ) ) {
+			return [ MailDeliverability::FAILED, 'pas d’expéditeur configuré pour ce chemin' ];
+		}
 
 		try {
-			$message = ( new Swift_Message( $this->subject( 'discussion', $environment ) ) )
+			$message = ( new Swift_Message( $this->subject( $path, $environment ) ) )
 					->setFrom( $from )
 					->setTo( $to )
-					->setBody( $this->body( 'discussion', $environment ), 'text/html' )
-					->addPart( strip_tags( $this->body( 'discussion', $environment ) ), 'text/plain' );
+					->setBody( $this->body( $path, $environment ), 'text/html' )
+					->addPart( strip_tags( $this->body( $path, $environment ) ), 'text/plain' );
 
 			// Le transport expose sendMultiple, comme DiscussionSender l'appelle.
 			$sent = $this->bulk->sendMultiple( [ $message ] );
 
-			return $sent > 0
-					? [ MailDeliverability::OK, sprintf( 'remis au transport, expéditeur %s', $from ) ]
-					: [ MailDeliverability::WARNING, 'rien envoyé — transport muet dans cet environnement' ];
+			if ( $sent > 0 ) {
+				return [ MailDeliverability::OK, 'accepté par Postmark' ];
+			}
+
+			// Postmark dit pourquoi il refuse, et le disait à personne : le
+			// transport se contentait de rendre zéro. « Sender signature not
+			// confirmed » se corrige en deux minutes quand on le lit, et se
+			// cherche pendant des jours quand on ne le lit pas.
+			$reason = $this->bulk->getLastError();
+
+			return [
+					MailDeliverability::FAILED,
+					$reason ?: 'rien envoyé — transport muet dans cet environnement',
+			];
 		}
 		catch ( Throwable $error ) {
 			return [ MailDeliverability::FAILED, $error->getMessage() ];
 		}
+	}
+
+	/**
+	 * L'expéditeur des messages de discussion : celui-là seul est bâti sur le
+	 * domaine de liste, parce qu'il porte un Reply-To qui doit revenir.
+	 *
+	 * @param array $postmark
+	 *
+	 * @return string
+	 */
+	private function listSender ( array $postmark ) {
+		return !empty( $postmark[ 'list_domain' ] )
+				? 'noreply@' . $postmark[ 'list_domain' ]
+				: '';
 	}
 
 	/**

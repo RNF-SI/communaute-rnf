@@ -444,6 +444,22 @@ Corollaire à ne pas perdre : **le contenu à chaud emprunte le jeton *bulk***,
 pas celui du résumé. Les deux peuvent diverger, et c'est le cas le plus
 trompeur — le résumé arrive, les publications non.
 
+**Et un HTTP 200 ne veut pas dire « envoyé ».** L'API par lot répond 200 en
+portant un verdict *par message* — signature d'expéditeur non confirmée,
+destinataire inactif. `BulkTransport` ne lisait que le code HTTP : il rendait
+« tout est parti » là où Postmark venait de refuser chaque message un par un.
+Il lit désormais chaque verdict et retient le premier refus (`getLastError()`),
+qu'`app:mail:check` affiche.
+
+**Trois chemins, mais surtout trois couples jeton + expéditeur.** Les
+discussions écrivent depuis `noreply@POSTMARK_LIST_DOMAIN` — il faut bien que
+le `Reply-To` revienne quelque part —, le contenu à chaud et le résumé depuis
+`POSTMARK_SENDER`. Deux chemins partagent donc le jeton sans partager
+l'expéditeur : un domaine autorisé chez Postmark et l'autre non, et les
+discussions arrivent pendant que les messages privés se font refuser. C'est
+pourquoi `app:mail:check --to` envoie **trois** messages et non deux : éprouver
+les jetons ne suffit pas.
+
 Le changement de défaut ne se voit pas tout seul : la migration pose
 `noticePending` sur les comptes existants, `components/notifications-notice`
 l'annonce une fois, et personne ne repose le drapeau — les inscrits d'après ne

@@ -8,11 +8,33 @@ use Swift_Mime_SimpleMessage;
 
 class BulkTransport extends Transport {
 	/**
+	 * Ce que Postmark a répondu la dernière fois qu'il a refusé quelque chose.
+	 *
+	 * Le transport ne peut pas décider seul quoi faire d'un refus — il est
+	 * appelé au milieu de la requête de quelqu'un qui vient de publier. Mais
+	 * l'information ne doit pas disparaître pour autant : sans elle,
+	 * `app:mail:check` ne peut dire que « rien n'est parti », là où Postmark
+	 * disait précisément pourquoi.
+	 *
+	 * @var string|null
+	 */
+	private $lastError;
+
+	/**
+	 * @return string|null
+	 */
+	public function getLastError () {
+		return $this->lastError;
+	}
+
+	/**
 	 * @param array $messages
 	 *
-	 * @return bool|int
+	 * @return int le nombre de messages que Postmark a acceptés
 	 */
 	public function sendMultiple ( array $messages ) {
+		$this->lastError = NULL;
+
 		// Sans jeton, rien ne part. Rendre TRUE le disait « réussi » à qui
 		// lisait la valeur, et un appelant marquait alors comme envoyé ce qui
 		// n'était jamais sorti de la machine. Zéro est ce qui s'est passé.
@@ -63,7 +85,13 @@ class BulkTransport extends Transport {
 						'json'        => $messagesPool,
 						'http_errors' => FALSE,
 				] );
-				$sendSuccessful = $sendSuccessful && ( $response->getStatusCode() == 200 );
+				// **Un 200 ne veut pas dire « envoyé ».** L'API par lot répond
+				// 200 en portant un verdict par message : une signature
+				// d'expéditeur non confirmée, une adresse désactivée, un flux
+				// absent s'y lisent message par message, et le code HTTP reste
+				// 200. Ne regarder que lui, c'est enregistrer comme partis des
+				// messages que Postmark vient de refuser un par un.
+				$sendSuccessful = $this->accepted( $response, count( $messagesPool ) ) && $sendSuccessful;
 
 				$messagesPool = [];
 			}
@@ -77,6 +105,88 @@ class BulkTransport extends Transport {
 		return $sendSuccessful
 				? $total
 				: 0;
+	}
+
+	/**
+	 * Est-ce que ce lot a été accepté, en entier ?
+	 *
+	 * Un lot à moitié accepté est traité comme refusé : l'appelant ne saurait
+	 * pas lesquels marquer, et mieux vaut qu'un membre reçoive deux fois
+	 * qu'aucune.
+	 *
+	 * @param \Psr\Http\Message\ResponseInterface $response
+	 * @param int                                  $expected
+	 *
+	 * @return bool
+	 */
+	private function accepted ( $response, $expected ) {
+		$body = (string) $response->getBody();
+
+		if ( $response->getStatusCode() != 200 ) {
+			$this->remember( sprintf( 'HTTP %d — %s', $response->getStatusCode(), $this->firstMessage( $body ) ) );
+
+			return FALSE;
+		}
+
+		$results = json_decode( $body, TRUE );
+
+		// Une réponse qu'on ne sait pas lire ne prouve pas un envoi. On ne la
+		// prend pas pour un succès : le résumé rattrapera.
+		if ( !is_array( $results ) ) {
+			$this->remember( 'réponse illisible de Postmark' );
+
+			return FALSE;
+		}
+
+		$accepted = 0;
+
+		foreach ( $results as $result ) {
+			if ( !is_array( $result ) ) {
+				continue;
+			}
+
+			if ( isset( $result[ 'ErrorCode' ] ) && ( (int) $result[ 'ErrorCode' ] !== 0 ) ) {
+				$this->remember( sprintf(
+						'%s (ErrorCode %d)',
+						isset( $result[ 'Message' ] ) ? $result[ 'Message' ] : 'message refusé',
+						(int) $result[ 'ErrorCode' ]
+				) );
+
+				continue;
+			}
+
+			$accepted++;
+		}
+
+		return $accepted >= $expected;
+	}
+
+	/**
+	 * Le premier refus est le seul retenu : ils se ressemblent tous quand
+	 * c'est la configuration qui est en cause, et une liste de cinq cents
+	 * lignes identiques n'apprend rien de plus.
+	 *
+	 * @param string $error
+	 */
+	private function remember ( $error ) {
+		if ( $this->lastError === NULL ) {
+			$this->lastError = $error;
+		}
+	}
+
+	/**
+	 * @param string $body
+	 *
+	 * @return string
+	 */
+	private function firstMessage ( $body ) {
+		$decoded = json_decode( $body, TRUE );
+
+		if ( is_array( $decoded ) && isset( $decoded[ 'Message' ] ) ) {
+			return (string) $decoded[ 'Message' ];
+		}
+
+		return mb_substr( trim( $body ), 0, 200 ) ?: 'aucune réponse';
 	}
 
 	/**************************************************
