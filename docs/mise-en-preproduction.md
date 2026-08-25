@@ -32,10 +32,23 @@ plateforme envoie est mis en quarantaine**.
       compte déclenche l'indexation. À poser une fois pour toutes :
 
       ```bash
-      sudo chown -R DEPLOYEUR:UTILISATEUR_WEB public/media/cache var/
+      sudo chown -R DEPLOYEUR:UTILISATEUR_WEB public/media/cache var/cache var/log var/files
       sudo apt-get install -y acl
-      sudo setfacl -R -m g:UTILISATEUR_WEB:rwX -m d:g:UTILISATEUR_WEB:rwX public/media/cache var/
+      sudo setfacl -R -m g:UTILISATEUR_WEB:rwX -m d:g:UTILISATEUR_WEB:rwX \
+           public/media/cache var/cache var/log var/files
       ```
+
+      ⚠️ **Ne jamais inclure `var/sessions/` dans ce `chown`.** C'est la seule
+      partie de `var/` où la propriété a un sens à elle seule : le gestionnaire
+      de sessions de PHP refuse de lire un fichier `sess_*` dont le
+      propriétaire n'est pas le processus, quels que soient les droits et les
+      ACL. Chowner ces fichiers au déployeur rend « Failed to start the
+      session » sur **toutes** les pages, y compris celles qu'on croit
+      publiques. Le remède : `rm -f var/sessions/<env>/sess_*`, le serveur web
+      les recrée à son nom — au prix d'une déconnexion générale.
+
+      C'est pour cela que la commande écrit les répertoires un par un plutôt
+      que `var/` en bloc.
 
       **Le `d:` est le point important** : il pose une règle par défaut, si bien
       que tout fichier créé ensuite dans ces répertoires est inscriptible par le
@@ -459,6 +472,33 @@ l'enregistrement se poursuit. La recherche manque alors ce qui n'a pas été
 indexé — `search:reindex:all` le rattrape — mais personne n'est plus empêché
 de se connecter. Les ACL restent la bonne façon de faire ; elles ne sont
 simplement plus un préalable à ce que la plateforme fonctionne.
+
+### Le remède aux droits d'écriture, appliqué un cran trop large
+
+Arrivé le 25 août, en rechargeant les données de test. Le `chown -R` du
+paragraphe précédent avait été passé sur `var/` en entier, `var/sessions/prod`
+compris. Le staging a rendu **500 sur toutes les pages**, avec dans le journal :
+
+```
+Warning: SessionHandler::read(): Session data file is not created by your uid
+Warning: session_start(): Failed to read session data: user
+RuntimeException: Failed to start the session.
+```
+
+Trois choses à retenir, parce qu'aucune ne se devine :
+
+1. **La panne ne ressemble pas à sa cause.** Le répertoire était inscriptible,
+   les ACL posées, `app:preflight` disait « Rien de bloquant » quelques minutes
+   plus tôt. Ce que PHP vérifie sur un fichier de session n'est pas un droit
+   mais un **propriétaire**, et rien dans `ls -l` ne saute aux yeux.
+2. **Elle est totale.** La session est ouverte à chaque requête ; il n'y a donc
+   pas de page épargnée, pas même la page d'accueil ou la connexion.
+3. **Le remède est un `rm`**, pas un `chown` de plus : les sessions sont
+   jetables, le serveur web les recrée à son nom.
+
+`app:preflight` le détecte depuis : il signale un fichier `sess_*` appartenant à
+celui qui lance la console, ce qui n'arrive jamais autrement — aucune commande
+n'ouvre de session.
 
 ### Rattacher un serveur existant au dépôt
 

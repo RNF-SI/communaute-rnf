@@ -255,6 +255,33 @@ class PreflightCommand extends Command {
 				TRUE,
 		];
 
+		// Le répertoire inscriptible ne suffit pas, et c'est le piège : le
+		// gestionnaire de sessions de PHP refuse un fichier `sess_*` dont le
+		// **propriétaire** n'est pas le processus. Ni les droits ni les ACL n'y
+		// changent quoi que ce soit.
+		//
+		// Rien ici ne peut trancher : la console ne sait pas sous quel
+		// utilisateur tourne le serveur web, et en dev les deux sont le même —
+		// des fichiers au nom de la console y sont parfaitement normaux. La
+		// ligne dit donc **qui possède quoi**, et laisse la comparaison à qui
+		// connaît son serveur. C'est déjà tout ce qui manquait le jour où la
+		// panne est arrivée : elle n'était visible nulle part.
+		$owners = $this->sessionFileOwners( $sessionDir );
+
+		$checks[] = [
+				'Propriété des fichiers de session',
+				TRUE,
+				empty( $owners )
+						? sprintf( 'aucun fichier pour l’instant (console : %s)', $this->currentUser() )
+						: sprintf(
+								'%s — doit être l’utilisateur du serveur web, sans quoi « Failed to start '
+								. 'the session » sur toutes les pages (console : %s)',
+								implode( ', ', $owners ),
+								$this->currentUser()
+						),
+				FALSE,
+		];
+
 		$checks[] = [
 				'Assets compilés',
 				file_exists( $this->parameters->get( 'kernel.project_dir' ) . '/public/build/entrypoints.json' ),
@@ -301,6 +328,60 @@ class PreflightCommand extends Command {
 		}
 
 		return sprintf( '%d minute(s)', (int) round( $seconds / 60 ) );
+	}
+
+	/**
+	 * Qui possède les fichiers de session.
+	 *
+	 * Les `sess_*` sont créés par le serveur web, et lui seul — aucune commande
+	 * n'ouvre de session. Les voir appartenir à quelqu'un d'autre veut dire
+	 * qu'un `chown -R` est passé par là : le remède aux droits d'écriture des
+	 * index, appliqué un cran trop large, jusqu'à `var/sessions/`.
+	 *
+	 * La panne qui suit ne ressemble en rien à sa cause — « Failed to start the
+	 * session », sur **toutes** les pages, alors que le répertoire est
+	 * parfaitement inscriptible et les ACL posées.
+	 *
+	 * @param string $directory
+	 *
+	 * @return string[] les noms des propriétaires trouvés, sans doublon
+	 */
+	private function sessionFileOwners ( $directory ) {
+		if ( !is_dir( $directory ) ) {
+			return [];
+		}
+
+		$owners = [];
+
+		foreach ( (array) glob( rtrim( $directory, '/' ) . '/sess_*' ) as $file ) {
+			$uid = @fileowner( $file );
+
+			if ( $uid === FALSE ) {
+				continue;
+			}
+
+			$owners[ $uid ] = $this->userName( $uid );
+		}
+
+		return array_values( $owners );
+	}
+
+	/**
+	 * @return string
+	 */
+	private function currentUser () {
+		return function_exists( 'posix_geteuid' ) ? $this->userName( posix_geteuid() ) : 'inconnu';
+	}
+
+	/**
+	 * @param int $uid
+	 *
+	 * @return string
+	 */
+	private function userName ( $uid ) {
+		$entry = function_exists( 'posix_getpwuid' ) ? posix_getpwuid( $uid ) : NULL;
+
+		return !empty( $entry[ 'name' ] ) ? $entry[ 'name' ] : (string) $uid;
 	}
 
 	/**
