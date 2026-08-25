@@ -25,6 +25,10 @@ parameters:
   # d'environnement puisse vérifier qu'il est accessible en écriture. (#14)
   search_index_dir: "%env(string:INDEX_DIR)%"
 
+  # Durée de la session, exposée pour la même raison : c'est très exactement la
+  # durée pendant laquelle on reste connecté, et rien ne la rattrape.
+  session_lifetime: "%env(int:SESSION_LIFETIME)%"
+
   google_recaptcha_site_key: "%env(GOOGLE_RECAPTCHA_SITE_KEY)%"
   google_recaptcha_secret_key: "%env(GOOGLE_RECAPTCHA_SECRET_KEY)%"
 
@@ -76,6 +80,13 @@ services:
 
   App\EventSubscriber\UserLocaleSubscriber:
     arguments: ["%kernel.default_locale%"]
+
+  # Le rappel du cookie de session lit les réglages de framework.yaml, et pas
+  # les ini de PHP : le cookie qu'il repose doit avoir exactement la portée de
+  # celui que PHP avait posé, sinon le navigateur en garde deux.
+  App\EventSubscriber\SessionCookieRefreshSubscriber:
+    arguments:
+      $options: "%session.storage.options%"
 
   # L'export « Liens utilisateurs-réserves » de GeoNature demande un jeton.
   # Sans lui le service se tait et le champ reste saisi à la main. (#28)

@@ -80,7 +80,42 @@ POSTMARK_SENDER=noreply@rnfrance.org        # vide = les demandes d'adhésion
 POSTMARK_SERVER_TOKEN=…                     # échouent (cf. #4)
 POSTMARK_BULK_TOKEN=…                       # vide = aucun e-mail de discussion,
                                             # silencieusement
+
+SESSION_LIFETIME=2592000                    # 30 jours. C'est la durée pendant
+                                            # laquelle on reste connecté, et
+                                            # rien ne la rattrape.
 ```
+
+### Rester connecté
+
+Toute l'authentification tient dans la session PHP : il n'y a ni « remember
+me » ni jeton persistant. Ce que règle `SESSION_LIFETIME` est donc, très
+exactement, la durée pendant laquelle on reste connecté.
+
+Ce qui déconnectait la préproduction toutes les vingt minutes : rien n'était
+réglé, et PHP décidait seul. Son `session.gc_maxlifetime` vaut 1440 secondes —
+vingt-quatre minutes — et son `save_path` désigne un répertoire partagé avec les
+autres sites de la machine (souvent `/var/lib/php/sessions`), que Debian et
+Ubuntu balaient par un cron réglé sur le `php.ini` **de la CLI** et non sur
+celui du serveur web. Un voisin réglé plus court effaçait nos fichiers de
+session. Rien n'apparaissait dans les journaux : du point de vue de
+l'application, la personne n'avait simplement plus de session.
+
+La plateforme écrit maintenant ses sessions dans `var/sessions/<environnement>`
+et fait son propre ramassage. Deux conséquences au déploiement :
+
+- **Le serveur web doit pouvoir écrire dans `var/`.** C'est lui qui crée le
+  répertoire, à la première requête. `app:preflight` le vérifie et bloque si
+  ce n'est pas le cas — personne ne pourrait se connecter.
+- **Tout le monde est déconnecté une fois**, au moment du déploiement : les
+  sessions en cours vivent dans l'ancien répertoire. Une seule fois, jamais
+  ensuite.
+
+L'échéance du cookie est repoussée à chaque visite
+(`SessionCookieRefreshSubscriber`) : les trente jours se comptent depuis la
+dernière page vue, non depuis la connexion. Sans cela PHP n'émet le cookie
+qu'en créant la session, et quelqu'un qui vient tous les jours serait tout de
+même déconnecté au trentième.
 
 ### Volume : ce que ça représente vraiment
 
@@ -125,8 +160,9 @@ php bin/console app:preflight
 Elle contrôle tout ce dont l'absence provoque une panne **silencieuse** plutôt
 qu'une erreur : l'extension `imagick`, les migrations restantes, `SITE_HOST`,
 les trois jetons Postmark, `config/platform/config.yaml`, les répertoires de
-fichiers, et la présence des assets compilés — donc que `npm run build` n'a pas
-échoué faute d'une version de Node compatible.
+fichiers, la durée de session et le répertoire où elles s'écrivent, et la
+présence des assets compilés — donc que `npm run build` n'a pas échoué faute
+d'une version de Node compatible.
 
 Elle sort en erreur sur ce qui empêche l'application de fonctionner, et signale
 en « attention » ce qui la laisse tourner en silence.

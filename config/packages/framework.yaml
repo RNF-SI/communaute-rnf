@@ -6,10 +6,44 @@ framework:
 
     # Enables session support. Note that the session will ONLY be started if you read or write from it.
     # Remove or comment this section to explicitly disable session support.
+    #
+    # Toute l'authentification tient dans cette session : ni « remember me »,
+    # ni jeton persistant. Ce qui est réglé ici est donc exactement la durée
+    # pendant laquelle on reste connecté, et rien d'autre ne la rattrape.
     session:
-        handler_id: null
+        # Notre propre répertoire, et notre propre ramassage.
+        #
+        # `handler_id: null` laissait PHP décider : son `save_path` (souvent
+        # /var/lib/php/sessions, partagé avec les autres sites de la machine)
+        # et son `gc_maxlifetime` (1440 s — vingt-quatre minutes). Sur Debian
+        # et Ubuntu, un cron balaie ce répertoire selon le php.ini *de la CLI*,
+        # pas celui du serveur web : un voisin réglé plus court effaçait nos
+        # fichiers de session. D'où les déconnexions au bout de quelques
+        # minutes d'inactivité, sans rien dans les journaux.
+        handler_id: session.handler.native_file
+        save_path: '%kernel.project_dir%/var/sessions/%kernel.environment%'
+        # Surtout pas %kernel.cache_dir% : `cache:clear` déconnecterait tout le
+        # monde à chaque déploiement.
+
         cookie_secure: auto
         cookie_samesite: lax
+        # Sans durée, le cookie meurt à la fermeture du navigateur : fermer
+        # l'onglet déconnectait. Trente jours, et `SessionCookieRefreshSubscriber`
+        # repousse l'échéance à chaque page vue — PHP, lui, n'émet le cookie
+        # qu'en créant la session, si bien que le délai serait sinon compté
+        # depuis la connexion et non depuis la dernière visite.
+        cookie_lifetime: '%env(int:SESSION_LIFETIME)%'
+        cookie_httponly: true
+
+        # Le fichier de session doit survivre au moins aussi longtemps que le
+        # cookie qui le désigne, sinon on présente un cookie valide pour une
+        # session déjà ramassée — et on est déconnecté sans comprendre.
+        gc_maxlifetime: '%env(int:SESSION_LIFETIME)%'
+        # Debian met gc_probability à 0 et confie le ménage à son cron, qui ne
+        # connaît pas notre répertoire. À nous de ramasser : une requête sur
+        # mille.
+        gc_probability: 1
+        gc_divisor: 1000
 
     #esi: true
     #fragments: true

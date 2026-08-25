@@ -32,7 +32,7 @@ cite toutes : une commande ajoutée sans être documentée fait échouer la suit
 Vérifie, sur la machine qui fera tourner la plateforme, tout ce dont l'absence
 provoque une panne **silencieuse** plutôt qu'une erreur : extension manquante,
 jeton vide, hôte de routeur absent, répertoire non inscriptible, migrations en
-retard.
+retard, durée de session trop courte.
 
 N'écrit rien. Sort en code 1 s'il reste une vérification bloquante en échec.
 

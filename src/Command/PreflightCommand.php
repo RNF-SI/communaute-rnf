@@ -217,6 +217,44 @@ class PreflightCommand extends Command {
 				TRUE,
 		];
 
+		// Toute l'authentification tient dans la session : il n'y a ni
+		// « remember me » ni jeton persistant. Une session trop courte, ou un
+		// répertoire que le serveur web ne peut pas écrire, et l'on est
+		// déconnecté sans que rien n'apparaisse dans les journaux.
+		$lifetime = (int) $this->parameters->get( 'session_lifetime' );
+
+		$checks[] = [
+				'Durée de session',
+				$lifetime >= 3600,
+				$lifetime === 0
+						? 'non réglée — PHP décide, souvent 24 minutes d’inactivité'
+						: sprintf(
+								'%s (SESSION_LIFETIME=%d)',
+								$this->humanDuration( $lifetime ),
+								$lifetime
+						),
+				FALSE,
+		];
+
+		// Le répertoire n'existe pas encore au premier déploiement : c'est la
+		// première requête web qui le crée. Ce qui compte est donc de savoir
+		// si le serveur web y arrivera — d'où la remontée jusqu'au premier
+		// parent existant.
+		$sessionDir = (string) $this->parameters->get( 'session.save_path' );
+		$sessionOk  = is_writable( $this->nearestExistingDirectory( $sessionDir ) );
+
+		$checks[] = [
+				'Écriture des sessions',
+				$sessionOk,
+				$sessionOk
+						? ( is_dir( $sessionDir ) ? $sessionDir : $sessionDir . ' (sera créé)' )
+						: sprintf(
+								'%s non inscriptible — personne ne pourra se connecter',
+								$sessionDir
+						),
+				TRUE,
+		];
+
 		$checks[] = [
 				'Assets compilés',
 				file_exists( $this->parameters->get( 'kernel.project_dir' ) . '/public/build/entrypoints.json' ),
@@ -227,6 +265,42 @@ class PreflightCommand extends Command {
 		];
 
 		return $checks;
+	}
+
+	/**
+	 * @param string $path
+	 *
+	 * @return string the first ancestor of $path that exists, $path included
+	 */
+	private function nearestExistingDirectory ( $path ) {
+		while ( !is_dir( $path ) ) {
+			$parent = dirname( $path );
+
+			if ( $parent === $path ) {
+				return $path;
+			}
+
+			$path = $parent;
+		}
+
+		return $path;
+	}
+
+	/**
+	 * @param int $seconds
+	 *
+	 * @return string
+	 */
+	private function humanDuration ( $seconds ) {
+		if ( $seconds >= 86400 ) {
+			return sprintf( '%d jour(s)', (int) round( $seconds / 86400 ) );
+		}
+
+		if ( $seconds >= 3600 ) {
+			return sprintf( '%d heure(s)', (int) round( $seconds / 3600 ) );
+		}
+
+		return sprintf( '%d minute(s)', (int) round( $seconds / 60 ) );
 	}
 
 	/**

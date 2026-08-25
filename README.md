@@ -106,6 +106,11 @@ POSTMARK_BULK_TOKEN=
 SECURE_SCHEME=https  # Force HTTPS en production
 TRUSTED_PROXIES=127.0.0.1  # Si derrière un proxy
 
+# Durée de la session, en secondes — c'est-à-dire la durée pendant laquelle on
+# reste connecté : toute l'authentification tient dans la session PHP, rien ne
+# rattrape son expiration. 2592000 = 30 jours, repoussés à chaque visite.
+SESSION_LIFETIME=2592000
+
 # Authentification RNF (optionnelle)
 RNF_AUTH_API_ENDPOINT=https://geonature.reserves-naturelles.org
 RNF_AUTH_ID_APPLICATION=14
