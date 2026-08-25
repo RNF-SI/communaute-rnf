@@ -2,6 +2,7 @@
 
 namespace App\Tests\Security;
 
+use App\Entity\Article;
 use App\Entity\Document;
 use App\Entity\Page;
 use App\Entity\User;
@@ -139,6 +140,26 @@ class ContentEditRightsTest extends WebTestCase {
 	}
 
 	/**
+	 * @param \App\Entity\User $author
+	 *
+	 * @return \App\Entity\Article
+	 */
+	private function article ( User $author ) {
+		$article = new Article();
+		$article->setTitle( 'Compte rendu' );
+		$article->setSlug( 'compte-rendu-' . uniqid() );
+		$article->setBody( '<p>Bonjour</p>' );
+		$article->setUsergroup( $this->group );
+		$article->setAuthor( $author );
+		$article->setCreatedAt( new DateTime() );
+
+		$this->manager->persist( $article );
+		$this->manager->flush();
+
+		return $article;
+	}
+
+	/**
 	 * @param \App\Entity\User $user
 	 */
 	private function logIn ( User $user ) {
@@ -178,6 +199,15 @@ class ContentEditRightsTest extends WebTestCase {
 	 */
 	private function documentEditUrl ( Document $document ) {
 		return '/groups/' . $this->group->getSlug() . '/documents/' . $document->getId() . '/edit';
+	}
+
+	/**
+	 * @param \App\Entity\Article $article
+	 *
+	 * @return string
+	 */
+	private function articleEditUrl ( Article $article ) {
+		return '/groups/' . $this->group->getSlug() . '/articles/' . $article->getSlug() . '/edit';
 	}
 
 	/**************************************************
@@ -264,6 +294,68 @@ class ContentEditRightsTest extends WebTestCase {
 		$this->assertEquals(
 				200,
 				$this->statusOf( '/groups/' . $this->group->getSlug() . '/documents/new' )
+		);
+	}
+
+	/**************************************************
+	 * ACTUALITÉS
+	 *
+	 * C'est d'elles que la règle vient : les pages et les documents s'y sont
+	 * rangés. Elles n'étaient pourtant contrôlées nulle part — la règle qui
+	 * sert de référence était la seule à n'avoir aucun test.
+	 **************************************************/
+
+	public function testTheAuthorOfAnArticleCanEditIt () {
+		$author = $this->user();
+
+		$this->logIn( $author );
+
+		$this->assertEquals( 200, $this->statusOf( $this->articleEditUrl( $this->article( $author ) ) ) );
+	}
+
+	public function testAnotherMemberCannotEditAnArticle () {
+		$article = $this->article( $this->user() );
+
+		$this->logIn( $this->user() );
+
+		$this->assertEquals(
+				403,
+				$this->statusOf( $this->articleEditUrl( $article ) ),
+				'Assert what a group publishes is not rewritable by anybody who happens to be a member'
+		);
+	}
+
+	public function testAnAnimatorCanEditAnyArticle () {
+		$article = $this->article( $this->user() );
+
+		$this->logIn( $this->user( UsergroupMembership::ROLE_ADMIN ) );
+
+		$this->assertEquals(
+				200,
+				$this->statusOf( $this->articleEditUrl( $article ) ),
+				'Assert animating a group still means being able to fix what it announces'
+		);
+	}
+
+	public function testSomebodyOutsideTheGroupCannotEditAnArticle () {
+		$article = $this->article( $this->user() );
+
+		$this->logIn( $this->user( UsergroupMembership::ROLE_USER, FALSE ) );
+
+		$this->assertEquals(
+				403,
+				$this->statusOf( $this->articleEditUrl( $article ) ),
+				'Assert a public group is readable by anyone, and writable by its members'
+		);
+	}
+
+	public function testAMemberCanStillWriteAnArticle () {
+		$this->logIn( $this->user() );
+
+		$this->assertEquals(
+				200,
+				$this->statusOf( '/groups/' . $this->group->getSlug() . '/articles/new' ),
+				'Assert restricting the edition did not close the writing'
 		);
 	}
 
