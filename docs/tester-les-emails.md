@@ -243,6 +243,31 @@ Trois façons de s'en prémunir, à combiner :
    propres jetons. Les rebonds n'affectent alors pas la réputation du serveur de
    production.
 
+## Un envoi enregistré n'est pas un envoi reçu
+
+Le cas à connaître, parce qu'il ne laisse aucune trace d'erreur. Une
+notification en **e-mail immédiat** part par `ContentSender`, donc par le
+transport en lot, donc avec `POSTMARK_BULK_TOKEN` — pas avec le jeton du
+résumé. Ce transport ne lève pas quand il ne peut rien faire : sans jeton il se
+tait, et Postmark qui refuse un lot rend simplement zéro.
+
+Cette valeur était jetée, si bien que la notification était marquée
+`emailed_at` alors que rien n'était sorti de la machine — et le résumé, qui
+devait rattraper, ne la reprenait plus. Corrigé : ce qui n'est pas remis n'est
+plus marqué.
+
+Pour voir où on en est sur un serveur :
+
+```bash
+php bin/console doctrine:query:sql \
+  "select by_email, rhythm, count(*) n, sum(emailed_at is null) en_attente, max(created_at) derniere
+   from communaute_rnf_notifications group by by_email, rhythm"
+```
+
+Des lignes `rhythm = immediate` avec `en_attente = 0` disent que la plateforme
+**a cru** envoyer. Si rien n'est arrivé, c'est le jeton en lot qu'il faut
+regarder — `app:mail:check` l'éprouve pour de vrai.
+
 ## Ce qui ne se teste qu'en ligne
 
 Trois choses ne peuvent pas être vérifiées en local, quel que soit l'outil :

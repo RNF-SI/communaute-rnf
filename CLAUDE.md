@@ -430,6 +430,20 @@ plateforme. `NotificationSender` marque `emailedAt` sur ce qui vient de partir
 pour que le résumé ne le reprenne pas ; si le transport refuse, rien n'est
 marqué et le résumé rattrape.
 
+**Un transport n'échoue pas seulement en levant.** Il rend un nombre — zéro
+quand Postmark refuse le lot —, et sans jeton il ne fait rien du tout.
+`ContentSender` jetait cette valeur : tout ce qu'on lui confiait était marqué
+comme parti, et le résumé ne rattrapait jamais. Une préproduction au
+`POSTMARK_BULK_TOKEN` vide enregistrait ainsi des envois qui n'avaient pas eu
+lieu, sans que rien ne le signale. Le compte remis doit donc être **lu**, et un
+lot partiellement remis vaut un lot refusé : mieux vaut recevoir deux fois
+qu'aucune. `BulkTransport` rend `0` sans jeton, jamais `TRUE` — une valeur
+« vraie » se lit « réussi ».
+
+Corollaire à ne pas perdre : **le contenu à chaud emprunte le jeton *bulk***,
+pas celui du résumé. Les deux peuvent diverger, et c'est le cas le plus
+trompeur — le résumé arrive, les publications non.
+
 Le changement de défaut ne se voit pas tout seul : la migration pose
 `noticePending` sur les comptes existants, `components/notifications-notice`
 l'annonce une fois, et personne ne repose le drapeau — les inscrits d'après ne

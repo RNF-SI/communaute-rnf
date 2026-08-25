@@ -167,6 +167,69 @@ class ContentSenderTest extends TestCase {
 		);
 	}
 
+	/**
+	 * Un transport qui ne lève pas, et n'envoie rien.
+	 *
+	 * @param int|bool $answer ce que rend sendMultiple()
+	 *
+	 * @return \App\Postmark\BulkTransport
+	 */
+	private function muteTransport ( $answer ) {
+		$transport = $this->createMock( BulkTransport::class );
+		$transport->method( 'sendMultiple' )->willReturn( $answer );
+
+		return $transport;
+	}
+
+	/**
+	 * **Le cas qui a fait croire à une panne d'e-mail sur la préproduction.**
+	 *
+	 * Un transport n'échoue pas seulement en levant. Postmark qui refuse le
+	 * lot rend zéro ; un POSTMARK_BULK_TOKEN vide rend TRUE sans avoir rien
+	 * envoyé. Cette valeur était jetée, si bien que des notifications jamais
+	 * sorties de la machine étaient marquées comme parties — et le résumé,
+	 * qui devait rattraper, ne les reprenait plus.
+	 *
+	 * @dataProvider muteAnswers
+	 *
+	 * @param int|bool $answer
+	 */
+	public function testATransportThatSendsNothingMarksNothing ( $answer ) {
+		$done = $this->sender( $this->muteTransport( $answer ) )
+					 ->sendNow( [ $this->notification( $this->group() ) ] );
+
+		$this->assertSame(
+				[],
+				$done,
+				'Assert what never left is left for the summary, whatever shape the refusal takes'
+		);
+	}
+
+	/**
+	 * @return array
+	 */
+	public function muteAnswers () {
+		return [
+				'Postmark refuse le lot' => [ 0 ],
+				'aucun jeton configuré'  => [ TRUE ],
+		];
+	}
+
+	/**
+	 * Un lot partiellement remis n'est pas un lot remis : on préfère qu'un
+	 * membre reçoive deux fois plutôt qu'aucune fois.
+	 */
+	public function testAPartialBatchIsNotTakenForASuccess () {
+		$transport = $this->muteTransport( 1 );
+
+		$done = $this->sender( $transport )->sendNow( [
+				$this->notification( $this->group(), 'un@rnfrance.org' ),
+				$this->notification( $this->group(), 'deux@rnfrance.org' ),
+		] );
+
+		$this->assertSame( [], $done );
+	}
+
 	public function testATransportThatFailsMarksNothing () {
 		$done = $this->sender( $this->failingTransport() )
 					 ->sendNow( [ $this->notification( $this->group() ) ] );

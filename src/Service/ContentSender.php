@@ -136,12 +136,23 @@ class ContentSender {
 		}
 
 		try {
-			$this->transport->sendMultiple( $messages );
+			$delivered = $this->transport->sendMultiple( $messages );
 		}
 		catch ( Throwable $e ) {
 			// Un transport muet ne doit pas faire échouer la création du
 			// contenu : la notification reste sur la plateforme, et elle
 			// repartira dans le résumé puisqu'elle n'aura pas été marquée.
+			return [];
+		}
+
+		// **Un transport ne se contente pas de lever quand il échoue.** Il
+		// rend un nombre — zéro si Postmark a refusé le lot — et, jeton
+		// absent, il rend TRUE sans avoir rien envoyé. Cette valeur était
+		// jetée : tout ce qu'on lui avait confié était alors marqué comme
+		// parti, et le résumé ne le reprenait jamais. Une préproduction sans
+		// POSTMARK_BULK_TOKEN enregistrait ainsi des envois qui n'avaient pas
+		// eu lieu — le pire des cas, puisque rien ne le signalait.
+		if ( !is_int( $delivered ) || ( $delivered < count( $messages ) ) ) {
 			return [];
 		}
 

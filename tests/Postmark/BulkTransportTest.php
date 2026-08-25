@@ -34,12 +34,25 @@ class BulkTransportTest extends TestCase {
 	}
 
 	/**
-	 * Sans jeton, le transport se tait depuis toujours — et continue de le
-	 * faire, lot vide ou non.
+	 * Sans jeton, le transport se tait — et le **dit**.
+	 *
+	 * Il rendait TRUE, ce qui se lit « réussi » chez qui regarde la valeur.
+	 * ContentSender marquait alors comme parties des notifications qui
+	 * n'étaient jamais sorties de la machine, et le résumé, qui devait les
+	 * rattraper, ne les reprenait plus. Sur une préproduction dont le
+	 * POSTMARK_BULK_TOKEN est vide, cela donne des envois enregistrés que
+	 * personne n'a reçus — et rien pour le signaler.
+	 *
+	 * Zéro est ce qui s'est passé.
 	 */
-	public function testAnEmptyBatchIsHarmlessWithoutAToken () {
+	public function testWithoutATokenNothingIsSentAndTheCountSaysSo () {
 		$transport = new BulkTransport( '' );
 
-		self::assertTrue( $transport->sendMultiple( [] ) );
+		self::assertSame( 0, $transport->sendMultiple( [] ) );
+		self::assertSame(
+				0,
+				$transport->sendMultiple( [ new \Swift_Message( 'Objet' ) ] ),
+				'Assert a mute transport never reports a delivery it did not make'
+		);
 	}
 }

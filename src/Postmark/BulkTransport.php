@@ -13,8 +13,11 @@ class BulkTransport extends Transport {
 	 * @return bool|int
 	 */
 	public function sendMultiple ( array $messages ) {
+		// Sans jeton, rien ne part. Rendre TRUE le disait « réussi » à qui
+		// lisait la valeur, et un appelant marquait alors comme envoyé ce qui
+		// n'était jamais sorti de la machine. Zéro est ce qui s'est passé.
 		if ( empty( $this->serverToken ) ) {
-			return TRUE;
+			return 0;
 		}
 
 		// Un lot vide n'est pas une anomalie : personne n'attendait cet e-mail.
