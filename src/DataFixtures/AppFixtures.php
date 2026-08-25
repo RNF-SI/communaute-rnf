@@ -557,8 +557,13 @@ class AppFixtures extends Fixture {
 			/**
 			 * ARTICLES
 			 */
-			for ( $j = 0, $n = rand( 2, 4 ); $j < $n; $j++ ) {
-				$news = NetworkContent::pick( NetworkContent::ARTICLES, ( $i * 2 ) + $j );
+			// Le pas est de cinq, et non de deux : deux groupes voisins
+			// tombaient sur presque la même paire d'actualités, si bien qu'en
+			// parcourant la plateforme on croyait à un bug d'affichage. Cinq
+			// et vingt-quatre étant premiers entre eux, il faut faire tout le
+			// tour de la liste avant de retomber sur le même début.
+			for ( $j = 0, $n = rand( 3, 5 ); $j < $n; $j++ ) {
+				$news = NetworkContent::pick( NetworkContent::ARTICLES, ( $i * 5 ) + $j );
 
 				$article = new Article();
 				$article->setTitle( mb_substr( $news[ 'title' ], 0, 100 ) );
@@ -706,7 +711,10 @@ class AppFixtures extends Fixture {
 			$page->setUsergroup( $group );
 			$page->setAuthor( $authors[ $rank % count( $authors ) ] );
 			$page->setBody( NetworkContent::body( $definition[ 'body' ] ) );
-			$page->setCreatedAt( new \DateTime( sprintf( '-%d days', 60 - $rank ) ) );
+			$page->setCreatedAt( new \DateTime( sprintf(
+					'-%d days',
+					4 + ( ( count( NetworkContent::COMMUNITY_PAGES ) - 1 - $rank ) * 3 )
+			) ) );
 			$page->setIsImportant( $rank === 0 );
 
 			$manager->persist( $page );
@@ -716,7 +724,13 @@ class AppFixtures extends Fixture {
 		 * DISCUSSIONS
 		 */
 		foreach ( NetworkContent::COMMUNITY_DISCUSSIONS as $rank => $thread ) {
-			$openedAt = new \DateTime( sprintf( '-%d days', 50 - ( $rank * 7 ) ) );
+			// Comme pour les actualités : l'écart se compte depuis la fin de
+			// la liste, pour qu'en ajouter une n'envoie pas la suivante dans
+			// le futur.
+			$openedAt = new \DateTime( sprintf(
+					'-%d days',
+					5 + ( ( count( NetworkContent::COMMUNITY_DISCUSSIONS ) - 1 - $rank ) * 7 )
+			) );
 
 			$discussion = new Discussion();
 			$discussion->setUuid( Uuid::uuid4() );
@@ -747,7 +761,15 @@ class AppFixtures extends Fixture {
 
 		/**
 		 * ACTUALITÉS
+		 *
+		 * La dernière écrite est la plus récente, et l'écart se compte depuis
+		 * la fin de la liste : une date posée depuis le début — « 40 jours
+		 * moins six par rang » — repassait dans le futur, puis fabriquait un
+		 * « --2 days » que DateTime refuse, dès que la liste s'allongeait.
+		 * Ainsi, en ajouter une n'oblige à rien recalculer.
 		 */
+		$newsCount = count( NetworkContent::COMMUNITY_ARTICLES );
+
 		foreach ( NetworkContent::COMMUNITY_ARTICLES as $rank => $news ) {
 			$article = new Article();
 			$article->setTitle( mb_substr( $news[ 'title' ], 0, 100 ) );
@@ -755,7 +777,9 @@ class AppFixtures extends Fixture {
 			$article->setUsergroup( $group );
 			$article->setAuthor( $authors[ $rank % count( $authors ) ] );
 			$article->setBody( NetworkContent::body( $news[ 'body' ] ) );
-			$article->setCreatedAt( new \DateTime( sprintf( '-%d days', 40 - ( $rank * 6 ) ) ) );
+			$article->setCreatedAt( new \DateTime(
+					sprintf( '-%d days', 2 + ( ( $newsCount - 1 - $rank ) * 6 ) )
+			) );
 
 			$manager->persist( $article );
 		}
@@ -777,7 +801,10 @@ class AppFixtures extends Fixture {
 			$document->setDescription( $reference[ 'description' ] );
 			$document->setUsergroup( $group );
 			$document->setUser( $authors[ $rank % count( $authors ) ] );
-			$document->setCreatedAt( new \DateTime( sprintf( '-%d days', 45 - ( $rank * 4 ) ) ) );
+			$document->setCreatedAt( new \DateTime( sprintf(
+					'-%d days',
+					3 + ( ( count( NetworkContent::COMMUNITY_DOCUMENTS ) - 1 - $rank ) * 4 )
+			) ) );
 
 			// Les deux premiers sont rangés et étiquetés : de quoi éprouver
 			// dossier et filtre dès le groupe où l'on arrive.
@@ -1065,6 +1092,17 @@ class AppFixtures extends Fixture {
 		$deMembre->setCreatedAt( new \DateTime() );
 		$manager->persist( $deMembre );
 
+		/**
+		 * ACTUALITÉS
+		 *
+		 * Trois, et non une seule. Une actualité isolée montre bien la page
+		 * d'une actualité, mais rien de ce qui fait la liste : ni l'ordre —
+		 * la plus récente en tête —, ni la règle de #33, qui ne se voit qu'en
+		 * comparant deux actualités de deux auteurs différents.
+		 *
+		 * Celle du référent garde son titre, « Actualité de test » : c'est
+		 * celui que la recette nomme.
+		 */
 		$article = new Article();
 		$article->setTitle( 'Actualité de test' );
 		$article->setSlug( $this->slugGenerator->generateSlug( 'Actualite de test ' . $group->getSlug(), Article::class, 'slug' ) );
@@ -1073,6 +1111,63 @@ class AppFixtures extends Fixture {
 		$article->setBody( NetworkContent::body( NetworkContent::pick( NetworkContent::ARTICLES, 0 )[ 'body' ] ) );
 		$article->setCreatedAt( new \DateTime() );
 		$manager->persist( $article );
+
+		// Rédigée par un membre ordinaire, comme la page plus haut : son
+		// auteur la modifie, un autre membre ne peut pas, un animateur le
+		// peut. Sans elle, la règle de #33 ne s'éprouvait que sur les pages
+		// et les documents — alors qu'elle vient des actualités. (#33)
+		$deMembreArticle = new Article();
+		$deMembreArticle->setTitle( 'Actualité rédigée par un membre' );
+		$deMembreArticle->setSlug( $this->slugGenerator->generateSlug(
+				'Actualite redigee par un membre ' . $group->getSlug(),
+				Article::class,
+				'slug'
+		) );
+		$deMembreArticle->setUsergroup( $group );
+		$deMembreArticle->setAuthor( $member );
+		$deMembreArticle->setBody( NetworkContent::body( [
+				'Nous avons reçu la visite de deux collègues venus voir notre dispositif de suivi des mares. La journée a été plus utile pour nous que pour eux : expliquer une méthode oblige à s’apercevoir de ce qu’on n’avait jamais justifié.',
+				'Si d’autres équipes veulent venir, la période la plus parlante se situe entre avril et juin. Écrivez-moi, nous nous arrangerons.',
+		] ) );
+		$deMembreArticle->setCreatedAt( new \DateTime( '-6 days' ) );
+		$manager->persist( $deMembreArticle );
+
+		// Datée de l'an dernier pour de bon, et non de « plusieurs semaines » :
+		// la liste a un ordre, et l'on voit qu'une actualité vieillit sans
+		// disparaître.
+		$ancienne = new Article();
+		$ancienne->setTitle( 'Actualité de l’an dernier' );
+		$ancienne->setSlug( $this->slugGenerator->generateSlug(
+				'Actualite de l an dernier ' . $group->getSlug(),
+				Article::class,
+				'slug'
+		) );
+		$ancienne->setUsergroup( $group );
+		$ancienne->setAuthor( $referent );
+		$ancienne->setBody( NetworkContent::body( NetworkContent::pick( NetworkContent::ARTICLES, 3 )[ 'body' ] ) );
+		$ancienne->setCreatedAt( new \DateTime( '-13 months' ) );
+		$manager->persist( $ancienne );
+
+		// Les notifications posées plus haut parlent toutes d'une discussion :
+		// la page des notifications ne montrait donc qu'une seule des quatre
+		// catégories, et le réglage « actualités » n'avait rien à côté de quoi
+		// se lire. (#34, #38)
+		if ( $group->getSlug() === self::REFERENCE_GROUP ) {
+			$parue = new Notification();
+			$parue->setRecipient( $member );
+			$parue->setAuthor( $referent );
+			$parue->setUsergroup( $group );
+			$parue->setType( Notification::ARTICLE_CREATE );
+			$parue->setTitle( $article->getTitle() );
+			$parue->setUrl( sprintf(
+					'/groups/%s/articles/%s',
+					$group->getSlug(),
+					$article->getSlug()
+			) );
+			$parue->setCreatedAt( new \DateTime( '-1 hour' ) );
+			$parue->setByEmail( FALSE );
+			$manager->persist( $parue );
+		}
 
 		// Une arborescence de dossiers, pour éprouver le classement. (#8)
 		$racine = new DocumentFolder();

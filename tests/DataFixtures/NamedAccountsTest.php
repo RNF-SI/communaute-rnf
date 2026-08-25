@@ -71,37 +71,37 @@ class NamedAccountsTest extends TestCase {
 	}
 
 	public function testAnAccountPublishesAPhoneNumber () {
-		$this->assertGreaterThan( 0, $this->howMany( function ( array $profile ) {
+		$this->assertGreaterThan( 0, $this->count( function ( array $profile ) {
 			return !empty( $profile[ 'phone' ] );
 		} ), 'Assert the phone number of #27 can be seen without filling a profile first' );
 	}
 
 	public function testAnAccountKeepsItsAddressVisible () {
-		$this->assertGreaterThan( 0, $this->howMany( function ( array $profile ) {
+		$this->assertGreaterThan( 0, $this->count( function ( array $profile ) {
 			return !empty( $profile ) && !$this->hidesAddress( $profile );
 		} ), 'Assert the default — an address anybody can read — is represented' );
 	}
 
 	public function testAnAccountHidesItsAddress () {
-		$this->assertGreaterThan( 0, $this->howMany( function ( array $profile ) {
+		$this->assertGreaterThan( 0, $this->count( function ( array $profile ) {
 			return $this->hidesAddress( $profile );
 		} ), 'Assert the opt-out of #27 is represented too' );
 	}
 
 	public function testAnAccountShowsNoContactDetailAtAll () {
-		$this->assertGreaterThan( 0, $this->howMany( function ( array $profile ) {
+		$this->assertGreaterThan( 0, $this->count( function ( array $profile ) {
 			return $this->hidesAddress( $profile ) && empty( $profile[ 'phone' ] );
 		} ), 'Assert the silent profile exists, the one that must not read as a bug' );
 	}
 
 	public function testAnAccountShowsAPhoneButNoAddress () {
-		$this->assertGreaterThan( 0, $this->howMany( function ( array $profile ) {
+		$this->assertGreaterThan( 0, $this->count( function ( array $profile ) {
 			return $this->hidesAddress( $profile ) && !empty( $profile[ 'phone' ] );
 		} ), 'Assert the two halves of the choice are both represented' );
 	}
 
 	public function testAnAccountCarriesTheThreeJobFields () {
-		$this->assertGreaterThan( 0, $this->howMany( function ( array $profile ) {
+		$this->assertGreaterThan( 0, $this->count( function ( array $profile ) {
 			return !empty( $profile[ 'jobTitle' ] )
 				   && !empty( $profile[ 'organisation' ] )
 				   && !empty( $profile[ 'reserves' ] );
@@ -113,11 +113,11 @@ class NamedAccountsTest extends TestCase {
 	 * jamais disparaître le bouton « Écrire » sur une fiche.
 	 */
 	public function testABoxIsClosedAndTheOthersAreOpen () {
-		$closed = $this->howMany( function ( array $profile ) {
+		$closed = $this->count( function ( array $profile ) {
 			return array_key_exists( 'messages', $profile ) && ( $profile[ 'messages' ] === FALSE );
 		} );
 
-		$open = $this->howMany( function ( array $profile ) {
+		$open = $this->count( function ( array $profile ) {
 			return !empty( $profile ) && !array_key_exists( 'messages', $profile );
 		} );
 
@@ -126,7 +126,7 @@ class NamedAccountsTest extends TestCase {
 	}
 
 	public function testAnAccountIsLeftBlank () {
-		$this->assertGreaterThan( 0, $this->howMany( function ( array $profile ) {
+		$this->assertGreaterThan( 0, $this->count( function ( array $profile ) {
 			return $profile === [];
 		} ), 'Assert an untouched profile is seeded, so its rendering can be checked' );
 	}
@@ -261,6 +261,75 @@ class NamedAccountsTest extends TestCase {
 					'Assert walking past the end of a list starts over rather than failing'
 			);
 		}
+	}
+
+	/**
+	 * Les actualités sont tirées de la liste par pas de cinq : le groupe n° i
+	 * prend les entrées i×5, i×5+1… Deux propriétés font que la plateforme ne
+	 * se répète pas — la liste est assez longue pour qu'un groupe ne prenne
+	 * jamais deux fois la même, et cinq est premier avec sa longueur, sans
+	 * quoi les groupes se partageraient un cinquième de la liste et le reste
+	 * ne s'afficherait nulle part.
+	 *
+	 * Changer la longueur de la liste sans y penser suffirait à ramener l'un
+	 * ou l'autre.
+	 */
+	public function testTheNewsFillAGroupWithoutRepeatingThemselves () {
+		$count = count( NetworkContent::ARTICLES );
+
+		$this->assertGreaterThanOrEqual(
+				5,
+				$count,
+				'Assert a group of five news items never picks the same one twice'
+		);
+
+		$this->assertSame(
+				1,
+				$this->greatestCommonDivisor( 5, $count ),
+				sprintf( 'Assert the stride of 5 walks the whole list of %d, not a fraction of it', $count )
+		);
+	}
+
+	public function testTheNewsAreAllDifferent () {
+		foreach ( [ NetworkContent::ARTICLES, NetworkContent::COMMUNITY_ARTICLES ] as $list ) {
+			$titles = array_column( $list, 'title' );
+
+			$this->assertCount(
+					count( $titles ),
+					array_unique( $titles ),
+					'Assert no piece of news is written twice in the same list'
+			);
+		}
+	}
+
+	/**
+	 * Une actualité d'une seule phrase ne montre pas ce qu'est une actualité :
+	 * ni le résumé qu'en fait la liste, ni le corps qu'on lit ensuite.
+	 */
+	public function testEveryPieceOfNewsSaysMoreThanASentence () {
+		foreach ( [ NetworkContent::ARTICLES, NetworkContent::COMMUNITY_ARTICLES ] as $list ) {
+			foreach ( $list as $news ) {
+				$this->assertGreaterThanOrEqual(
+						2,
+						count( $news[ 'body' ] ),
+						sprintf( 'Assert « %s » carries a body, not a headline', $news[ 'title' ] )
+				);
+			}
+		}
+	}
+
+	/**
+	 * @param int $a
+	 * @param int $b
+	 *
+	 * @return int
+	 */
+	private function greatestCommonDivisor ( $a, $b ) {
+		while ( $b !== 0 ) {
+			list( $a, $b ) = [ $b, $a % $b ];
+		}
+
+		return $a;
 	}
 
 	public function testTheJobFieldsStayWithinTheColumnWidths () {

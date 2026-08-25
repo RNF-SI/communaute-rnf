@@ -76,6 +76,9 @@ Ouvre **Groupe de test**.
   un animateur — **pas** par un autre membre. À éprouver avec les deux comptes.
 - Liste des groupes : la hiérarchie commission → groupes apparaît, et un filtre
   par commission fonctionne.
+- Onglet **Actualités** : trois actualités, la plus récente en tête. Celle
+  « rédigée par un membre » suit la même règle que la page — son auteur et un
+  animateur la modifient, un autre membre non.
 
 ---
 

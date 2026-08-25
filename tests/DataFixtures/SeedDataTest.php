@@ -119,6 +119,38 @@ class SeedDataTest extends KernelTestCase {
 		);
 	}
 
+	/**
+	 * Une actualité datée d'aujourd'hui et une autre datée d'aujourd'hui ne
+	 * font pas une liste : c'est l'écart entre les dates qui montre l'ordre,
+	 * et une actualité qui vieillit sans disparaître.
+	 */
+	public function testTheCommunityArticlesAreSpreadOverTime () {
+		$articles = $this->manager->getRepository( Article::class )
+								  ->findBy( [ 'usergroup' => $this->communityGroup() ] );
+
+		if ( count( $articles ) < 2 ) {
+			$this->markTestSkipped( 'Fixtures not loaded: community articles' );
+		}
+
+		$days = [];
+
+		foreach ( $articles as $article ) {
+			$this->assertLessThanOrEqual(
+					new \DateTime(),
+					$article->getCreatedAt(),
+					sprintf( 'Assert « %s » is not dated in the future', $article->getTitle() )
+			);
+
+			$days[] = $article->getCreatedAt()->format( 'Y-m-d' );
+		}
+
+		$this->assertCount(
+				count( $days ),
+				array_unique( $days ),
+				'Assert the news do not all land on the same day'
+		);
+	}
+
 	public function testTheCommunityGroupHasDocuments () {
 		$this->assertNotEmpty(
 				$this->manager->getRepository( Document::class )->findBy( [ 'usergroup' => $this->communityGroup() ] )
@@ -276,6 +308,73 @@ class SeedDataTest extends KernelTestCase {
 		);
 	}
 
+	/**
+	 * La règle de #33 vient des actualités — les pages et les documents s'y
+	 * sont rangés ensuite. Elle ne s'éprouvait pourtant que sur les deux
+	 * derniers : le groupe de référence ne portait qu'une seule actualité,
+	 * signée de l'animateur, et il n'y avait donc rien à comparer.
+	 */
+	public function testTheArticlesOfTheReferenceGroupHaveTwoDifferentAuthors () {
+		$articles = $this->manager->getRepository( Article::class )
+								  ->findBy( [ 'usergroup' => $this->referenceGroup() ] );
+
+		if ( empty( $articles ) ) {
+			$this->markTestSkipped( 'Fixtures not loaded: reference articles' );
+		}
+
+		$authors = [];
+
+		foreach ( $articles as $article ) {
+			$authors[ $article->getAuthor()->getEmail() ] = TRUE;
+		}
+
+		$this->assertGreaterThan(
+				1,
+				count( $authors ),
+				'Assert « I edit mine, not yours » can be tried on an article too'
+		);
+	}
+
+	public function testAPlainMemberAuthoredAnArticle () {
+		$member = $this->account( 'membre@example.org' );
+
+		$this->assertNotEmpty(
+				$this->manager->getRepository( Article::class )
+							  ->findBy( [ 'usergroup' => $this->referenceGroup(), 'author' => $member ] ),
+				'Assert an article whose author is not an animator is seeded'
+		);
+	}
+
+	/**
+	 * Trois actualités toutes datées d'aujourd'hui ne montrent pas une liste
+	 * d'actualités : elles montrent trois fois la même. Il en faut une assez
+	 * ancienne pour qu'on voie ce que devient une actualité qui vieillit.
+	 */
+	public function testTheReferenceGroupCarriesAnOldArticleAndARecentOne () {
+		$articles = $this->manager->getRepository( Article::class )
+								  ->findBy( [ 'usergroup' => $this->referenceGroup() ] );
+
+		if ( count( $articles ) < 2 ) {
+			$this->markTestSkipped( 'Fixtures not loaded: reference articles' );
+		}
+
+		$month = new \DateTime( '-1 month' );
+		$older = 0;
+		$recent = 0;
+
+		foreach ( $articles as $article ) {
+			if ( $article->getCreatedAt() < $month ) {
+				$older++;
+			}
+			else {
+				$recent++;
+			}
+		}
+
+		$this->assertGreaterThan( 0, $older, 'Assert the list has a past' );
+		$this->assertGreaterThan( 0, $recent, 'Assert the list has something fresh at its top' );
+	}
+
 	/**************************************************
 	 * #37 — LES MENTIONS
 	 **************************************************/
@@ -411,6 +510,33 @@ class SeedDataTest extends KernelTestCase {
 		);
 		$this->assertGreaterThan( 0, $read, 'Assert read and unread can be told apart' );
 		$this->assertLessThan( count( $notifications ), $read, 'Assert one of them is still unread' );
+	}
+
+	/**
+	 * Quatre catégories se règlent groupe par groupe, et la page des réglages
+	 * les propose toutes. Si les notifications posées d'avance ne parlaient
+	 * que de discussions, le réglage « actualités » n'aurait rien en face de
+	 * lui : on cocherait sans jamais voir ce que cela change. (#34, #38)
+	 */
+	public function testTheNotificationsCoverMoreThanOneCategory () {
+		$notifications = $this->manager->getRepository( Notification::class )
+									   ->findBy( [ 'recipient' => $this->account( 'membre@example.org' ) ] );
+
+		if ( empty( $notifications ) ) {
+			$this->markTestSkipped( 'Fixtures not loaded: notifications' );
+		}
+
+		$types = [];
+
+		foreach ( $notifications as $notification ) {
+			$types[ $notification->getType() ] = TRUE;
+		}
+
+		$this->assertArrayHasKey(
+				Notification::ARTICLE_CREATE,
+				$types,
+				'Assert something other than a discussion is waiting, or the list reads as one feature'
+		);
 	}
 
 	/**************************************************

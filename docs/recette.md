@@ -190,6 +190,22 @@ Aller dans **Groupe de test**.
 
 ---
 
+## 5 bis. Les actualités
+
+Onglet **Actualités** du **Groupe de test**. Il en porte trois, de deux
+auteurs et de trois dates différentes : c'est ce qu'il faut pour voir autre
+chose qu'une page d'actualité isolée.
+
+| À faire | Attendu |
+|---|---|
+| Onglet Actualités | Trois actualités, la plus récente en tête ; celle « de l'an dernier » est en bas et n'a pas disparu |
+| « Actualité rédigée par un membre » | Modifiable par son auteur (Manon) et par un animateur ; **pas** par un autre membre (#33) |
+| « Actualité de test », en tant que Manon | **Non** modifiable : elle est de l'animateur (#33) |
+| Écrire une actualité en tant que membre simple | Autorisé : c'est la modification qui est réservée, pas l'écriture (#33) |
+| Groupe **Communauté RNF**, onglet Actualités | Huit actualités échelonnées sur plusieurs semaines, aucune datée du même jour |
+
+---
+
 ## 6. Notifications et e-mails — **à deux**
 
 C'est la partie qui demande deux comptes — deux comptes de test dans deux navigateurs suffisent.

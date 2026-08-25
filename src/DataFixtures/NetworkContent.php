@@ -448,6 +448,90 @@ final class NetworkContent {
 							'Le bilan sera présenté à l’automne. Les retours des testeurs sont attendus dans la discussion du groupe, y compris — surtout — les difficultés rencontrées.',
 					],
 			],
+			[
+					'title' => 'Un chien errant sur la réserve : ce qui a marché',
+					'body'  => [
+							'Trois divagations en un mois, dont une sur le secteur de nidification. Nous avons repris contact avec la mairie et le groupement de chasse plutôt que de multiplier les procès-verbaux, et posé quatre panneaux sur les seuls accès réellement empruntés.',
+							'Depuis, une seule divagation constatée. Ce n’est pas une méthode transposable partout, mais la démarche — identifier les accès réels avant de communiquer — vaut d’être essayée ailleurs.',
+					],
+			],
+			[
+					'title' => 'Renouvellement du plan de gestion : le calendrier est arrêté',
+					'body'  => [
+							'L’évaluation du plan en cours démarre à l’automne et durera six mois. Les ateliers de rédaction se tiendront ensuite, ouverts aux gestionnaires du réseau qui souhaitent observer la méthode avant de se lancer chez eux.',
+							'Le rétroplanning et la trame utilisée sont déposés dans les documents. Ils reprennent le guide national, avec les allègements que la taille de notre équipe imposait.',
+					],
+			],
+			[
+					'title' => 'Une espèce exotique envahissante repérée sur trois sites',
+					'body'  => [
+							'La renouée a été observée sur trois sites du réseau au cours du printemps, toujours à proximité immédiate d’un dépôt de matériaux. Le lien n’est pas prouvé, mais il est trop régulier pour être ignoré.',
+							'Un protocole de veille commun est proposé : deux passages annuels sur les zones de dépôt, et un signalement dans la discussion dédiée dès la première tache repérée. Intervenir sur dix mètres carrés coûte cent fois moins que sur mille.',
+					],
+			],
+			[
+					'title' => 'Sécheresse : ce que nous avons changé dans les suivis',
+					'body'  => [
+							'Deux mares suivies depuis douze ans se sont asséchées avant la fin du mois de juin. Les protocoles n’avaient pas prévu ce cas : le passage manqué apparaissait comme une donnée absente, ce qui rendait la série illisible.',
+							'Nous notons désormais l’assèchement comme un résultat, et non comme une absence de mesure. La distinction paraît formelle ; elle change entièrement la lecture de la courbe sur dix ans.',
+					],
+			],
+			[
+					'title' => 'Marché public de travaux : le cahier des charges est partagé',
+					'body'  => [
+							'Le cahier des charges du chantier de gestion des ligneux est déposé dans les documents, avec les clauses environnementales qui ont résisté à l’analyse des offres.',
+							'Deux points ont fait la différence : la période d’intervention imposée, et la pénalité prévue en cas de circulation hors des pistes autorisées. Le reste est standard et peut être repris tel quel.',
+					],
+			],
+			[
+					'title' => 'Fréquentation estivale : trois compteurs et un constat',
+					'body'  => [
+							'Les compteurs installés sur les sentiers donnent une fréquentation en hausse d’un tiers sur juillet, concentrée sur deux heures de la journée et sur un seul itinéraire.',
+							'Plutôt que de fermer, nous testons un décalage de l’animation du matin, pour étaler la fréquentation. Le bilan sera fait à l’automne, chiffres en main.',
+					],
+			],
+			[
+					'title' => 'Un poste de chargé de mission ouvert dans le réseau',
+					'body'  => [
+							'Une réserve du réseau recrute un chargé de mission scientifique pour trois ans, sur le suivi des milieux ouverts et l’animation du conseil scientifique.',
+							'La fiche de poste est déposée dans les documents du groupe. Les candidatures se font auprès de la structure gestionnaire, et non auprès du réseau.',
+					],
+			],
+			[
+					'title' => 'Les données des suivis versées au SINP',
+					'body'  => [
+							'Les observations des cinq dernières années ont été versées au système d’information sur la nature et les paysages. Le travail de mise en forme a pris plus de temps que la saisie elle-même.',
+							'La correspondance entre nos champs et ceux attendus est décrite dans un document du groupe : elle évitera à d’autres de refaire le même travail d’interprétation.',
+					],
+			],
+			[
+					'title' => 'Retour d’expérience : un pâturage qui n’a pas donné ce qu’on attendait',
+					'body'  => [
+							'Après quatre saisons de pâturage extensif, la végétation n’a pas évolué comme le plan de gestion le prévoyait. Le chargement était trop faible, et surtout mal réparti dans la saison.',
+							'Nous préférons le dire que le taire : l’essai a coûté quatre ans, et les collègues qui envisagent la même chose gagneront à savoir ce que nous n’avions pas anticipé.',
+					],
+			],
+			[
+					'title' => 'Sciences participatives : deux cents observations en un week-end',
+					'body'  => [
+							'L’opération de comptage ouverte au public a rassemblé soixante-dix participants sur deux jours, pour un peu plus de deux cents observations validées.',
+							'La validation a demandé une journée à deux personnes. C’est le coût réel de ce type d’opération, et il vaut mieux le prévoir que le découvrir.',
+					],
+			],
+			[
+					'title' => 'Le matériel de suivi acoustique circule entre réserves',
+					'body'  => [
+							'Six enregistreurs sont désormais mutualisés entre les réserves du réseau. Le planning de prêt et l’état du matériel se tiennent dans une page du groupe.',
+							'Chaque emprunteur repart avec la fiche de réglage utilisée par le précédent : sans elle, les enregistrements ne sont pas comparables d’un site à l’autre.',
+					],
+			],
+			[
+					'title' => 'Incendie sur un site voisin : ce que la journée a appris',
+					'body'  => [
+							'Le feu s’est arrêté à quelques centaines de mètres de la limite de la réserve. La journée a montré que notre plan d’accès n’était pas à jour et qu’un portail n’ouvrait plus.',
+							'Les cartes d’accès ont été refaites avec le service départemental d’incendie et de secours, et seront revues chaque printemps. Rien de spectaculaire : simplement ce qui manquait le jour où il a fallu.',
+					],
+			],
 	];
 
 	/**
@@ -787,6 +871,27 @@ final class NetworkContent {
 					'body'  => [
 							'L’animation de deux commissions sera renouvelée à l’automne. La fonction demande environ une journée par mois, prise sur le temps de travail avec l’accord de la structure employeuse.',
 							'Les candidatures sont à adresser avant l’été. Les animateurs actuels se tiennent à disposition de celles et ceux qui souhaitent savoir à quoi s’attendre.',
+					],
+			],
+			[
+					'title' => 'La messagerie privée est ouverte',
+					'body'  => [
+							'Il est désormais possible d’écrire directement à quelqu’un du réseau, seul à seul ou à plusieurs, sans passer par un groupe. Les conversations restent accessibles depuis l’enveloppe, en haut de chaque page.',
+							'Chacun règle sa boîte dans ses paramètres : la fermer empêche qu’on vous écrive pour la première fois, sans interrompre les conversations déjà commencées. Un message déplacé se signale à l’équipe depuis le message lui-même.',
+					],
+			],
+			[
+					'title' => 'Régler ses notifications une fois pour tous ses groupes',
+					'body'  => [
+							'La page des paramètres part maintenant d’un réglage général, valable partout ; un groupe n’est écrit que lorsqu’il doit s’en écarter. Pour qui siège dans trente groupes, le choix se fait une fois.',
+							'Le rythme fait partie du réglage : aucune notification, dans la plateforme seulement, tout de suite, une fois par jour ou une fois par semaine — catégorie par catégorie. Ce qui avait été choisi auparavant est conservé.',
+					],
+			],
+			[
+					'title' => 'Une visite guidée pour les nouveaux arrivants',
+					'body'  => [
+							'Une visite en quelques étapes se lance à la première connexion et promène le lecteur dans la plateforme : l’annuaire, un groupe, les documents, les notifications.',
+							'Elle se rejoue à tout moment depuis les paramètres du compte, et se referme d’un clic sans jamais bloquer la page. Les animateurs qui accueillent de nouvelles équipes peuvent s’appuyer dessus plutôt que de tout réexpliquer.',
 					],
 			],
 	];
