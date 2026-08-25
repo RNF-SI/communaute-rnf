@@ -36,9 +36,9 @@ use Throwable;
  * que l'autre est muet — c'est ce qui s'était produit en #4. Mais le transport
  * en lot est emprunté par deux chemins qui n'écrivent pas depuis la même
  * adresse : les discussions depuis le domaine de liste, le contenu à chaud —
- * page, actualité, document, message privé — depuis l'adresse de la
- * plateforme. Un domaine autorisé et l'autre non, et le premier arrive pendant
- * que le second se fait refuser message par message.
+ * page, actualité, document — depuis l'adresse de la plateforme. Un domaine
+ * autorisé et l'autre non, et le premier arrive pendant que le second se fait
+ * refuser message par message.
  */
 class MailCheckCommand extends Command {
 	protected static $defaultName = 'app:mail:check';
@@ -193,13 +193,12 @@ class MailCheckCommand extends Command {
 		 * TROIS CHEMINS, PAS DEUX
 		 *
 		 * Ce qui compte n'est pas le jeton seul : c'est le **couple** jeton +
-		 * adresse d'expédition. Le contenu à chaud — page, actualité, document,
-		 * message privé — emprunte le transport en lot des discussions, mais
-		 * l'adresse d'expédition de la plateforme. Ce couple-là n'était éprouvé
-		 * par rien.
+		 * adresse d'expédition. Le contenu à chaud — page, actualité, document
+		 * — emprunte le transport en lot des discussions, mais l'adresse
+		 * d'expédition de la plateforme. Ce couple-là n'était éprouvé par rien.
 		 *
-		 * Le cas rencontré : le message de discussion arrive, celui d'un
-		 * message privé non. Les deux passent par le même jeton, la différence
+		 * Le cas rencontré : le message de discussion arrive, celui d'une
+		 * actualité non. Les deux passent par le même jeton, la différence
 		 * tient à l'expéditeur — et le contrôle disait « les deux chemins
 		 * fonctionnent » pendant que le troisième était muet.
 		 */
@@ -224,7 +223,7 @@ class MailCheckCommand extends Command {
 						],
 						[
 								$this->badge( $content[ 0 ] ),
-								'Contenu et messages privés',
+								'Contenu à chaud (page, actualité, document)',
 								$platform[ 'from' ] ?: '—',
 								$content[ 1 ],
 						],

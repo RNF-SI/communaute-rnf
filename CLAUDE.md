@@ -385,16 +385,30 @@ remplit que la liste.
 ### Notification settings (#34, #38)
 **Cinq catégories, mais pas partout.** `NotificationCategory::all()` donne les
 quatre qu'un groupe sait régler ; `general()` y ajoute `messages`, qui ne vit
-dans aucun groupe et ne se règle qu'une fois, dans le réglage général. Son
-défaut est l'**immédiat** (`NotificationCategory::defaultLevel()`) et non le
-quotidien : quelqu'un qui écrit directement attend une réponse. Confondre les
-deux listes ferait apparaître sous chaque groupe un réglage « messages » qui ne
-voudrait rien dire.
+dans aucun groupe et ne se règle qu'une fois, dans le réglage général.
+Confondre les deux listes ferait apparaître sous chaque groupe un réglage
+« messages » qui ne voudrait rien dire.
+
+**Et `messages` n'envoie aucun e-mail.** Ni à chaud, ni dans le résumé :
+`NotificationCategory::sendsEmail()` rend `FALSE` pour elle seule, `levelsFor()`
+ne propose donc que `none` et `app`, et le défaut est `app`. Ce n'est pas un
+réglage laissé à chacun mais une propriété de la catégorie — un e-mail par
+message échangé fait un volume qui suit le nombre de conversations et non le
+nombre de publications, pour prévenir de ce que la pastille et le dock montrent
+déjà en se connectant. `notifyNewPrivateMessage()` pose `byEmail` à `FALSE` et
+`rhythm` à `NULL` explicitement : le résumé ne lit que ce drapeau, et c'est là
+qu'il doit se voir.
+
+Les réglages choisis avant cette bascule sont **traduits à la lecture**
+(`NotificationCategory::clamp()`, appelé des deux côtés de
+`User::getDefaultNotificationLevel`/`set…`), jamais réécrits en base — même
+principe que `NotificationLevel::fromLegacy()`. « Aucune notification » reste
+« aucune » : ce qui est ramené, c'est la promesse d'e-mail, pas le silence
+demandé.
 
 La notification d'un message privé est la seule **sans groupe**, et son titre
-est le **nom de celui qui écrit**, jamais un extrait : un résumé qui citerait un
-message privé le sortirait de la conversation pour le poser dans une boîte
-e-mail souvent partagée.
+est le **nom de celui qui écrit**, jamais un extrait : une notification qui
+citerait un message privé le sortirait de la conversation.
 
 What a member hears about is read from **two sources, in this order**: what
 the group itself says (`UsergroupMembership::getOwnNotificationLevel` — which

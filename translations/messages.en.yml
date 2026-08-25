@@ -263,6 +263,7 @@ pages:
         notifications_settings:
             messages_open: "Accept private messages"
             messages_open_hint: "Unchecked, nobody can start a new conversation with you. Conversations already open stay open: you can still answer them. The RNF team can always reach you."
+            messages_no_email: "Private messages are never sent by e-mail: they are announced on the platform, in the badge and in the chat window. This setting only chooses whether you are told about them here."
             title: "Notifications"
             introduction: "Choose what you want to hear about: once for all your groups, then group by group for the few that have to differ."
             emails: "Receive e-mails"

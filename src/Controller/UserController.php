@@ -275,7 +275,28 @@ class UserController extends AbstractController
 				'categories'        => NotificationCategory::all(),
 				'generalCategories' => NotificationCategory::general(),
 				'levels'            => NotificationLevel::all(),
+				// Toutes les catégories n'offrent pas les mêmes niveaux : la
+				// messagerie n'envoie plus d'e-mail et ne propose donc que
+				// « rien » ou « sur la plateforme ». La liste est calculée
+				// ici, pas dans le gabarit, pour qu'elle soit la même que
+				// celle que l'écriture accepte.
+				'generalLevels'     => $this->levelsByCategory(),
 		]);
+	}
+
+	/**
+	 * Les niveaux proposés, catégorie par catégorie.
+	 *
+	 * @return array<string, string[]>
+	 */
+	private function levelsByCategory (): array {
+		$levels = [];
+
+		foreach ( NotificationCategory::general() as $category ) {
+			$levels[ $category ] = NotificationCategory::levelsFor( $category );
+		}
+
+		return $levels;
 	}
 
 	/**

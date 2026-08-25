@@ -183,6 +183,53 @@ class NotificationSettingsTest extends WebTestCase {
 		}
 	}
 
+	/**
+	 * La messagerie n'envoie plus d'e-mail : la page ne propose donc que
+	 * « rien » et « sur la plateforme ». Proposer un niveau que l'écriture
+	 * refuse ferait une page qui ment sur ce qu'elle enregistre.
+	 */
+	public function testTheMailboxOffersNoEmailLevel () {
+		$crawler = $this->openSettings();
+
+		$offered = $crawler->filter( '#notif-default-' . NotificationCategory::MESSAGES . ' option' )
+						   ->extract( [ 'value' ] );
+
+		$this->assertSame( [ NotificationLevel::NONE, NotificationLevel::APP ], $offered );
+	}
+
+	public function testTheGroupsStillOfferEveryLevel () {
+		$crawler = $this->openSettings();
+
+		$offered = $crawler->filter( '#notif-default-' . NotificationCategory::DISCUSSIONS . ' option' )
+						   ->extract( [ 'value' ] );
+
+		$this->assertSame(
+				NotificationLevel::all(),
+				$offered,
+				'Assert only the mailbox lost its e-mail levels'
+		);
+	}
+
+	/**
+	 * Et un formulaire forgé n'y arrive pas non plus : le niveau est ramené
+	 * à ce que la catégorie sait tenir, plutôt qu'enregistré tel quel.
+	 */
+	public function testAnEmailLevelPostedOnTheMailboxIsBroughtBack () {
+		$crawler = $this->openSettings();
+		$form    = $crawler->filter( '.notifications-settings form' )->form();
+
+		$values = $form->getPhpValues();
+
+		$values[ 'notifications' ][ 'defaults' ][ NotificationCategory::MESSAGES ] = NotificationLevel::IMMEDIATE;
+
+		$this->client->request( 'POST', $form->getUri(), $values );
+
+		$this->assertEquals(
+				NotificationLevel::APP,
+				$this->reloadUser()->getDefaultNotificationLevel( NotificationCategory::MESSAGES )
+		);
+	}
+
 	public function testTheGeneralSettingReachesAGroupThatSaysNothing () {
 		$crawler = $this->openSettings();
 		$form    = $crawler->filter( '.notifications-settings form' )->form();

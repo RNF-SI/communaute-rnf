@@ -268,6 +268,46 @@ class MessagingTest extends WebTestCase {
 		$this->assertStringNotContainsString( 'secret', (string) $notifications[ 0 ]->getTitle() );
 	}
 
+	/**
+	 * Un message privé ne part jamais par e-mail — ni à chaud, ni dans le
+	 * résumé. C'est `byEmail` que la commande du résumé lit, et lui seul :
+	 * une notification qui le porterait à VRAI ressortirait le lendemain,
+	 * quel que soit le niveau réglé à côté.
+	 */
+	public function testAPrivateMessageNeverGoesOutByEmail () {
+		$author    = $this->user( 'Jeanne Réserve' );
+		$recipient = $this->user( 'Paul Martin' );
+
+		$recipient->setDefaultNotificationLevel(
+				NotificationCategory::MESSAGES,
+				NotificationLevel::IMMEDIATE
+		);
+		$this->manager->flush();
+
+		$this->logIn( $author );
+		$this->writeTo( $author, $recipient, 'Bonjour Paul' );
+
+		$notifications = $this->manager->getRepository( Notification::class )->findForUser( $recipient );
+
+		$this->assertCount( 1, $notifications );
+		$this->assertFalse(
+				$notifications[ 0 ]->isByEmail(),
+				'Assert the summary will not pick it up'
+		);
+		$this->assertNull(
+				$notifications[ 0 ]->getEmailedAt(),
+				'Assert nothing was sent as the message was posted'
+		);
+
+		// Et la propriété telle que le résumé la voit, plutôt que telle qu'on
+		// l'a écrite : c'est cette requête-là qui décide ce qui part.
+		$this->assertCount(
+				0,
+				$this->manager->getRepository( Notification::class )->findAwaitingDigestFor( $recipient ),
+				'Assert the daily summary has nothing to say about it either'
+		);
+	}
+
 	/**************************************************
 	 * UNE BOÎTE FERMÉE
 	 *************************************************/

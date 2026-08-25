@@ -376,6 +376,7 @@ pages:
         notifications_settings:
             messages_open: "Accepter de recevoir des messages privés"
             messages_open_hint: "Décochée, cette case empêche qu’une nouvelle conversation s’ouvre avec vous. Les conversations en cours restent ouvertes : vous continuez d’y répondre. L’équipe RNF peut toujours vous joindre."
+            messages_no_email: "Les messages privés ne partent jamais par e-mail : ils s’annoncent sur la plateforme, dans la pastille et dans la fenêtre de discussion. Ce réglage choisit seulement si vous en êtes prévenu ici."
             title: "Notifications"
             introduction: "Choisissez ce dont vous voulez être prévenu·e : une fois pour tous vos groupes, puis groupe par groupe pour ceux qui doivent s’en écarter."
             emails: "Recevoir des e-mails"

@@ -889,7 +889,15 @@ class User implements UserInterface, JsonSerializable {
 
 		$level = NotificationLevel::fromLegacy( $stored, $this->getLegacyDiscussionRhythm(), $category );
 
-		return $level !== NULL ? $level : NotificationCategory::defaultLevel( $category );
+		if ( $level === NULL ) {
+			return NotificationCategory::defaultLevel( $category );
+		}
+
+		// Un réglage choisi du temps où la messagerie envoyait des e-mails est
+		// ramené ici à ce qu'elle sait tenir. On le traduit à la lecture
+		// plutôt que de réécrire la base : une migration figerait un choix que
+		// personne n'a fait, et la page afficherait un niveau qui ment.
+		return NotificationCategory::clamp( $category, $level );
 	}
 
 	/**
@@ -902,6 +910,11 @@ class User implements UserInterface, JsonSerializable {
 		if ( !NotificationCategory::exists( $category ) || !NotificationLevel::exists( $level ) ) {
 			return $this;
 		}
+
+		// Le même garde qu'à la lecture, pour qu'un formulaire forgé — ou un
+		// gabarit oublié — n'inscrive pas un niveau que la catégorie ne sait
+		// pas honorer.
+		$level = NotificationCategory::clamp( $category, $level );
 
 		$settings = $this->notificationsSettings ?: [];
 

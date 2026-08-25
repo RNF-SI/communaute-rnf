@@ -151,6 +151,18 @@ class NotificationSender {
 	 * « messages ». Elle vaut l'immédiat par défaut — quelqu'un qui écrit
 	 * directement attend une réponse.
 	 *
+	 * **Rien ne part par e-mail.** Ni à chaud, ni dans le résumé : la
+	 * notification vit sur la plateforme, où la pastille et le dock
+	 * l'annoncent déjà. Un e-mail par message échangé, c'est un volume qui
+	 * suit le nombre de conversations et non le nombre de publications — la
+	 * dépense n'était pas tenable pour prévenir de ce que le destinataire voit
+	 * en se connectant. Voir NotificationCategory::sendsEmail().
+	 *
+	 * Corollaire à ne pas défaire en relisant : `byEmail` est posé à FALSE
+	 * explicitement. Le laisser au calcul commun suffirait aujourd'hui, la
+	 * catégorie ne rendant plus de niveau qui envoie ; mais le résumé lit ce
+	 * drapeau et lui seul, et c'est là qu'il doit se voir.
+	 *
 	 * Ce que la notification porte, c'est le nom de celui qui écrit, jamais un
 	 * extrait de ce qu'il a écrit. Un résumé qui citerait un message privé le
 	 * sortirait de la conversation pour le poser dans une boîte e-mail
@@ -170,8 +182,7 @@ class NotificationSender {
 
 		$url = $this->router->generate( 'messages_index', [ 'conversation' => $conversation->getId() ] );
 
-		$created   = 0;
-		$immediate = [];
+		$created = 0;
 
 		foreach ( $conversation->getActiveParticipants() as $participant ) {
 			$recipient = $participant->getUser();
@@ -198,12 +209,8 @@ class NotificationSender {
 			$notification->setTitle( $author ? (string) $author->getName() : '' );
 			$notification->setUrl( $url );
 			$notification->setCreatedAt( new DateTime() );
-			$notification->setRhythm( NotificationLevel::rhythm( $level ) );
-			$notification->setByEmail( $this->shouldGoInTheSummary( $recipient, $level ) );
-
-			if ( NotificationLevel::sendsNow( $level ) && $recipient->wantsEmails() ) {
-				$immediate[] = $notification;
-			}
+			$notification->setRhythm( NULL );
+			$notification->setByEmail( FALSE );
 
 			$this->manager->persist( $notification );
 
@@ -211,8 +218,6 @@ class NotificationSender {
 		}
 
 		$this->manager->flush();
-
-		$this->sendNow( $immediate );
 
 		return $created;
 	}

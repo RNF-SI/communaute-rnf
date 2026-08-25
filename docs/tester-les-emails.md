@@ -78,14 +78,14 @@ vérifier ce jeton.
 | E-mail | Service | Transport / jeton | Expéditeur |
 |---|---|---|---|
 | Message de discussion | `DiscussionSender` | `BulkTransport` → API Postmark | `noreply@POSTMARK_LIST_DOMAIN` |
-| Page, actualité, document, **message privé** — à chaud | `ContentSender` | `BulkTransport` → API Postmark | **`POSTMARK_SENDER`** |
+| Page, actualité, document — à chaud | `ContentSender` | `BulkTransport` → API Postmark | **`POSTMARK_SENDER`** |
 | Résumé, demande d'adhésion, mot de passe oublié, inscription | `EmailSender` | Swift_Mailer → `MAILER_URL` | `POSTMARK_SENDER` |
 
 Les deux premiers partagent le jeton et **pas** l'adresse d'expédition. C'est le
 piège : un domaine de liste autorisé chez Postmark et une adresse de plateforme
 qui ne l'est pas, et les messages de discussion arrivent pendant que les
-messages privés se font refuser — même jeton, même transport, même code de
-retour HTTP 200.
+actualités se font refuser — même jeton, même transport, même code de retour
+HTTP 200.
 
 (Rappel du tableau ci-dessus : en dev et en test, les deux premiers passent eux
 aussi par `MAILER_URL`, grâce au transport de remplacement.)

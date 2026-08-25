@@ -412,6 +412,74 @@ class NotificationPreferencesTest extends TestCase {
 		);
 	}
 
+	/**************************************************
+	 * LA MESSAGERIE N'ENVOIE PAS D'E-MAIL
+	 *************************************************/
+
+	public function testTheMailboxIsAnnouncedOnThePlatformAndNowhereElse () {
+		$user = new User();
+
+		$this->assertEquals(
+				NotificationLevel::APP,
+				$user->getDefaultNotificationLevel( NotificationCategory::MESSAGES ),
+				'Assert a private message is announced on the platform, never by e-mail'
+		);
+	}
+
+	public function testTheMailboxOffersOnlyWhatItCanHonour () {
+		$this->assertSame(
+				[ NotificationLevel::NONE, NotificationLevel::APP ],
+				NotificationCategory::levelsFor( NotificationCategory::MESSAGES )
+		);
+
+		$this->assertSame(
+				NotificationLevel::all(),
+				NotificationCategory::levelsFor( NotificationCategory::DISCUSSIONS ),
+				'Assert the other categories are untouched'
+		);
+	}
+
+	public function testAnEmailLevelCannotBeWrittenOnTheMailbox () {
+		$user = new User();
+		$user->setDefaultNotificationLevel( NotificationCategory::MESSAGES, NotificationLevel::IMMEDIATE );
+
+		$this->assertEquals(
+				NotificationLevel::APP,
+				$user->getDefaultNotificationLevel( NotificationCategory::MESSAGES ),
+				'Assert a level that promises an e-mail is brought back to what the category sends'
+		);
+	}
+
+	/**
+	 * Le réglage d'avant la bascule est traduit à la lecture, pas réécrit :
+	 * une migration figerait un choix que personne n'a fait.
+	 */
+	public function testALevelChosenBeforeTheChangeIsReadAsThePlatformOnly () {
+		$user = new User();
+		$user->setNotificationsSettings( [
+				'categories' => [ NotificationCategory::MESSAGES => NotificationLevel::WEEKLY ],
+		] );
+
+		$this->assertEquals(
+				NotificationLevel::APP,
+				$user->getDefaultNotificationLevel( NotificationCategory::MESSAGES )
+		);
+	}
+
+	/**
+	 * Et « aucune notification » reste « aucune notification » : ce qui est
+	 * ramené, c'est la promesse d'e-mail, pas le silence demandé.
+	 */
+	public function testTurningTheMailboxOffIsStillHonoured () {
+		$user = new User();
+		$user->setDefaultNotificationLevel( NotificationCategory::MESSAGES, NotificationLevel::NONE );
+
+		$this->assertEquals(
+				NotificationLevel::NONE,
+				$user->getDefaultNotificationLevel( NotificationCategory::MESSAGES )
+		);
+	}
+
 	public function testTheNoticeIsShownOnceAndOnlyToThoseTheChangeCrossed () {
 		$newcomer = new User();
 

@@ -56,15 +56,22 @@
                                     <label for="notif-default-{{ category }}">
                                         {{ ('pages.user.notifications_settings.categories.' ~ category)|trans }}
                                     </label>
+                                    {# Les niveaux viennent du contrôleur et non
+                                       de la liste complète : la messagerie
+                                       n'envoie pas d'e-mail et n'en propose
+                                       donc aucun. #}
                                     <select id="notif-default-{{ category }}"
                                             name="notifications[defaults][{{ category }}]">
-                                        {% for level in levels %}
+                                        {% for level in generalLevels[category] %}
                                             <option value="{{ level }}"
                                                     {{ user.getDefaultNotificationLevel(category) == level ? 'selected' : '' }}>
                                                 {{ ('pages.user.notifications_settings.levels.' ~ level)|trans }}
                                             </option>
                                         {% endfor %}
                                     </select>
+                                    {% if category == 'messages' %}
+                                        <div class="hint">{{ 'pages.user.notifications_settings.messages_no_email'|trans }}</div>
+                                    {% endif %}
                                 </div>
                             {% endfor %}
                         </div>

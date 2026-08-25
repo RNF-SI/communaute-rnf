@@ -270,15 +270,18 @@ class ContentSenderTest extends TestCase {
 	}
 
 	/**
-	 * La notification d'un message privé est la seule sans groupe, et son
-	 * titre est le **nom de celui qui écrit**. « Jeanne Réserve » seul en objet
-	 * ne dirait rien : on met devant la phrase que la plateforme affiche.
+	 * Une notification sans groupe garde un objet qui dit de quoi il s'agit :
+	 * un titre seul, sans le « [Groupe] » devant, ne dirait rien.
+	 *
+	 * Le cas venait des messages privés, qui ne portent aucun groupe. Ils ne
+	 * passent plus par ici — la messagerie n'envoie plus d'e-mail du tout —
+	 * mais la règle reste éprouvée : rien ne garantit qu'un contenu arrivera
+	 * toujours avec son groupe attaché.
 	 */
 	public function testWithoutAGroupTheSubjectSaysWhatItIs () {
 		$sent = [];
 
 		$notification = $this->notification();
-		$notification->setType( Notification::MESSAGE_NEW );
 		$notification->setTitle( 'Jeanne Réserve' );
 
 		$this->sender( $this->recordingTransport( $sent ) )->sendNow( [ $notification ] );

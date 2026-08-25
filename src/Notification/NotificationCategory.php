@@ -11,6 +11,9 @@ namespace App\Notification;
  * sait régler, self::general() est celle que la page des paramètres propose
  * en réglage général. Confondre les deux ferait apparaître, sous chaque
  * groupe, un réglage « messages » qui ne voudrait rien dire.
+ *
+ * Et « messages » se distingue une seconde fois : c'est la seule catégorie
+ * qui n'envoie **aucun** e-mail. Voir self::sendsEmail().
  */
 final class NotificationCategory {
 	const DISCUSSIONS = 'discussions';
@@ -67,11 +70,70 @@ final class NotificationCategory {
 	}
 
 	/**
+	 * Cette catégorie peut-elle donner lieu à un e-mail ?
+	 *
+	 * La messagerie, non — et c'est la seule. Un message privé se lit sur la
+	 * plateforme, où il est déjà annoncé par la pastille et par le dock. Le
+	 * doubler d'un e-mail multipliait le volume envoyé par le nombre de
+	 * messages échangés, ce qu'un réseau de cette taille ne peut pas payer,
+	 * pour prévenir de quelque chose que le destinataire voit en se
+	 * connectant.
+	 *
+	 * Ce n'est donc pas un réglage laissé à chacun : la catégorie ne propose
+	 * plus que « rien » ou « sur la plateforme ». Les autres catégories ne
+	 * changent pas — une actualité paraît une fois, un message s'échange.
+	 *
+	 * @param string $category
+	 *
+	 * @return bool
+	 */
+	public static function sendsEmail ( $category ) {
+		return $category !== self::MESSAGES;
+	}
+
+	/**
+	 * Les niveaux qu'on propose sur cette catégorie.
+	 *
+	 * Deux listes, parce que toutes les catégories ne savent pas envoyer un
+	 * e-mail. C'est ici, et pas dans le gabarit, que la question se tranche :
+	 * une page qui déciderait seule de ce qu'elle affiche finirait par
+	 * proposer un niveau que la lecture refuse.
+	 *
+	 * @param string $category
+	 *
+	 * @return string[]
+	 */
+	public static function levelsFor ( $category ) {
+		return self::sendsEmail( $category )
+				? NotificationLevel::all()
+				: [ NotificationLevel::NONE, NotificationLevel::APP ];
+	}
+
+	/**
+	 * Ramène un niveau à ce que cette catégorie sait tenir.
+	 *
+	 * Employé des deux côtés — à la lecture comme à l'écriture — pour qu'un
+	 * réglage choisi avant que la messagerie cesse d'envoyer des e-mails ne
+	 * promette pas un e-mail qui ne partira jamais. On ne réécrit rien en
+	 * base : la traduction se fait au passage, comme celle de l'ancien
+	 * vocabulaire dans NotificationLevel::fromLegacy().
+	 *
+	 * @param string $category
+	 * @param string $level
+	 *
+	 * @return string one of NotificationLevel
+	 */
+	public static function clamp ( $category, $level ) {
+		return ( !self::sendsEmail( $category ) && NotificationLevel::sendsEmail( $level ) )
+				? NotificationLevel::APP
+				: $level;
+	}
+
+	/**
 	 * Ce que vaut cette catégorie tant que personne n'a rien choisi.
 	 *
-	 * Le quotidien partout, sauf la messagerie : quelqu'un qui écrit
-	 * directement à une personne attend une réponse, et lui répondre le
-	 * lendemain soir n'est pas une conversation.
+	 * Le quotidien partout, sauf la messagerie, qui s'annonce sur la
+	 * plateforme et n'envoie plus d'e-mail du tout — voir self::sendsEmail().
 	 *
 	 * @param string $category
 	 *
@@ -79,7 +141,7 @@ final class NotificationCategory {
 	 */
 	public static function defaultLevel ( $category ) {
 		return ( $category === self::MESSAGES )
-				? NotificationLevel::IMMEDIATE
+				? NotificationLevel::APP
 				: NotificationLevel::DEFAULT_LEVEL;
 	}
 }
