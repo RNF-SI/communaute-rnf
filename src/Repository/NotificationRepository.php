@@ -161,6 +161,64 @@ class NotificationRepository extends ServiceEntityRepository {
 	}
 
 	/**
+	 * Pourquoi il n'y a rien à envoyer.
+	 *
+	 * « 0 members have notifications waiting » recouvre trois situations qu'un
+	 * exploitant doit distinguer, et qu'il ne peut pas deviner : rien n'a
+	 * jamais été publié, tout est déjà parti, ou tout est créé **sans e-mail**
+	 * — c'est-à-dire que les réglages des membres, non l'envoi, sont en cause.
+	 * Sans ces trois nombres, un zéro renvoie à la base de données, où
+	 * personne n'ira regarder.
+	 *
+	 * @param \App\Entity\User|null $user restreindre à un membre
+	 *
+	 * @return array total, waiting, sent, silent, last, lastSent
+	 */
+	public function digestState ( User $user = NULL ) {
+		$count = function ( callable $narrow ) use ( $user ) {
+			$query = $this->createQueryBuilder( 'n' )->select( 'COUNT(n.id)' );
+
+			if ( $user ) {
+				$query->andWhere( 'n.recipient = :user' )->setParameter( 'user', $user );
+			}
+
+			$narrow( $query );
+
+			return (int) $query->getQuery()->getSingleScalarResult();
+		};
+
+		$latest = function ( $field ) use ( $user ) {
+			$query = $this->createQueryBuilder( 'n' )
+						  ->select( sprintf( 'MAX(n.%s)', $field ) );
+
+			if ( $user ) {
+				$query->andWhere( 'n.recipient = :user' )->setParameter( 'user', $user );
+			}
+
+			return $query->getQuery()->getSingleScalarResult();
+		};
+
+		return [
+				'total'    => $count( function ( $query ) {
+				} ),
+				'waiting'  => $count( function ( $query ) {
+					$query->andWhere( 'n.byEmail = TRUE' )->andWhere( 'n.emailedAt IS NULL' );
+				} ),
+				'sent'     => $count( function ( $query ) {
+					$query->andWhere( 'n.emailedAt IS NOT NULL' );
+				} ),
+				// Créées, montrées sur la plateforme, mais qu'aucun résumé
+				// n'emportera : niveau « rien » ou « plateforme seulement »,
+				// e-mail immédiat déjà parti, ou membre qui refuse les e-mails.
+				'silent'   => $count( function ( $query ) {
+					$query->andWhere( 'n.byEmail = FALSE' );
+				} ),
+				'last'     => $latest( 'createdAt' ),
+				'lastSent' => $latest( 'emailedAt' ),
+		];
+	}
+
+	/**
 	 * Recipients who have at least one notification waiting to be summarised.
 	 *
 	 * @return User[]

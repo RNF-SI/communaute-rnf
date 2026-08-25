@@ -154,6 +154,18 @@ Chaque ligne dit ce qui partirait ce jour-là et ce qui resterait :
 Le même appel un mardi doit montrer l'hebdomadaire **retenu**, pas disparu :
 c'est la moitié du contrôle.
 
+Si la commande annonce **0 destinataire**, elle dit maintenant pourquoi, et
+c'est le plus souvent qu'il n'y a rien à résumer — pas que l'envoi est en panne.
+Trois verdicts possibles :
+
+| Ce qui s'affiche | Ce que ça veut dire |
+|---|---|
+| `RIEN N'A ÉTÉ PUBLIÉ` | aucune notification n'existe. Reprendre l'étape 1 : publier **avec un autre compte** |
+| `CE SONT LES RÉGLAGES` | des notifications existent, mais aucune ne doit partir par e-mail — niveau « aucune » / « plateforme seulement », immédiat déjà parti, ou refus général |
+| `TOUT EST DÉJÀ PARTI` | le résumé a été envoyé, et ne l'est qu'une fois. Republier, ou employer `--only --keep` qui ne consomme rien |
+
+Aucun des trois n'est un problème de transport : pour cela, `app:mail:check`.
+
 **3. Recevoir le vrai e-mail, à une seule adresse :**
 
 ```bash

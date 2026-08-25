@@ -335,13 +335,68 @@ class WeeklyDigestTest extends KernelTestCase {
 		$this->assertFalse( $this->wasSent( $notification ), 'Assert nothing left at all' );
 	}
 
-	public function testAnAccountWithNothingWaitingIsRefused () {
+	public function testAnUnknownAddressIsRefused () {
 		$this->command->execute( [ '--day' => self::TUESDAY, '--only' => 'personne@example.org' ] );
 
 		$this->assertSame(
 				1,
 				$this->command->getStatusCode(),
 				'Assert a typo in the address says so, instead of reporting a successful run that sent nothing'
+		);
+		$this->assertStringContainsString(
+				'Aucun compte ne porte',
+				$this->command->getDisplay(),
+				'Assert a wrong address is told apart from an account with nothing waiting'
+		);
+	}
+
+	/**
+	 * « 0 members have notifications waiting » recouvre trois situations qu'un
+	 * exploitant ne peut pas deviner : rien n'a été publié, tout est déjà
+	 * parti, ou tout est créé sans e-mail. Un zéro muet le renvoie à la base
+	 * de données, où il n'ira pas — il conclut que l'envoi est en panne.
+	 */
+	public function testAnAccountWithNothingWaitingIsToldWhy () {
+		$user = $this->user();
+
+		$this->command->execute( [ '--day' => self::TUESDAY, '--only' => $user->getEmail() ] );
+
+		$display = $this->command->getDisplay();
+
+		$this->assertSame( 1, $this->command->getStatusCode() );
+		$this->assertStringContainsString(
+				'RIEN N\'A ÉTÉ PUBLIÉ',
+				$display,
+				'Assert the report says what to do next, not only what is missing'
+		);
+	}
+
+	public function testAnAccountWhoseSummaryAlreadyLeftIsToldSo () {
+		$user = $this->user();
+		$this->notification( $user );
+
+		$this->command->execute( [ '--day' => self::TUESDAY, '--only' => $user->getEmail() ] );
+		$this->command->execute( [ '--day' => self::TUESDAY, '--only' => $user->getEmail() ] );
+
+		$this->assertStringContainsString(
+				'TOUT EST DÉJÀ PARTI',
+				$this->command->getDisplay(),
+				'Assert a summary that was consumed is told apart from one that never existed'
+		);
+	}
+
+	public function testNotificationsCreatedWithoutEmailAreToldApart () {
+		$user         = $this->user();
+		$notification = $this->notification( $user );
+		$notification->setByEmail( FALSE );
+		$this->manager->flush();
+
+		$this->command->execute( [ '--day' => self::TUESDAY, '--only' => $user->getEmail() ] );
+
+		$this->assertStringContainsString(
+				'CE SONT LES RÉGLAGES',
+				$this->command->getDisplay(),
+				'Assert a settings problem is not read as a broken transport'
 		);
 	}
 }

@@ -136,13 +136,20 @@ class SendNotificationsDigestCommand extends Command {
 		$recipients = $repository->findRecipientsAwaitingDigest();
 
 		if ( $only ) {
-			$recipients = $this->restrictTo( $recipients, $only );
+			$target = $this->manager->getRepository( User::class )
+								    ->findOneBy( [ 'email' => trim( $only ) ] );
+
+			if ( !$target ) {
+				$io->error( sprintf( 'Aucun compte ne porte l\'adresse « %s ».', trim( $only ) ) );
+
+				return 1;
+			}
+
+			$recipients = $this->restrictTo( $recipients, $target );
 
 			if ( $recipients === NULL ) {
-				$io->error( sprintf(
-						'Rien n\'attend d\'e-mail pour « %s » : compte inconnu, inactif, ou aucune notification en attente.',
-						$only
-				) );
+				$io->error( sprintf( 'Rien n\'attend d\'e-mail pour %s.', $target->getEmail() ) );
+				$this->explainNothing( $io, $repository->digestState( $target ), $target );
 
 				return 1;
 			}
@@ -242,6 +249,12 @@ class SendNotificationsDigestCommand extends Command {
 				$failed
 		) );
 
+		// Le compte rendu d'abord, l'explication ensuite : un zéro sans raison
+		// renvoie à la base de données, où personne n'ira regarder.
+		if ( empty( $recipients ) ) {
+			$this->explainNothing( $io, $repository->digestState() );
+		}
+
 		if ( $keep && ( $sent > 0 ) ) {
 			$io->note( 'Rien n\'a été consommé : les mêmes notifications repartiront au prochain lancement avec --only.' );
 		}
@@ -258,18 +271,100 @@ class SendNotificationsDigestCommand extends Command {
 	 * façon, et la commande doit le dire au lieu d'envoyer un e-mail vide.
 	 *
 	 * @param \App\Entity\User[] $recipients
-	 * @param string             $email
+	 * @param \App\Entity\User   $target
 	 *
 	 * @return \App\Entity\User[]|null
 	 */
-	private function restrictTo ( array $recipients, $email ) {
+	private function restrictTo ( array $recipients, User $target ) {
 		foreach ( $recipients as $recipient ) {
-			if ( mb_strtolower( (string) $recipient->getEmail() ) === mb_strtolower( trim( $email ) ) ) {
+			if ( $recipient->getId() === $target->getId() ) {
 				return [ $recipient ];
 			}
 		}
 
 		return NULL;
+	}
+
+	/**
+	 * Dire pourquoi il n'y a rien, plutôt que zéro.
+	 *
+	 * Un exploitant qui lit « 0 » sur une préproduction ne peut pas savoir
+	 * s'il a mal réglé quelque chose ou si simplement personne n'a rien
+	 * publié. Il conclut alors que « les e-mails ne marchent pas », ce qui
+	 * n'est ni vrai ni faux, et cherche du côté de Postmark.
+	 *
+	 * @param \Symfony\Component\Console\Style\SymfonyStyle $io
+	 * @param array                                        $state
+	 * @param \App\Entity\User|null                        $user
+	 */
+	private function explainNothing ( SymfonyStyle $io, array $state, User $user = NULL ) {
+		$io->section( $user ? sprintf( 'Ce que la base dit de %s', $user->getEmail() ) : 'Ce que la base dit' );
+
+		if ( $user ) {
+			$io->table( [ 'Le compte', '' ], [
+					[ 'Statut', $user->getStatus() === User::STATUS_ACTIVE ? 'actif' : $user->getStatus() ],
+					[ 'Accepte les e-mails', $user->wantsEmails() ? 'oui' : 'NON — réglage général « aucun e-mail »' ],
+			] );
+		}
+
+		$io->table( [ 'Notifications', '' ], [
+				[ 'En tout', $state[ 'total' ] ],
+				[ 'En attente d\'un résumé', $state[ 'waiting' ] ],
+				[ 'Déjà parties', $state[ 'sent' ] ],
+				[ 'Sans e-mail (byEmail = 0)', $state[ 'silent' ] ],
+				[ 'La plus récente', $state[ 'last' ] ?: '—' ],
+				[ 'Dernier envoi', $state[ 'lastSent' ] ?: '—' ],
+		] );
+
+		// Le résumé ne va qu'aux comptes actifs : un compte suspendu peut avoir
+		// tout ce qu'il faut en attente et n'être servi par personne.
+		if ( $user && ( $state[ 'waiting' ] > 0 ) && ( $user->getStatus() !== User::STATUS_ACTIVE ) ) {
+			$io->warning(
+					'Des notifications attendent, mais ce compte n\'est pas actif : le résumé ne s\'adresse '
+					. 'qu\'aux comptes actifs.'
+			);
+
+			return;
+		}
+
+		// Les trois verdicts commencent par une phrase courte : c'est elle
+		// qu'on lit, et c'est elle que les épreuves attendent — le reste peut
+		// se replier au gré de la largeur du terminal.
+		if ( $state[ 'total' ] === 0 ) {
+			$io->warning( implode( "\n", [
+					'RIEN N\'A ÉTÉ PUBLIÉ.',
+					'Aucune notification n\'existe' . ( $user ? ' pour ce compte' : '' ) . ', donc rien à résumer.',
+					'Ce n\'est pas une panne d\'envoi.',
+					'Publier une page ou une actualité dans un groupe, avec un AUTRE compte :',
+					'personne n\'est notifié de ce qu\'il publie lui-même.',
+			] ) );
+
+			return;
+		}
+
+		if ( $state[ 'waiting' ] > 0 ) {
+			return;
+		}
+
+		if ( $state[ 'silent' ] >= $state[ 'sent' ] ) {
+			$io->warning( implode( "\n", [
+					'CE SONT LES RÉGLAGES.',
+					'Des notifications existent, mais aucune ne doit partir par e-mail :',
+					'niveau « aucune » ou « sur la plateforme seulement », e-mail immédiat',
+					'déjà parti, ou refus général des e-mails.',
+					'Régler une catégorie sur « résumé quotidien » ou « hebdomadaire »',
+					'dans /user/parameters/edit, puis republier.',
+			] ) );
+
+			return;
+		}
+
+		$io->warning( implode( "\n", [
+				'TOUT EST DÉJÀ PARTI.',
+				'Voir « Dernier envoi » ci-dessus : un résumé n\'est envoyé qu\'une fois.',
+				'Pour le revoir, republier quelque chose — ou employer --only et --keep,',
+				'qui ne consomment rien.',
+		] ) );
 	}
 
 	/**

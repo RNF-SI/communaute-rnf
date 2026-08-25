@@ -116,6 +116,13 @@ Chaque ligne dit ce qui part et ce qui reste :
 #42 vous@rnfrance.org : 3 notifications (daily 2, weekly 1), 4 en attente d'un lundi
 ```
 
+**Quand il n'y a rien, la commande dit pourquoi.** « 0 members have
+notifications waiting » recouvre trois situations qu'on ne peut pas deviner, et
+elle les sépare : *rien n'a été publié* (aucune notification n'existe — ce n'est
+pas une panne d'envoi), *ce sont les réglages* (des notifications existent mais
+aucune ne doit partir par e-mail), *tout est déjà parti* (un résumé n'est envoyé
+qu'une fois). Un tableau donne les nombres et la date du dernier envoi.
+
 Ces options font travailler **la commande elle-même**, pas une démonstration à
 côté : une seconde mécanique d'envoi finirait par diverger de celle qui part la
 nuit, et l'essai dirait alors le contraire de la production.
