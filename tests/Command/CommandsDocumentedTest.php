@@ -94,6 +94,27 @@ class CommandsDocumentedTest extends TestCase {
 		}
 	}
 
+	/**
+	 * Le README les montre toutes, d'un coup d'œil.
+	 *
+	 * La page de référence dit ce que fait chaque commande ; encore faut-il
+	 * savoir qu'elle existe. Une commande qu'on ne découvre qu'en lisant le
+	 * dossier `src/Command` n'est lancée par personne — c'est ce qui était
+	 * arrivé à `app:preflight` et à `app:mail:check`, écrites pour un
+	 * déploiement et oubliées au suivant.
+	 */
+	public function testTheReadmeShowsEveryCommand () {
+		$readme = (string) file_get_contents( $this->root() . '/README.md' );
+
+		foreach ( $this->declared() as $name ) {
+			$this->assertStringContainsString(
+					$name,
+					$readme,
+					sprintf( 'Assert the README lists "%s" — see its « Les commandes » table', $name )
+			);
+		}
+	}
+
 	public function testTheReadmeDocumentsNoGhostCommand () {
 		$readme   = (string) file_get_contents( $this->root() . '/README.md' );
 		$declared = $this->declared();

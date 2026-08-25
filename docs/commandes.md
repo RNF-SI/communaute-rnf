@@ -92,6 +92,42 @@ php bin/console app:notifications:digest --day=2026-08-24 --dry-run
 |---|---|
 | `--dry-run` | dit ce qui partirait, n'envoie rien et ne marque rien |
 | `--day=AAAA-MM-JJ` | se place un autre jour — pour voir ce qu'un lundi enverrait |
+| `--only=adresse` | n'écrit qu'à ce compte, et détaille ce qu'il a en attente |
+| `--keep` | ne marque rien comme envoyé : le même résumé repart au lancement suivant. **Exige `--only`** |
+
+#### Éprouver l'hebdomadaire sans attendre lundi
+
+Trois obstacles, et une option chacun : l'hebdomadaire ne part **qu'un jour sur
+sept**, une préproduction porte souvent une **copie anonymisée** dont toutes les
+adresses rebondissent, et un résumé envoyé est **consommé** — le relancer
+n'envoie plus rien.
+
+```bash
+# 1. Ce qui attend, et ce qu'un lundi emporterait. N'envoie rien.
+php bin/console app:notifications:digest --day=2026-08-31 --dry-run
+
+# 2. Le vrai e-mail, à un seul compte, un lundi, sans rien consommer.
+php bin/console app:notifications:digest --day=2026-08-31 --only=vous@rnfrance.org --keep
+```
+
+Chaque ligne dit ce qui part et ce qui reste :
+
+```
+#42 vous@rnfrance.org : 3 notifications (daily 2, weekly 1), 4 en attente d'un lundi
+```
+
+Ces options font travailler **la commande elle-même**, pas une démonstration à
+côté : une seconde mécanique d'envoi finirait par diverger de celle qui part la
+nuit, et l'essai dirait alors le contraire de la production.
+
+Pour qu'il y ait de l'hebdomadaire à voir, il en faut en attente : régler une
+catégorie sur « résumé hebdomadaire » dans `/user/parameters/edit`, puis publier
+une page ou une actualité dans le groupe concerné. Voir
+[`tester-les-emails.md`](tester-les-emails.md).
+
+⚠️ **`--keep` n'est pas une option de production.** Sans `--only` la commande la
+refuse — le même résumé repartirait à tout le monde le lendemain, et le
+surlendemain.
 
 ⚠️ **Une seule ligne de cron, quotidienne.** Ajouter une seconde ligne
 hebdomadaire enverrait le résumé deux fois.

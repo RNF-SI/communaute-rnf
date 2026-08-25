@@ -19,6 +19,42 @@ La plateforme permet de créer des groupes thématiques, partager des ressources
 - **Maps** : Leaflet pour la géolocalisation
 - **Email** : Postmark pour les notifications
 
+## Les commandes
+
+Toutes les commandes propres au projet, ce qu'elles font et **ce qu'elles
+écrivent** : [`docs/commandes.md`](docs/commandes.md). Un test échoue si une
+commande est ajoutée sans y être documentée, ou si cette liste envoie vers une
+commande qui n'existe plus.
+
+| Commande | Écrit ? | Quand |
+|---|---|---|
+| `php bin/console app:preflight` | non | après chaque déploiement — ce qui échouerait en silence |
+| `php bin/console app:mail:check` | non, sauf `--to` | après chaque modification du DNS d'envoi |
+| `php bin/console app:notifications:digest` | oui | **tous les jours**, par tâche planifiée |
+| `php bin/console app:rnf:sync-reserves` | oui | la nuit, par tâche planifiée |
+| `php bin/console app:rnf:inspect` | non | pour voir ce que GeoNature répond d'un compte |
+| `php bin/console user:set-admin` / `user:unset-admin` | oui | nommer ou révoquer un administrateur |
+| `php bin/console search:reindex:all` / `search:reindex` | oui (index) | après un changement des colonnes indexées |
+| `php bin/console import:skills` | oui | après modification de la liste des compétences |
+| `php bin/console app:update-coordinates` / `app:update-nuts-id` | oui | ponctuel, données géographiques |
+| `php bin/console app:db:anonymize` | **oui, irréversible** | sur une copie, jamais en production |
+
+Deux tâches planifiées, et deux seulement : le résumé des notifications, **une
+fois par jour** — c'est la commande qui décide de ce qui part ce jour-là, une
+seconde ligne hebdomadaire enverrait tout en double — et la synchronisation des
+réserves depuis GeoNature.
+
+Pour éprouver l'envoi du résumé sur une préproduction sans écrire à tout le
+réseau :
+
+```bash
+# ce qu'un lundi enverrait, sans rien envoyer
+php bin/console app:notifications:digest --day=2026-08-31 --dry-run
+
+# le vrai e-mail, à une seule adresse, sans rien consommer
+php bin/console app:notifications:digest --day=2026-08-31 --only=vous@rnfrance.org --keep
+```
+
 ## Installation
 
 ### Prérequis
@@ -279,6 +315,10 @@ npm run watch
 npm run build
 ```
 
+Les commandes propres au projet sont rassemblées plus haut, [Les
+commandes](#les-commandes), et détaillées dans
+[`docs/commandes.md`](docs/commandes.md).
+
 ## Déploiement en production
 
 ### Résolution des problèmes de permissions
@@ -334,3 +374,5 @@ Vérifiez que le `DATABASE_PREFIX` est bien défini et que l'utilisateur MySQL a
   DMARC : ce que le DNS doit dire pour que les e-mails arrivent.
 - [`docs/donnees-reelles.md`](docs/donnees-reelles.md) — jeux de données pour le
   développement, comptes de test, et import anonymisé d'une copie de production.
+- [`docs/commandes.md`](docs/commandes.md) — chaque commande `bin/console` du
+  projet : ce qu'elle fait, ce qu'elle écrit, et quand la lancer.

@@ -255,4 +255,93 @@ class WeeklyDigestTest extends KernelTestCase {
 				'Assert a typo in a scheduled task does not silently send the wrong day'
 		);
 	}
+
+	/**
+	 * Ce qui suit : éprouver l'envoi sur une préproduction sans écrire à tout
+	 * le réseau, et sans consommer ce qu'on veut revoir.
+	 *
+	 * L'enjeu n'est pas le confort. Une préproduction porte souvent une copie
+	 * anonymisée dont toutes les adresses sont en `@example.org` : un résumé
+	 * lancé tel quel y produit autant de rebonds durs que de comptes, et
+	 * Postmark suspend un serveur pour moins que ça — celui de la production.
+	 */
+	public function testOnlyWritesToTheOneAccountAsked () {
+		$tested = $this->user();
+		$other  = $this->user();
+
+		$mine   = $this->notification( $tested );
+		$theirs = $this->notification( $other );
+
+		$this->command->execute( [ '--day' => self::TUESDAY, '--only' => $tested->getEmail() ] );
+
+		$this->assertTrue( $this->wasSent( $mine ), 'Assert the account asked for was served' );
+		$this->assertFalse(
+				$this->wasSent( $theirs ),
+				'Assert nobody else was written to — that is the whole point of the option'
+		);
+	}
+
+	public function testAMondayCanBeRehearsedForOneAccount () {
+		$user   = $this->user();
+		$weekly = $this->notification( $user, NotificationRhythm::WEEKLY );
+
+		$this->command->execute( [ '--day' => self::MONDAY, '--only' => $user->getEmail() ] );
+
+		$this->assertTrue(
+				$this->wasSent( $weekly ),
+				'Assert the weekly summary can be seen without waiting for a Monday'
+		);
+	}
+
+	public function testTheReportSaysWhatIsHeldForThatAccount () {
+		$user = $this->user();
+		$this->notification( $user, NotificationRhythm::WEEKLY );
+
+		$this->command->execute( [ '--day' => self::TUESDAY, '--only' => $user->getEmail() ] );
+
+		$this->assertStringContainsString(
+				'en attente d\'un lundi',
+				$this->command->getDisplay(),
+				'Assert the line says what is waiting, rather than showing an account with nothing'
+		);
+	}
+
+	public function testKeepConsumesNothing () {
+		$user         = $this->user();
+		$notification = $this->notification( $user );
+
+		$this->command->execute( [
+				'--day'  => self::TUESDAY,
+				'--only' => $user->getEmail(),
+				'--keep' => TRUE,
+		] );
+
+		$this->assertFalse(
+				$this->wasSent( $notification ),
+				'Assert the same summary can be sent again, which is what makes it testable'
+		);
+	}
+
+	/**
+	 * Sans --only, --keep enverrait à tout le monde et laisserait tout en
+	 * attente : le même résumé repartirait le lendemain, et le surlendemain.
+	 */
+	public function testKeepAloneIsRefused () {
+		$notification = $this->notification( $this->user() );
+
+		$this->command->execute( [ '--day' => self::TUESDAY, '--keep' => TRUE ] );
+
+		$this->assertSame( 1, $this->command->getStatusCode() );
+		$this->assertFalse( $this->wasSent( $notification ), 'Assert nothing left at all' );
+	}
+
+	public function testAnAccountWithNothingWaitingIsRefused () {
+		$this->command->execute( [ '--day' => self::TUESDAY, '--only' => 'personne@example.org' ] );
+
+		$this->assertSame(
+				1,
+				$this->command->getStatusCode(),
+				'Assert a typo in the address says so, instead of reporting a successful run that sent nothing'
+		);
+	}
 }

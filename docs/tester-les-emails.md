@@ -122,6 +122,58 @@ Pour envoyer un résumé quotidien à la demande :
 php bin/console app:notifications:digest
 ```
 
+## Le résumé hebdomadaire
+
+C'est celui qu'on ne peut pas simplement « lancer pour voir » : il ne part
+**qu'un jour sur sept**, il est **consommé** dès qu'il est parti, et il s'envoie
+à **tout le monde à la fois** — sur une préproduction anonymisée, autant de
+rebonds durs que de comptes. Trois options y répondent, et elles font travailler
+la vraie commande plutôt qu'une démonstration à côté.
+
+**1. Avoir de l'hebdomadaire en attente.** Rien ne se voit s'il n'y a rien à
+voir :
+
+1. dans `/user/parameters/edit`, régler une catégorie — « Documents », par
+   exemple — sur **résumé hebdomadaire**, pour un groupe ou en réglage général ;
+2. faire publier dans ce groupe le contenu correspondant, avec **un autre
+   compte** (personne n'est notifié de ce qu'il publie lui-même).
+
+**2. Regarder ce qui attend, sans rien envoyer.** `--day` se place un lundi —
+n'importe quel lundi, passé ou à venir :
+
+```bash
+php bin/console app:notifications:digest --day=2026-08-31 --dry-run
+```
+
+Chaque ligne dit ce qui partirait ce jour-là et ce qui resterait :
+
+```
+#42 vous@rnfrance.org : 3 notifications (daily 2, weekly 1), 4 en attente d'un lundi
+```
+
+Le même appel un mardi doit montrer l'hebdomadaire **retenu**, pas disparu :
+c'est la moitié du contrôle.
+
+**3. Recevoir le vrai e-mail, à une seule adresse :**
+
+```bash
+php bin/console app:notifications:digest --day=2026-08-31 --only=vous@rnfrance.org --keep
+```
+
+- `--only` restreint l'envoi à ce compte. **C'est la protection à ne pas
+  oublier en préproduction** : sans elle, le résumé part à tous les comptes de
+  la copie, et une copie anonymisée n'a que des adresses en `@example.org`.
+- `--keep` ne marque rien comme envoyé : on relance autant de fois qu'on veut,
+  après avoir corrigé un gabarit par exemple. Sans `--only`, la commande refuse
+  cette option — le même résumé repartirait à tout le monde le lendemain.
+
+Puis, dans l'e-mail reçu : un seul message pour plusieurs notifications, un
+titre par groupe, le quotidien **et** l'hebdomadaire réunis puisqu'on s'est
+placé un lundi, et les en-têtes `List-Unsubscribe`.
+
+⚠️ Un `--only` vers une adresse en `@example.org` sera refusé par le garde de
+#14 en production : viser une vraie boîte.
+
 ## En préproduction : Postmark, mais pas n'importe comment
 
 ⚠️ **Si la préproduction porte une copie anonymisée, toutes les adresses sont
@@ -129,9 +181,12 @@ en `@example.org`.** Lancer le résumé quotidien sur 120 comptes produirait 120
 rebonds durs d'un coup, et Postmark suspend un compte pour bien moins que ça.
 La production tomberait avec.
 
-Deux façons de s'en prémunir, à combiner :
+Trois façons de s'en prémunir, à combiner :
 
-1. **Rediriger tout vers une seule adresse réelle.** Dans
+1. **Ne viser qu'un compte**, ce qui ne demande aucune configuration :
+   `app:notifications:digest --only=vous@rnfrance.org`. C'est le premier
+   réflexe, et le seul qui protège aussi d'une erreur de manipulation.
+2. **Rediriger tout vers une seule adresse réelle.** Dans
    `config/packages/prod/swiftmailer.yaml` de la préproduction :
 
    ```yaml
@@ -143,7 +198,7 @@ Deux façons de s'en prémunir, à combiner :
    transport Postmark en direct. Y mettre un `POSTMARK_BULK_TOKEN` vide tant que
    la question n'est pas tranchée.
 
-2. **Utiliser un serveur Postmark distinct** pour la préproduction, avec ses
+3. **Utiliser un serveur Postmark distinct** pour la préproduction, avec ses
    propres jetons. Les rebonds n'affectent alors pas la réputation du serveur de
    production.
 
