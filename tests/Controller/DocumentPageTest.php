@@ -359,7 +359,7 @@ class DocumentPageTest extends WebTestCase {
 
 		$this->assertStringContainsString(
 				'Retour sur l’atelier',
-				$this->openSheet( $document )->filter( '.document-sheet--talk' )->text()
+				$this->openSheet( $document )->filter( '.document-talk' )->text()
 		);
 	}
 
@@ -372,7 +372,7 @@ class DocumentPageTest extends WebTestCase {
 
 		$this->assertStringNotContainsString(
 				'Retour sur l’atelier',
-				$this->openSheet( $document )->filter( '.document-sheet--talk' )->text()
+				$this->openSheet( $document )->filter( '.document-talk' )->text()
 		);
 	}
 
@@ -388,7 +388,7 @@ class DocumentPageTest extends WebTestCase {
 
 		$this->assertStringNotContainsString(
 				'Retour sur l’atelier',
-				$this->openSheet( $document )->filter( '.document-sheet--talk' )->text(),
+				$this->openSheet( $document )->filter( '.document-talk' )->text(),
 				'Assert a retired discussion does not come back through the document'
 		);
 	}
@@ -411,7 +411,7 @@ class DocumentPageTest extends WebTestCase {
 
 		$this->assertStringContainsString(
 				'Mode d’emploi du pâturage',
-				$this->openSheet( $document )->filter( '.document-sheet--talk' )->text()
+				$this->openSheet( $document )->filter( '.document-talk' )->text()
 		);
 	}
 
@@ -423,7 +423,7 @@ class DocumentPageTest extends WebTestCase {
 
 		$this->assertStringContainsString(
 				'Personne n’en a encore parlé',
-				$this->openSheet( $document )->filter( '.document-sheet--talk' )->text()
+				$this->openSheet( $document )->filter( '.document-talk' )->text()
 		);
 	}
 

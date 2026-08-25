@@ -39,15 +39,20 @@
 			]} %}
 
 			<div class="thin">
-				<div class="document-sheet">
+				{# Ce qu'est le document, puis ce qui en a été dit : deux cartes, et
+				   non deux blocs posés à plat sur le fond de page. Sans le fond
+				   blanc, la liste de liens du bas se lisait comme la suite des
+				   métadonnées du haut, et les étiquettes — gris pâle sur gris pâle —
+				   disparaissaient. (#32) #}
+				<article class="document-sheet">
 					{% if document.description is not empty %}
 						<p class="document-sheet--description">{{ document.description|nl2br }}</p>
 					{% endif %}
 
 					{% if document.tags is not empty %}
-						<ul class="tags document-sheet--tags">
+						<ul class="document-sheet--tags">
 							{% for tag in document.tags %}
-								<li class="tag">
+								<li>
 									<a href="{{ path('group_documents_index', {'groupSlug': group.slug, 'form': {'tags': [tag.id]}}) }}">{{ tag.name }}</a>
 								</li>
 							{% endfor %}
@@ -75,22 +80,38 @@
 					</dl>
 
 					{% if document.file is empty %}
-						<p class="hint">{{ 'pages.document.view.no_file'|trans }}</p>
+						<p class="document-sheet--nofile">{{ 'pages.document.view.no_file'|trans }}</p>
 					{% endif %}
-				</div>
+				</article>
 
 				{# Ce qui a été dit de ce document, et les pages qui s'y réfèrent :
 				   c'est la moitié manquante de la navigation, celle qui va du
-				   document vers le reste. (#32) #}
-				<section class="document-sheet--talk">
-					<h2 class="h3">{{ 'pages.document.view.talk.title'|trans }}</h2>
+				   document vers le reste. (#32)
+
+				   Chacune des deux listes porte son intertitre. Seules les pages en
+				   avaient un, si bien que « Pages qui y renvoient » semblait
+				   qualifier la discussion posée juste au-dessus. #}
+				<section class="document-talk">
+					<div class="document-talk--head">
+						<h2 class="h3">{{ 'pages.document.view.talk.title'|trans }}</h2>
+
+						{% if is_granted(constant('App\\Security\\GroupDiscussionVoter::CREATE'), group) %}
+							<a class="cta__inverted document-talk--ask"
+							   href="{{ path('group_discussion_new', {'groupSlug': group.slug, 'document': document.id}) }}">{{ 'pages.document.view.talk.ask'|trans }}</a>
+						{% endif %}
+					</div>
+
+					{% if discussions is empty and pages is empty %}
+						<p class="document-talk--empty">{{ 'pages.document.view.talk.empty'|trans }}</p>
+					{% endif %}
 
 					{% if discussions is not empty %}
-						<ul class="documents-list">
+						<h3 class="document-talk--kind">{{ 'pages.document.view.talk.discussions'|trans }}</h3>
+						<ul class="document-talk--list">
 							{% for discussion in discussions %}
 								<li>
-									<a class="document-infos" href="{{ path('group_discussion_index', {'groupSlug': group.slug, 'discussionUuid': discussion.uuid}) }}">
-										<div class="document--title"><span>{{ discussion.title }}</span></div>
+									<a class="document-talk--item" href="{{ path('group_discussion_index', {'groupSlug': group.slug, 'discussionUuid': discussion.uuid}) }}">
+										<span class="document-talk--item-title">{{ discussion.title }}</span>
 									</a>
 								</li>
 							{% endfor %}
@@ -98,27 +119,16 @@
 					{% endif %}
 
 					{% if pages is not empty %}
-						<h3 class="h4">{{ 'pages.document.view.talk.pages'|trans }}</h3>
-						<ul class="documents-list">
+						<h3 class="document-talk--kind">{{ 'pages.document.view.talk.pages'|trans }}</h3>
+						<ul class="document-talk--list">
 							{% for page in pages %}
 								<li>
-									<a class="document-infos" href="{{ path('group_page_index', {'groupSlug': group.slug, 'pageSlug': page.slug}) }}">
-										<div class="document--title"><span>{{ page.title }}</span></div>
+									<a class="document-talk--item" href="{{ path('group_page_index', {'groupSlug': group.slug, 'pageSlug': page.slug}) }}">
+										<span class="document-talk--item-title">{{ page.title }}</span>
 									</a>
 								</li>
 							{% endfor %}
 						</ul>
-					{% endif %}
-
-					{% if discussions is empty and pages is empty %}
-						<p class="hint">{{ 'pages.document.view.talk.empty'|trans }}</p>
-					{% endif %}
-
-					{% if is_granted(constant('App\\Security\\GroupDiscussionVoter::CREATE'), group) %}
-						<p>
-							<a class="cta__inverted document-sheet--ask"
-							   href="{{ path('group_discussion_new', {'groupSlug': group.slug, 'document': document.id}) }}">{{ 'pages.document.view.talk.ask'|trans }}</a>
-						</p>
 					{% endif %}
 				</section>
 			</div>
