@@ -435,9 +435,12 @@ class NotificationSettingsTest extends WebTestCase {
 				$discussion->getUuid()
 		) );
 
+		// Le lien de suivi, et non « le lien du panneau » : celui qui a ouvert
+		// le sujet — ou l'anime — y trouve aussi « Renommer le sujet », et les
+		// deux partagent la même colonne.
 		$this->assertEquals(
 				1,
-				$crawler->filter( '.discussion-follow a' )->count(),
+				$crawler->filter( '.discussion-follow a[href*="/follow/"]' )->count(),
 				'Assert the button is offered to a member'
 		);
 	}

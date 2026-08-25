@@ -554,6 +554,26 @@ class MessagingTest extends WebTestCase {
 	 * SIGNALER
 	 *************************************************/
 
+	/**
+	 * Le signalement qui porte sur ce message, parmi ceux que l'administration
+	 * a en attente.
+	 *
+	 * @param \App\Entity\PrivateMessage $message
+	 *
+	 * @return \App\Entity\MessageReport
+	 */
+	private function reportOf ( PrivateMessage $message ) {
+		foreach ( $this->manager->getRepository( MessageReport::class )->findForAdmin() as $report ) {
+			$reported = $report->getMessage();
+
+			if ( $reported && ( $reported->getId() === $message->getId() ) ) {
+				return $report;
+			}
+		}
+
+		$this->fail( 'Assert the report reached the administration list' );
+	}
+
 	public function testAReportCarriesACopyOfTheMessageAndItsContext () {
 		$author    = $this->user( 'Jeanne Réserve' );
 		$recipient = $this->user( 'Paul Martin' );
@@ -581,11 +601,10 @@ class MessagingTest extends WebTestCase {
 		$form[ 'reason' ] = 'Ce ton ne va pas.';
 		$this->client->submit( $form );
 
-		$reports = $this->manager->getRepository( MessageReport::class )->findForAdmin();
-
-		$this->assertCount( 1, $reports );
-
-		$report = $reports[ 0 ];
+		// Le signalement de ce message-ci, et non « le seul de la table » :
+		// les données de test en portent déjà un en attente, et compter les
+		// lignes revenait à compter les fixtures. (#31)
+		$report = $this->reportOf( $reported );
 
 		$this->assertSame( 'Le second message, celui qui pose problème', $report->getExcerpt() );
 		$this->assertSame( $author->getId(), $report->getReported()->getId() );

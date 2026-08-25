@@ -35,11 +35,19 @@ class NamedAccountsTest extends TestCase {
 	}
 
 	/**
+	 * Compte les fiches qui répondent à un critère.
+	 *
+	 * Elle s'appelait `count()`, et rien ne s'en servait. PHPUnit, lui, en
+	 * déclare une : `TestCase` implémente `Countable`, et une `count()` privée
+	 * dans une classe fille est une **erreur fatale à la compilation** — pas
+	 * un test rouge, un fichier qui ne se charge pas, et avec lui toute la
+	 * suite. Ne pas lui rendre son nom.
+	 *
 	 * @param callable $matches
 	 *
 	 * @return int
 	 */
-	private function count ( callable $matches ) {
+	private function howMany ( callable $matches ) {
 		return count( array_filter( $this->profiles(), $matches ) );
 	}
 
@@ -63,37 +71,37 @@ class NamedAccountsTest extends TestCase {
 	}
 
 	public function testAnAccountPublishesAPhoneNumber () {
-		$this->assertGreaterThan( 0, $this->count( function ( array $profile ) {
+		$this->assertGreaterThan( 0, $this->howMany( function ( array $profile ) {
 			return !empty( $profile[ 'phone' ] );
 		} ), 'Assert the phone number of #27 can be seen without filling a profile first' );
 	}
 
 	public function testAnAccountKeepsItsAddressVisible () {
-		$this->assertGreaterThan( 0, $this->count( function ( array $profile ) {
+		$this->assertGreaterThan( 0, $this->howMany( function ( array $profile ) {
 			return !empty( $profile ) && !$this->hidesAddress( $profile );
 		} ), 'Assert the default — an address anybody can read — is represented' );
 	}
 
 	public function testAnAccountHidesItsAddress () {
-		$this->assertGreaterThan( 0, $this->count( function ( array $profile ) {
+		$this->assertGreaterThan( 0, $this->howMany( function ( array $profile ) {
 			return $this->hidesAddress( $profile );
 		} ), 'Assert the opt-out of #27 is represented too' );
 	}
 
 	public function testAnAccountShowsNoContactDetailAtAll () {
-		$this->assertGreaterThan( 0, $this->count( function ( array $profile ) {
+		$this->assertGreaterThan( 0, $this->howMany( function ( array $profile ) {
 			return $this->hidesAddress( $profile ) && empty( $profile[ 'phone' ] );
 		} ), 'Assert the silent profile exists, the one that must not read as a bug' );
 	}
 
 	public function testAnAccountShowsAPhoneButNoAddress () {
-		$this->assertGreaterThan( 0, $this->count( function ( array $profile ) {
+		$this->assertGreaterThan( 0, $this->howMany( function ( array $profile ) {
 			return $this->hidesAddress( $profile ) && !empty( $profile[ 'phone' ] );
 		} ), 'Assert the two halves of the choice are both represented' );
 	}
 
 	public function testAnAccountCarriesTheThreeJobFields () {
-		$this->assertGreaterThan( 0, $this->count( function ( array $profile ) {
+		$this->assertGreaterThan( 0, $this->howMany( function ( array $profile ) {
 			return !empty( $profile[ 'jobTitle' ] )
 				   && !empty( $profile[ 'organisation' ] )
 				   && !empty( $profile[ 'reserves' ] );
@@ -105,11 +113,11 @@ class NamedAccountsTest extends TestCase {
 	 * jamais disparaître le bouton « Écrire » sur une fiche.
 	 */
 	public function testABoxIsClosedAndTheOthersAreOpen () {
-		$closed = $this->count( function ( array $profile ) {
+		$closed = $this->howMany( function ( array $profile ) {
 			return array_key_exists( 'messages', $profile ) && ( $profile[ 'messages' ] === FALSE );
 		} );
 
-		$open = $this->count( function ( array $profile ) {
+		$open = $this->howMany( function ( array $profile ) {
 			return !empty( $profile ) && !array_key_exists( 'messages', $profile );
 		} );
 
@@ -118,7 +126,7 @@ class NamedAccountsTest extends TestCase {
 	}
 
 	public function testAnAccountIsLeftBlank () {
-		$this->assertGreaterThan( 0, $this->count( function ( array $profile ) {
+		$this->assertGreaterThan( 0, $this->howMany( function ( array $profile ) {
 			return $profile === [];
 		} ), 'Assert an untouched profile is seeded, so its rendering can be checked' );
 	}

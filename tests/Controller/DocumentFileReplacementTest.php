@@ -136,6 +136,31 @@ class DocumentFileReplacementTest extends WebTestCase {
 	}
 
 	/**
+	 * Retenir un fichier à effacer du stockage, **chargé**.
+	 *
+	 * Ce que rend `getFile()` après un `clear()` est un mandataire vide : il
+	 * ira chercher sa ligne au premier appel. Or c'est tout le sujet de #41
+	 * que de supprimer l'ancienne ligne — si bien que le nettoyage, à la fin,
+	 * réveillait un mandataire dont la ligne n'existait plus et le test
+	 * finissait en `EntityNotFoundException`, après avoir pourtant vérifié ce
+	 * qu'il avait à vérifier.
+	 *
+	 * Le charger tout de suite lui donne son chemin et son système de
+	 * fichiers ; ce qu'on en fait ensuite en base ne le regarde plus.
+	 *
+	 * @param \App\Entity\File|null $file
+	 */
+	private function remember ( File $file = NULL ) {
+		if ( !$file ) {
+			return;
+		}
+
+		$this->manager->initializeObject( $file );
+
+		$this->written[] = $file;
+	}
+
+	/**
 	 * @param string $content
 	 *
 	 * @return string chemin du fichier à envoyer
@@ -177,7 +202,7 @@ class DocumentFileReplacementTest extends WebTestCase {
 		$this->assertNotNull( $document, 'Assert the deposit went through' );
 		$this->assertNotNull( $document->getFile(), 'Assert the deposit attached its file' );
 
-		$this->written[] = $document->getFile();
+		$this->remember( $document->getFile() );
 
 		return $document;
 	}
@@ -209,7 +234,7 @@ class DocumentFileReplacementTest extends WebTestCase {
 				'Assert the document now points at another file'
 		);
 
-		$this->written[] = $replaced->getFile();
+		$this->remember( $replaced->getFile() );
 	}
 
 	/**
@@ -236,7 +261,7 @@ class DocumentFileReplacementTest extends WebTestCase {
 		$this->manager->clear();
 
 		$replaced = $this->manager->getRepository( Document::class )->find( $document->getId() );
-		$this->written[] = $replaced->getFile();
+		$this->remember( $replaced->getFile() );
 
 		$this->assertNull(
 				$this->manager->getRepository( File::class )->find( $previous->getId() ),
@@ -267,7 +292,7 @@ class DocumentFileReplacementTest extends WebTestCase {
 		$this->manager->clear();
 
 		$replaced = $this->manager->getRepository( Document::class )->find( $document->getId() );
-		$this->written[] = $replaced->getFile();
+		$this->remember( $replaced->getFile() );
 
 		$this->assertEquals( $title, $replaced->getTitle(), 'Assert the title is left alone' );
 	}

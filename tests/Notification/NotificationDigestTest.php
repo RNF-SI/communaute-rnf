@@ -115,12 +115,28 @@ class NotificationDigestTest extends KernelTestCase {
 		$this->command->execute( $options );
 	}
 
+	/**
+	 * Ce que la commande a écrit, sur une seule ligne.
+	 *
+	 * `SymfonyStyle` met ses encadrés à la largeur du terminal — quatre-vingts
+	 * colonnes par défaut. Une phrase un peu longue s'y coupe en deux, et
+	 * `assertStringContainsString` ne la retrouve plus : « 1 dropped for
+	 * members who / refuse e-mails » a échoué pour cette seule raison, alors
+	 * que la commande disait exactement ce qu'il fallait. Un test sur la
+	 * sortie d'une commande ne doit pas dépendre de la largeur de l'écran.
+	 *
+	 * @return string
+	 */
+	private function display () {
+		return trim( preg_replace( '/\s+/u', ' ', $this->command->getDisplay() ) );
+	}
+
 	public function testAMemberWithNothingWaitingGetsNothing () {
 		$this->user();
 
 		$this->digest( [ '--dry-run' => TRUE ] );
 
-		$this->assertStringContainsString( '0 summaries would be sent', $this->command->getDisplay() );
+		$this->assertStringContainsString( '0 summaries would be sent', $this->display() );
 	}
 
 	public function testOneSummaryPerMemberWhateverTheNumberOfNotifications () {
@@ -133,7 +149,7 @@ class NotificationDigestTest extends KernelTestCase {
 
 		$this->assertStringContainsString(
 				'1 summaries would be sent',
-				$this->command->getDisplay(),
+				$this->display(),
 				'Assert three notifications make one e-mail, not three'
 		);
 	}
@@ -148,7 +164,7 @@ class NotificationDigestTest extends KernelTestCase {
 
 		$this->assertStringContainsString(
 				'0 summaries sent',
-				$this->command->getDisplay(),
+				$this->display(),
 				'Assert notifications already summarised are not sent again'
 		);
 	}
@@ -173,7 +189,7 @@ class NotificationDigestTest extends KernelTestCase {
 
 		$this->digest( [ '--dry-run' => TRUE ] );
 
-		$this->assertStringContainsString( '0 summaries would be sent', $this->command->getDisplay() );
+		$this->assertStringContainsString( '0 summaries would be sent', $this->display() );
 	}
 
 	public function testAMemberWhoStoppedWantingEmailsIsNotWrittenTo () {
@@ -188,7 +204,7 @@ class NotificationDigestTest extends KernelTestCase {
 
 		$this->assertStringContainsString(
 				'1 dropped for members who refuse e-mails',
-				$this->command->getDisplay(),
+				$this->display(),
 				'Assert the last word belongs to what the member wants now'
 		);
 	}
@@ -203,7 +219,7 @@ class NotificationDigestTest extends KernelTestCase {
 		$this->manager->clear();
 		$this->digest();
 
-		$this->assertStringContainsString( '0 dropped', $this->command->getDisplay() );
+		$this->assertStringContainsString( '0 dropped', $this->display() );
 	}
 
 	/**

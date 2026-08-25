@@ -127,7 +127,13 @@ class GroupDiscussionsController extends AbstractController {
 								->findOneBy( [ 'id' => $request->query->get( 'document' ), 'usergroup' => $group ] );
 
 			if ( $document && $this->isGranted( GroupDocumentVoter::READ, $document ) ) {
-				$discussion->setTitle( mb_substr(
+				// Le titre se pose sur le **champ**, comme le corps juste
+				// dessous, et non sur la discussion. Le formulaire a lu son
+				// objet au moment où il a été construit, deux lignes plus
+				// haut : écrire dans l'objet après coup ne remonte pas
+				// jusqu'au champ, et « En discuter » ouvrait un sujet dont le
+				// titre était resté vide. (#32)
+				$form->get( 'title' )->setData( mb_substr(
 						$translator->trans( 'pages.discussion.about_document', [
 								'%title%' => $document->getTitle(),
 						] ),

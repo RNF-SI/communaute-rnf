@@ -4,9 +4,11 @@ namespace App\Tests\Controller;
 
 use App\Entity\Document;
 use App\Entity\DocumentFolder;
+use App\Entity\File;
 use App\Entity\User;
 use App\Entity\Usergroup;
 use App\Service\DocumentFolderResolver;
+use App\Service\FileManager;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -44,12 +46,31 @@ class DocumentFoldersTest extends WebTestCase {
 	 */
 	private $group;
 
+	/**
+	 * @var \App\Service\FileManager
+	 */
+	private $files;
+
+	/**
+	 * Les fichiers écrits pendant le test, à retirer du stockage ensuite : la
+	 * transaction annule les lignes, elle ne rend pas les octets déposés.
+	 *
+	 * @var \App\Entity\File[]
+	 */
+	private $written = [];
+
+	/**
+	 * @var string[]
+	 */
+	private $temporary = [];
+
 	protected function setUp (): void {
 		$this->client = static::createClient();
 		$this->client->disableReboot();
 
 		$this->manager  = self::$container->get( EntityManagerInterface::class );
 		$this->resolver = self::$container->get( DocumentFolderResolver::class );
+		$this->files    = self::$container->get( FileManager::class );
 
 		$this->manager->getConnection()->beginTransaction();
 
@@ -62,6 +83,16 @@ class DocumentFoldersTest extends WebTestCase {
 	}
 
 	protected function tearDown (): void {
+		foreach ( $this->written as $file ) {
+			$this->files->deleteFile( $file );
+		}
+
+		foreach ( $this->temporary as $path ) {
+			if ( file_exists( $path ) ) {
+				unlink( $path );
+			}
+		}
+
 		$connection = $this->manager->getConnection();
 
 		if ( $connection->isTransactionActive() ) {
@@ -163,6 +194,12 @@ class DocumentFoldersTest extends WebTestCase {
 		$this->assertStringContainsString( 'Compte rendu de mars', $text );
 	}
 
+	/**
+	 * Un fichier est joint, et ce n'est pas un détail de montage : depuis #40
+	 * un dépôt sans fichier est refusé. Le formulaire soumis à vide ne créait
+	 * plus rien, et le test cherchait un document que la plateforme avait eu
+	 * raison de ne pas écrire.
+	 */
 	public function testADocumentCanBeFiledFromTheUploadForm () {
 		$this->logIn( 'referent@example.org' );
 
@@ -171,8 +208,9 @@ class DocumentFoldersTest extends WebTestCase {
 
 		$title = 'Document classé ' . uniqid();
 
-		$form[ 'document[title]' ]       = $title;
-		$form[ 'document[folderTitle]' ] = 'Protocoles / Forêts';
+		$form[ 'document[title]' ]        = $title;
+		$form[ 'document[folderTitle]' ]  = 'Protocoles / Forêts';
+		$form[ 'document[filefile]' ]->upload( $this->temporaryFile( 'Protocole de suivi.' ) );
 
 		$this->client->submit( $form );
 
@@ -180,7 +218,38 @@ class DocumentFoldersTest extends WebTestCase {
 
 		$document = $this->manager->getRepository( Document::class )->findOneBy( [ 'title' => $title ] );
 
-		$this->assertNotNull( $document );
+		$this->assertNotNull( $document, 'Assert the deposit went through' );
+
+		$this->remember( $document->getFile() );
+
 		$this->assertEquals( 'Protocoles / Forêts', $document->getFolder()->getPath() );
+	}
+
+	/**
+	 * @param string $content
+	 *
+	 * @return string chemin du fichier à envoyer
+	 */
+	private function temporaryFile ( $content ) {
+		$path = sys_get_temp_dir() . '/' . uniqid( 'document-' ) . '.txt';
+
+		file_put_contents( $path, $content );
+
+		$this->temporary[] = $path;
+
+		return $path;
+	}
+
+	/**
+	 * @param \App\Entity\File|null $file
+	 */
+	private function remember ( File $file = NULL ) {
+		if ( !$file ) {
+			return;
+		}
+
+		$this->manager->initializeObject( $file );
+
+		$this->written[] = $file;
 	}
 }
