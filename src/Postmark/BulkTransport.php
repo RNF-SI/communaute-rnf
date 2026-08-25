@@ -17,6 +17,16 @@ class BulkTransport extends Transport {
 			return TRUE;
 		}
 
+		// Un lot vide n'est pas une anomalie : personne n'attendait cet e-mail.
+		// Depuis #38 le rythme par défaut est le résumé quotidien, si bien qu'un
+		// message de discussion ne part à chaud que vers ceux qui ont choisi
+		// l'immédiat — et le plus souvent, personne ne l'a choisi. Sans ce
+		// retour, `$messages[ 0 ]` rend NULL, Swift refuse le type, et la page
+		// tombe en 500 *après* que le message a été enregistré.
+		if ( empty( $messages ) ) {
+			return 0;
+		}
+
 		$client = $this->getHttpClient();
 
 		if ( $evt = $this->_eventDispatcher->createSendEvent( $this, $messages[ 0 ] ) ) {

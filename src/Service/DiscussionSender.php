@@ -180,6 +180,19 @@ class DiscussionSender {
 			}
 		}
 
-		return $this->transport->sendMultiple( $messages );
+		if ( empty( $messages ) ) {
+			return 0;
+		}
+
+		try {
+			return $this->transport->sendMultiple( $messages );
+		}
+		catch ( Throwable $e ) {
+			// Un transport qui refuse ne doit pas faire échouer la publication :
+			// le message est déjà enregistré, et le résumé rattrapera ceux qui
+			// devaient être prévenus puisque rien n'aura été marqué comme parti.
+			// C'est la propriété que ContentSender tient déjà de son côté.
+			return 0;
+		}
 	}
 }
