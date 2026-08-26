@@ -518,7 +518,20 @@
  * L'éditeur occupe la page : il porte ses propres barres d'outils, et un cadre
  * trop court les empile jusqu'à ne plus rien laisser au document.
  */
+/**
+ * La hauteur est portée par le CADRE, pas par ce qu'il contient.
+ *
+ * `DocsAPI.DocEditor` ne remplit pas l'élément qu'on lui désigne : il le
+ * **remplace** par une iframe qui en reprend l'identifiant — et pas la classe.
+ * Une hauteur posée sur `.document-office--editor` disparaissait donc à
+ * l'instant précis où l'éditeur s'installait, et le cadre s'effondrait à la
+ * hauteur de son contenu. L'éditeur continuait de charger dans cent cinquante
+ * pixels, ses propres messages d'erreur compris — invisibles.
+ */
 .document-office {
+	height:        82vh;
+	max-height:    rem(1100px);
+	min-height:    rem(420px);
 	margin-bottom: column_gap();
 
 	background:    $color_surface;
@@ -527,11 +540,13 @@
 	overflow:      hidden;
 }
 
-.document-office--editor {
-	width:      100%;
-	height:     82vh;
-	max-height: rem(1100px);
-	min-height: rem(420px);
+// L'élément d'origine comme l'iframe qui le remplace : on ne nomme ni l'un ni
+// l'autre, seulement « ce qu'il y a dedans ».
+.document-office > * {
+	display: block;
+	width:   100%;
+	height:  100%;
+	border:  0;
 }
 
 .document-office--notice {
