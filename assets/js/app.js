@@ -47,6 +47,7 @@ import './ui/add-form';
 import './ui/link-order-change';
 import './ui/message-tags';
 import './ui/tag-picker';
+import './ui/onlyoffice';
 //
 // Le direct de la messagerie. `badge` s'abonne au chargement du module,
 // `dock` allume le moteur : dans cet ordre, sans quoi la pastille manquerait

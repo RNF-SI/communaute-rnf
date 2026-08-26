@@ -3,6 +3,8 @@
 namespace App\Command;
 
 use App\Service\MailGuard;
+use App\Service\OnlyOffice\OnlyOfficeJwt;
+use App\Service\OnlyOffice\OnlyOfficeService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -10,6 +12,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Throwable;
 
 /**
@@ -32,16 +35,28 @@ class PreflightCommand extends Command {
 
 	private $guard;
 
+	private $onlyoffice;
+
+	private $onlyofficeJwt;
+
+	private $http;
+
 	public function __construct (
 			EntityManagerInterface $manager,
 			ParameterBagInterface $parameters,
 			UrlGeneratorInterface $router,
-			MailGuard $guard
+			MailGuard $guard,
+			OnlyOfficeService $onlyoffice,
+			OnlyOfficeJwt $onlyofficeJwt,
+			HttpClientInterface $http
 	) {
-		$this->manager    = $manager;
-		$this->parameters = $parameters;
-		$this->router     = $router;
-		$this->guard      = $guard;
+		$this->manager       = $manager;
+		$this->parameters    = $parameters;
+		$this->router        = $router;
+		$this->guard         = $guard;
+		$this->onlyoffice    = $onlyoffice;
+		$this->onlyofficeJwt = $onlyofficeJwt;
+		$this->http          = $http;
 
 		parent::__construct();
 	}
@@ -282,6 +297,46 @@ class PreflightCommand extends Command {
 				FALSE,
 		];
 
+		// L'édition en ligne demande un service à part, et surtout un service
+		// que la PLATEFORME peut joindre — le navigateur ne suffit pas : c'est
+		// PHP qui va chercher la version modifiée à la fin d'une séance. Une
+		// installation où seul le navigateur voit le serveur de documents
+		// enregistre zéro modification, sans rien dire. (#43)
+		if ( !$this->onlyoffice->isEnabled() ) {
+			$checks[] = [
+					'ONLYOFFICE_URL',
+					TRUE,
+					'vide — édition en ligne éteinte, les documents se téléchargent',
+					FALSE,
+			];
+		}
+		else {
+			$reachable = $this->onlyofficeReachable();
+
+			$checks[] = [
+					'Serveur de documents',
+					$reachable,
+					$reachable
+							? $this->onlyoffice->serverUrl() . ' — joignable depuis la plateforme'
+							: sprintf(
+									'%s injoignable depuis la plateforme — rien de ce qui est modifié '
+									. 'en ligne ne sera enregistré',
+									$this->onlyoffice->serverUrl()
+							),
+					FALSE,
+			];
+
+			$checks[] = [
+					'ONLYOFFICE_JWT_SECRET',
+					$this->onlyofficeJwt->isEnabled(),
+					$this->onlyofficeJwt->isEnabled()
+							? 'renseigné'
+							: 'vide — rien n’est signé, à ne tolérer que si le serveur de documents '
+							  . 'n’est joignable que depuis la machine',
+					FALSE,
+			];
+		}
+
 		$checks[] = [
 				'Assets compilés',
 				file_exists( $this->parameters->get( 'kernel.project_dir' ) . '/public/build/entrypoints.json' ),
@@ -292,6 +347,27 @@ class PreflightCommand extends Command {
 		];
 
 		return $checks;
+	}
+
+	/**
+	 * Le serveur de documents répond-il, depuis ici ?
+	 *
+	 * `/healthcheck` est la route qu'OnlyOffice expose pour cela ; elle rend
+	 * le texte « true ». On se contente d'un code de réponse : ce qu'on veut
+	 * savoir est si le réseau et le nom d'hôte tiennent.
+	 *
+	 * @return bool
+	 */
+	private function onlyofficeReachable (): bool {
+		try {
+			$response = $this->http->request( 'GET', $this->onlyoffice->serverUrl() . '/healthcheck', [
+					'timeout' => 5,
+			] );
+
+			return $response->getStatusCode() < 400;
+		} catch ( Throwable $e ) {
+			return FALSE;
+		}
 	}
 
 	/**

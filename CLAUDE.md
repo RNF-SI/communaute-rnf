@@ -188,6 +188,65 @@ so there is no join table to keep in step and a link pasted by hand counts as
 much as one inserted by the editor. From the sheet, « En discuter » opens a
 pre-filled discussion carrying the link back.
 
+### Voir un document, et le modifier en ligne (#43)
+
+**Deux choses distinctes.** L'**aperçu** ne demande rien : sur la fiche, un PDF
+s'affiche dans une `iframe` — le lecteur du navigateur, aucune bibliothèque
+embarquée, aucune requête chez un tiers — et une image s'affiche telle quelle.
+Le fichier reste servi par `group_document_get`, donc derrière
+`GroupDocumentVoter` : rien n'est plus visible qu'avant.
+
+`FileManager::getFile()` décide seul de deux choses, et nulle part ailleurs :
+`nosniff` sur tout, et « inline » ou « pièce jointe ». Un SVG, un HTML ou un
+XML se télécharge **toujours** (`FileMimeManager::mustDownload`) — ouvert dans
+l'onglet, un SVG exécute son `<script>` dans notre origine, avec le cookie de
+session du lecteur. Cela ne casse pas l'aperçu des images : une sous-ressource
+ignore `Content-Disposition`. Corollaire à ne pas perdre : le bouton
+« Télécharger » porte `?download=1`, sans quoi il ouvrirait le lecteur au lieu
+d'enregistrer — le contraire de ce qu'il annonce.
+
+**L'édition en ligne demande un serveur de plus**, OnlyOffice, qui n'est pas
+fourni par la plateforme (`docs/edition-en-ligne.md`). Sans `ONLYOFFICE_URL`
+tout se tait : aucun bouton, aucune route qui réponde — la règle de
+`RNF_EXPORT_TOKEN`, une intégration non configurée ne fabrique pas de pages
+mortes. **Les PDF ne passent pas par lui** : le navigateur les affiche seul, et
+le nom du type « pdf » a changé d'une version d'OnlyOffice à l'autre.
+
+**Trois liens, et c'est le troisième qui manque toujours.** Le navigateur
+charge l'éditeur chez le serveur de documents ; le serveur de documents vient
+chercher le fichier chez nous ; et **la plateforme va chercher la version
+modifiée chez lui**. Une installation où seul le navigateur le voit enregistre
+zéro modification, en silence. `app:preflight` éprouve ce lien-là.
+
+**Le serveur de documents n'a pas de session** : `/office/{token}/content` et
+`/office/{token}/callback` vivent dans **leur propre pare-feu**, `security:
+false`. Ce n'est pas seulement qu'il n'a pas de cookie —
+`RnfAuthenticatorGuard::supports()` répond OUI à **toute** requête portant un
+entête `Authorization: Bearer`, et c'est exactement ce qu'OnlyOffice envoie
+pour signer ses appels. Dans le pare-feu principal, le callback partait
+s'authentifier contre GeoNature, recevait une redirection vers la connexion, et
+n'atteignait jamais son contrôleur : l'enregistrement était perdu sans une
+ligne dans les journaux. Ces deux routes sont donc protégées par le jeton signé
+qu'elles portent (`OnlyOfficeToken` — document,
+droit, échéance, HMAC du secret de l'application). **Le droit est dans le
+jeton**, parce que la configuration de l'éditeur est rendue dans la page, donc
+lue par celui qui regarde : un lecteur reçoit un jeton de lecture seule, et la
+route d'enregistrement refuse. `GroupDocumentVoter` est consulté **une fois**,
+à l'ouverture de la page ; le callback ne le reconsulte pas, il n'a personne à
+qui le demander.
+
+Deux invariants à ne pas « simplifier » : on ne répond `{"error":0}` qu'après
+avoir **vraiment** enregistré — le serveur de documents jette sa copie sur
+cette réponse, la donner d'avance perd la séance ; et `document.key` change à
+chaque version, sans quoi l'éditeur rouvre la précédente et l'écrit par-dessus
+la nouvelle. L'enregistrement suit le remplacement de fichier de #41 : nouveau
+`File` d'abord, ancien effacé ensuite.
+
+Les formats hérités — `.doc`, `.xls`, `.ppt` — s'ouvrent en **lecture seule** :
+les réenregistrer reviendrait à les convertir sous les pieds de qui les a
+déposés. La page le dit avant d'ouvrir l'éditeur, plutôt que de le laisser
+découvrir dedans.
+
 ### Guided tour (#39)
 `GuidedTour` declares the ordered steps; their wording lives in
 `pages.tour.steps.*` of the translation files, so a formulation changes without
@@ -438,7 +497,8 @@ un lundi ramasse le quotidien et l'hebdomadaire dans un seul e-mail.
 
 **Trois chemins d'e-mail, pas deux.** Le résumé (`EmailSender`), le message de
 discussion à chaud (`DiscussionSender`, avec son `Reply-To`), et depuis #38 le
-contenu à chaud — page, actualité, document — par `ContentSender`, qui emprunte
+contenu à chaud — page, actualité, document, et **rien de la messagerie** — par
+`ContentSender`, qui emprunte
 le même transport en lot que les discussions mais l'adresse d'expédition de la
 plateforme. `NotificationSender` marque `emailedAt` sur ce qui vient de partir
 pour que le résumé ne le reprenne pas ; si le transport refuse, rien n'est

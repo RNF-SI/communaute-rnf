@@ -172,6 +172,32 @@ Aller dans **Groupe de test**.
 | Modifier un document sans redéposer son fichier | Accepté : le fichier reste celui d'avant (#40) |
 | Modifier un document **en choisissant un autre fichier** | Le téléchargement rend le **nouveau** fichier, et le titre choisi ne change pas (#41) |
 
+### Voir le document sans le télécharger (#43)
+
+| À faire | Attendu |
+|---|---|
+| Déposer un **PDF**, ouvrir sa fiche | Le document **s'affiche dans la page**, sous le titre |
+| Bouton « Télécharger » sur cette même fiche | Le fichier est **enregistré**, il ne s'ouvre pas dans un onglet |
+| Déposer une **image**, ouvrir sa fiche | Elle s'affiche ; le clic ouvre l'image en grand |
+| Déposer un **.docx** ou un **.odt**, ouvrir sa fiche | Pas d'aperçu — et c'est voulu : rien, plutôt qu'une page d'octets |
+| Déposer un **.svg**, cliquer « Télécharger » | Le fichier est enregistré. Il ne doit **jamais** s'ouvrir dans un onglet du site |
+
+### L'édition en ligne (#43) — seulement si un serveur de documents est configuré
+
+`ONLYOFFICE_URL` vide, **rien de ce qui suit n'apparaît**, et c'est le
+comportement attendu : la ligne « ONLYOFFICE_URL » d'`app:preflight` le dit, et
+les documents se téléchargent comme avant. Passez à la section suivante.
+
+| À faire | Attendu |
+|---|---|
+| `php bin/console app:preflight` | « Serveur de documents … joignable depuis la plateforme ». Sinon **rien ne sera enregistré** : inutile d'aller plus loin |
+| Fiche d'un **.docx** ou **.odt** | Un bouton « Modifier en ligne » |
+| Le cliquer | L'éditeur s'ouvre dans la page, avec le contenu du document |
+| Modifier une phrase, puis « Retour à la fiche » | De retour sur la fiche, **télécharger** : le fichier porte la modification |
+| Fiche d'un **.doc** (ancien format) | Le bouton dit « Ouvrir dans le navigateur », et la page annonce la lecture seule **avant** d'ouvrir l'éditeur |
+| Avec un compte **simple membre**, sur un document déposé par quelqu'un d'autre | L'éditeur s'ouvre en **consultation** : aucune barre d'édition |
+| Fiche d'un **PDF** | Pas de bouton d'édition en ligne — le PDF s'affiche déjà, il ne passe pas par le serveur de documents |
+
 ---
 
 ## 5. Les discussions

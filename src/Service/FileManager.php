@@ -29,11 +29,31 @@ class FileManager {
 		$this->cacheManager = $cacheManager;
 	}
 
-	public function getFile ( File $file ) {
+	/**
+	 * Sert un fichier.
+	 *
+	 * Deux choses se décident ici, et nulle part ailleurs. La première :
+	 * `nosniff`, pour qu'un navigateur ne devine pas un type que nous avons
+	 * déclaré — sans quoi un fichier annoncé « texte » et contenant du HTML
+	 * s'exécute dans notre origine. La seconde : « inline » ou « pièce
+	 * jointe ». Un PDF, une image, un texte s'affichent dans la page ; un SVG
+	 * ou un HTML déposé comme document se téléchargent, quoi qu'il arrive
+	 * (voir `FileMimeManager::mustDownload`). (#43)
+	 *
+	 * @param \App\Entity\File $file
+	 * @param bool             $forceDownload demandé par le bouton « Télécharger »
+	 *
+	 * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+	 */
+	public function getFile ( File $file, bool $forceDownload = FALSE ) {
 		$response = new BinaryFileResponse( sprintf( 'gaufrette://%s', $file->getFilesystem() . '/' . $file->getPath() ) );
 		$response->headers->set( 'Content-Type', $file->getType() );
+		$response->headers->set( 'X-Content-Type-Options', 'nosniff' );
+
+		$inline = !$forceDownload && !FileMimeManager::mustDownload( $file->getType() );
+
 		$response->setContentDisposition(
-				ResponseHeaderBag::DISPOSITION_INLINE,
+				$inline ? ResponseHeaderBag::DISPOSITION_INLINE : ResponseHeaderBag::DISPOSITION_ATTACHMENT,
 				$file->getName()
 		);
 

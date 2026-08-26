@@ -17,6 +17,21 @@ security:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+        # Les deux routes du serveur de documents OnlyOffice, hors pare-feu. (#43)
+        #
+        # Ce n'est pas seulement qu'il n'a pas de session : `RnfAuthenticatorGuard`
+        # se déclenche sur **toute** requête portant un entête
+        # `Authorization: Bearer`, et c'est précisément ce qu'envoie OnlyOffice
+        # pour signer ses appels. Laissées dans le pare-feu principal, elles
+        # partaient s'authentifier contre GeoNature et n'atteignaient jamais leur
+        # contrôleur — un enregistrement perdu, sans rien dans les journaux.
+        #
+        # Ce qui les protège est le jeton signé de leur adresse
+        # (`OnlyOfficeToken` : document, droit, échéance, HMAC du secret de
+        # l'application), vérifié par le contrôleur au premier geste.
+        onlyoffice:
+            pattern: ^/office/
+            security: false
         # Main application (with RNF auth)
         main:
             pattern: ^/

@@ -17,6 +17,7 @@ use App\Service\DocumentFolderResolver;
 use App\Service\FileManager;
 use App\Service\NotificationSender;
 use App\Service\FileMimeManager;
+use App\Service\OnlyOffice\OnlyOfficeService;
 use App\Service\SlugGenerator;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
@@ -37,6 +38,30 @@ class GroupDocumentsController extends AbstractController {
 	 *
 	 * @return bool
 	 */
+	/**
+	 * Ce que la fiche sait afficher elle-même, et sous quelle forme. (#43)
+	 *
+	 * Rien ici n'est chargé de l'extérieur : le lecteur de PDF est celui du
+	 * navigateur, et une image est une image. Ce qui n'est ni l'un ni l'autre
+	 * ne se prévisualise pas — un `.docx` posé dans une balise ne donnerait
+	 * qu'une page d'octets.
+	 *
+	 * @param \App\Entity\File $file
+	 *
+	 * @return string|null « pdf », « image », ou NULL
+	 */
+	private function previewKind ( File $file ): ?string {
+		if ( FileMimeManager::isPdf( $file->getType() ) ) {
+			return 'pdf';
+		}
+
+		if ( FileMimeManager::isImage( $file->getType() ) ) {
+			return 'image';
+		}
+
+		return NULL;
+	}
+
 	private function match ( Document $document, $filters ) {
 		// Keywords
 
@@ -534,7 +559,8 @@ class GroupDocumentsController extends AbstractController {
 			$groupSlug,
 			$documentId,
 			EntityManagerInterface $manager,
-			FileManager $fileManager
+			FileManager $fileManager,
+			OnlyOfficeService $onlyoffice
 	) {
 		/**
 		 * @var \App\Entity\Usergroup $group
@@ -564,6 +590,14 @@ class GroupDocumentsController extends AbstractController {
 				'group'       => $group,
 				'document'    => $document,
 				'size'        => $file && $file->getSize() ? $fileManager->formatSize( $file->getSize() ) : NULL,
+				// Ce que la page sait montrer elle-même : un PDF et une image
+				// s'affichent dans le navigateur, sans rien installer et sans
+				// rien appeler au dehors. Le reste se télécharge — ou s'ouvre
+				// dans l'éditeur en ligne, quand il est configuré. (#43)
+				'preview'     => $file ? $this->previewKind( $file ) : NULL,
+				'office'      => $onlyoffice->supports( $file ),
+				'officeEdit'  => $onlyoffice->isEditable( $file )
+								 && $this->isGranted( GroupDocumentVoter::EDIT, $document ),
 				'discussions' => $manager->getRepository( Discussion::class )
 										 ->findMentioningDocument( $group, $document->getId() ),
 				'pages'       => $manager->getRepository( Page::class )
@@ -572,9 +606,17 @@ class GroupDocumentsController extends AbstractController {
 	}
 
 	/**
+	 * Le fichier lui-même.
+	 *
+	 * Sans rien, il s'affiche dans la page quand le navigateur sait le faire —
+	 * c'est ce qui met un PDF sous les yeux plutôt que dans le dossier des
+	 * téléchargements. Avec `?download=1`, il se télécharge : c'est le bouton
+	 * « Télécharger », qui doit rester un téléchargement même pour un PDF. (#43)
+	 *
 	 * @Route("/groups/{groupSlug}/documents/{documentId}/get", name="group_document_get")
 	 * @param                                            $groupSlug
 	 * @param                                            $documentId
+	 * @param \Symfony\Component\HttpFoundation\Request  $request
 	 * @param \Doctrine\ORM\EntityManagerInterface       $manager
 	 * @param \App\Service\FileManager                   $fileManager
 	 *
@@ -583,6 +625,7 @@ class GroupDocumentsController extends AbstractController {
 	public function documentGet (
 			$groupSlug,
 			$documentId,
+			Request $request,
             EntityManagerInterface $manager,
 			FileManager $fileManager
 	) {
@@ -613,7 +656,7 @@ class GroupDocumentsController extends AbstractController {
 			throw $this->createNotFoundException( 'The document file does not exist' );
 		}
 
-		return $fileManager->getFile( $file );
+		return $fileManager->getFile( $file, $request->query->getBoolean( 'download' ) );
 	}
 
 	/**

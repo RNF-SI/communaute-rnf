@@ -157,6 +157,14 @@ RNF_AUTH_APP_CODE=COMM_RNF
 RNF_EXPORT_TOKEN=
 RNF_EXPORT_RESERVES_ID=3
 
+# Édition en ligne des documents bureautiques (#43)
+# Le serveur de documents OnlyOffice est un service à part — voir
+# docs/edition-en-ligne.md. Vide, l'intégration est éteinte : les documents se
+# téléchargent, et les PDF s'affichent quand même dans la page.
+ONLYOFFICE_URL=            # adresse vue par le NAVIGATEUR
+ONLYOFFICE_JWT_SECRET=     # secret partagé avec le serveur de documents
+ONLYOFFICE_PLATFORM_URL=   # adresse de la plateforme vue par le SERVEUR DE DOCUMENTS
+
 # Analytics feature flag
 ANALYTICS_ENABLED=false
 

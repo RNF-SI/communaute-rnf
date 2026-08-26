@@ -644,6 +644,15 @@ pages:
             added: "Déposé le"
             size: "Taille"
             no_file: "Aucun fichier n’est attaché à ce document."
+            preview:
+                fallback: "Votre navigateur n’affiche pas ce document ?"
+                download: "Le télécharger"
+            office:
+                open: "Ouvrir dans le navigateur"
+                edit: "Modifier en ligne"
+                back: "Retour à la fiche"
+                readonly: "Ce format s’ouvre en lecture seule : l’enregistrer reviendrait à le convertir dans un autre format. Pour le modifier, téléchargez-le, ou déposez-en une version au format .odt, .docx, .ods, .xlsx, .odp ou .pptx."
+                unreachable: "L’éditeur en ligne ne répond pas. Le document reste téléchargeable depuis sa fiche ; prévenez un administrateur de la plateforme."
             talk:
                 title: "Ce qui en a été dit"
                 discussions: "Discussions qui en parlent"

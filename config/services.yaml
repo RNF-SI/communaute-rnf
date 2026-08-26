@@ -197,6 +197,23 @@ services:
     arguments:
       $secret: "%kernel.secret%"
 
+  # Édition en ligne des documents bureautiques (#43). Sans ONLYOFFICE_URL le
+  # service se déclare éteint : aucun bouton, aucune route qui réponde. Le
+  # secret JWT est celui du serveur de documents ; le jeton d'accès aux deux
+  # routes sans session, lui, est signé par le secret de l'application.
+  App\Service\OnlyOffice\OnlyOfficeJwt:
+    arguments:
+      $secret: "%env(string:ONLYOFFICE_JWT_SECRET)%"
+
+  App\Service\OnlyOffice\OnlyOfficeToken:
+    arguments:
+      $secret: "%kernel.secret%"
+
+  App\Service\OnlyOffice\OnlyOfficeService:
+    arguments:
+      $serverUrl: "%env(string:ONLYOFFICE_URL)%"
+      $platformUrl: "%env(string:ONLYOFFICE_PLATFORM_URL)%"
+
   App\Util\Geocoder:
     public: true
     arguments:

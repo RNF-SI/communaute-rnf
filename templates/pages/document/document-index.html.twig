@@ -11,8 +11,17 @@
 				<h1 class="h1">{{ document.title }}</h1>
 
 				<div class="panel--edit">
+					{# L'éditeur en ligne d'abord quand il est disponible : c'est le
+					   geste utile — le téléchargement reste à côté, et reste un
+					   téléchargement (`download`), y compris pour un PDF que la page
+					   sait pourtant afficher. (#43) #}
+					{% if office and app.user %}
+						<a class="cta" href="{{ path('group_document_office', {'groupSlug': group.slug, 'documentId': document.id}) }}">
+							{{ (officeEdit ? 'pages.document.view.office.edit' : 'pages.document.view.office.open')|trans }}
+						</a>
+					{% endif %}
 					{% if document.file %}
-						<a class="cta" href="{{ path('group_document_get', {'groupSlug': group.slug, 'documentId': document.id}) }}" target="_blank">{{ 'pages.document.view.download'|trans }}</a>
+						<a class="{{ (office and app.user) ? 'cta__inverted' : 'cta' }}" href="{{ path('group_document_get', {'groupSlug': group.slug, 'documentId': document.id, 'download': 1}) }}">{{ 'pages.document.view.download'|trans }}</a>
 					{% endif %}
 					{% if is_granted(constant('App\\Security\\GroupDocumentVoter::EDIT'), document) %}
 						<a class="cta__inverted" href="{{ path('group_document_edit', {'groupSlug': group.slug, 'documentId': document.id}) }}">{{ 'pages.document.document_edit.link'|trans }}</a>
@@ -39,6 +48,38 @@
 			]} %}
 
 			<div class="thin">
+				{# Le document lui-même, avant tout ce qu'on en dit. (#43)
+
+				   Un PDF s'affiche dans une `iframe` — le lecteur du navigateur,
+				   rien d'installé, rien chargé chez un tiers, et le document
+				   reste servi par notre route, donc derrière le voteur. Une image
+				   s'affiche telle quelle. Ce qui n'est ni l'un ni l'autre n'a pas
+				   d'aperçu : mieux vaut le bouton d'édition en ligne juste
+				   au-dessus qu'une page d'octets. #}
+				{% if preview == 'pdf' %}
+					<figure class="document-preview">
+						<iframe class="document-preview--frame"
+								src="{{ path('group_document_get', {'groupSlug': group.slug, 'documentId': document.id}) }}"
+								title="{{ document.title }}"
+								loading="lazy"></iframe>
+						{# Un navigateur sans lecteur intégré n'affiche rien du tout et
+						   ne le dit pas : la légende porte donc toujours la sortie de
+						   secours. #}
+						<figcaption class="document-preview--fallback">
+							{{ 'pages.document.view.preview.fallback'|trans }}
+							<a href="{{ path('group_document_get', {'groupSlug': group.slug, 'documentId': document.id, 'download': 1}) }}">{{ 'pages.document.view.preview.download'|trans }}</a>
+						</figcaption>
+					</figure>
+				{% elseif preview == 'image' %}
+					<figure class="document-preview document-preview__image">
+						<a href="{{ path('group_document_get', {'groupSlug': group.slug, 'documentId': document.id}) }}">
+							<img src="{{ path('group_document_get', {'groupSlug': group.slug, 'documentId': document.id}) }}"
+								 alt="{{ document.title }}"
+								 loading="lazy">
+						</a>
+					</figure>
+				{% endif %}
+
 				{# Ce qu'est le document, puis ce qui en a été dit : deux cartes, et
 				   non deux blocs posés à plat sur le fond de page. Sans le fond
 				   blanc, la liste de liens du bas se lisait comme la suite des

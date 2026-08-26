@@ -513,6 +513,15 @@ pages:
             added: "Added on"
             size: "Size"
             no_file: "No file is attached to this document."
+            preview:
+                fallback: "Your browser cannot display this document?"
+                download: "Download it"
+            office:
+                open: "Open in the browser"
+                edit: "Edit online"
+                back: "Back to the document"
+                readonly: "This format opens read-only: saving it would convert it to another format. To edit it, download it, or upload a version as .odt, .docx, .ods, .xlsx, .odp or .pptx."
+                unreachable: "The online editor is not responding. The document can still be downloaded from its page; please tell a platform administrator."
             talk:
                 title: "What was said about it"
                 discussions: "Discussions mentioning it"

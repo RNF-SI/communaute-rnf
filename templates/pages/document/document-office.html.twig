@@ -1,0 +1,67 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ document.title }} - {{ group.name }} | {{ plateform.name }}{% endblock %}
+
+{% block main %}
+	<section class="main main__document-office">
+		<div class="main--content content-container">
+			{% include 'components/app-flashes.html.twig' %}
+
+			<div class="panel">
+				<h1 class="h1">{{ document.title }}</h1>
+
+				<div class="panel--edit">
+					<a class="cta__inverted" href="{{ path('group_document_index', {'groupSlug': group.slug, 'documentId': document.id}) }}">{{ 'pages.document.view.office.back'|trans }}</a>
+				</div>
+			</div>
+
+			{% include 'components/breadcrumb.html.twig' with {'items':[
+				{
+					label: 'pages.group.groups.title'|trans,
+					href: path('groups_index')
+				},
+				{
+					label: group.name,
+					href: path('group_index', {'groupSlug':group.slug})
+				},
+				{
+					label: 'pages.group.documents.title'|trans,
+					href: path('group_documents_index', {'groupSlug':group.slug})
+				},
+				{
+					label: document.title,
+					href: path('group_document_index', {'groupSlug': group.slug, 'documentId': document.id})
+				},
+				{
+					label: (canWrite ? 'pages.document.view.office.edit' : 'pages.document.view.office.open')|trans,
+				}
+			]} %}
+
+			{# Ce qui est modifiable est dit avant d'ouvrir l'éditeur, et non
+			   découvert dedans : les formats hérités — .doc, .xls, .ppt —
+			   s'ouvrent en lecture, parce que les réenregistrer reviendrait à
+			   les convertir sous les pieds de qui les a déposés. (#43) #}
+			{% if not canWrite %}
+				<p class="document-office--notice">{{ 'pages.document.view.office.readonly'|trans }}</p>
+			{% endif %}
+
+			{# La configuration est posée en attribut plutôt qu'écrite dans un
+			   `<script>` : le titre d'un document est du texte saisi, et il n'a
+			   rien à faire dans du code. #}
+			<div class="document-office">
+				<div id="onlyoffice-editor"
+					 class="document-office--editor"
+					 data-config="{{ config|json_encode|escape('html_attr') }}"
+					 data-error="{{ 'pages.document.view.office.unreachable'|trans }}"></div>
+			</div>
+		</div>
+	</section>
+{% endblock %}
+
+{% block javascripts %}
+	{# Le seul appel au serveur de documents que fasse le navigateur. Il est
+	   chargé avant le paquet de l'application, mais `onlyoffice.js` ne s'y fie
+	   pas : il attend `DocsAPI`, et dit ce qu'il en est s'il ne vient pas. #}
+	<script src="{{ apiUrl }}"></script>
+	{{ parent() }}
+{% endblock %}
