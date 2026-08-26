@@ -113,6 +113,23 @@ curl -sS -m 5 -k -o /dev/null -w 'https/443 → %{http_code}\n' https://10.0.20.
 
 `http/80` répond et `https/443` non : c'est le remède 2.
 
+**Le lien 2, en clair et par le réseau interne.** Quand le reverse proxy n'est
+joignable que de l'extérieur, le serveur de documents ne peut atteindre la
+plateforme que par son IP interne, en HTTP. Deux choses le rendent possible.
+
+`ONLYOFFICE_PLATFORM_URL` porte l'adresse à employer — et il faut y mettre le
+**nom d'hôte**, pas l'IP, avec une entrée `/etc/hosts` sur le CT du serveur de
+documents qui fait pointer ce nom vers l'IP interne de la plateforme. Une URL
+bâtie sur l'IP enverrait `Host: 10.0.200.35`, et Apache servirait son hôte
+virtuel par défaut plutôt que celui de la plateforme.
+
+Et les deux routes répondent bien en HTTP là où tout le reste du site est
+renvoyé vers HTTPS : leur pare-feu dédié (`security: false`) ne pose aucun
+écouteur, donc pas de `ChannelListener`, donc pas de `requires_channel`. Ce
+n'est pas un effet de bord à corriger, c'est ce qui rend ce montage possible —
+`OnlyOfficeChannelTest` l'éprouve, et vérifie du même coup que la redirection
+est bien active pour le reste.
+
 **Une propriété qui vient avec.** Le fichier modifié n'est jamais cherché
 ailleurs que sur le serveur de documents configuré : `fetchUrl()` ne garde de
 l'adresse annoncée que son chemin, et le repose sur la nôtre. Un rappel forgé

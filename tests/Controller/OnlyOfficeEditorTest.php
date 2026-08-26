@@ -64,7 +64,6 @@ class OnlyOfficeEditorTest extends WebTestCase {
 	protected function setUp (): void {
 		$_ENV[ 'ONLYOFFICE_URL' ]    = self::SERVER;
 		$_SERVER[ 'ONLYOFFICE_URL' ] = self::SERVER;
-
 		$this->client = static::createClient();
 		$this->client->disableReboot();
 
@@ -101,7 +100,6 @@ class OnlyOfficeEditorTest extends WebTestCase {
 
 		$_ENV[ 'ONLYOFFICE_URL' ]    = '';
 		$_SERVER[ 'ONLYOFFICE_URL' ] = '';
-
 		parent::tearDown();
 	}
 
