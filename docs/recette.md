@@ -195,7 +195,9 @@ les documents se téléchargent comme avant. Passez à la section suivante.
 | Le cliquer | L'éditeur s'ouvre dans la page, avec le contenu du document |
 | Modifier une phrase, puis « Retour à la fiche » | De retour sur la fiche, **télécharger** : le fichier porte la modification |
 | Fiche d'un **.doc** (ancien format) | Le bouton dit « Ouvrir dans le navigateur », et la page annonce la lecture seule **avant** d'ouvrir l'éditeur |
-| Avec un compte **simple membre**, sur un document déposé par quelqu'un d'autre | L'éditeur s'ouvre en **consultation** : aucune barre d'édition |
+| Avec un compte **simple membre**, sur un document déposé par quelqu'un d'autre | L'éditeur s'ouvre **en modification** : un document est un outil commun (#43) |
+| Avec un compte **hors du groupe**, sur un document d'un groupe public | L'éditeur s'ouvre en **consultation** : aucune barre d'édition |
+| Ce même simple membre, bouton « Supprimer » sur la fiche | **Absent.** Ouvrir la modification n'est pas ouvrir l'effacement |
 | Fiche d'un **PDF** | Pas de bouton d'édition en ligne — le PDF s'affiche déjà, il ne passe pas par le serveur de documents |
 
 ---

@@ -122,12 +122,19 @@ class OnlyOfficeEditorTest extends WebTestCase {
 
 	/**
 	 * L'invariant : une consultation n'emporte pas de quoi réécrire.
+	 *
+	 * Un lecteur, c'est désormais quelqu'un qui **n'est pas membre** du groupe.
+	 * Depuis #43 tout membre peut modifier un document ; le groupe étant
+	 * public, un non-membre peut encore le lire — et c'est très exactement le
+	 * cas qui doit ressortir sans `callbackUrl`.
 	 */
 	public function testAReaderGetsNoCallbackAndNoWriteToken () {
-		// Le document a été déposé par quelqu'un d'autre : ce lecteur-ci n'en
-		// est ni l'auteur ni animateur du groupe.
-		$reader   = $this->member( UsergroupMembership::ROLE_USER );
-		$document = $this->depositAs( $this->stranger(), $reader, 'Compte rendu ' . uniqid() );
+		$this->member( UsergroupMembership::ROLE_USER );
+
+		$document = $this->deposit( 'Compte rendu ' . uniqid() );
+
+		// On repasse en simple visiteur connecté, hors du groupe.
+		$this->connect( $this->stranger() );
 
 		$config = $this->config( $document );
 

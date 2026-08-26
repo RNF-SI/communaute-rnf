@@ -128,9 +128,20 @@ both are granted everything in *every* group, including private ones they are
 not a member of. That is deliberate — the RNF team must be able to moderate
 anywhere — but it is easy to miss when reading a single voter.
 
-**Who may edit what inside a group** (#33). Any member may *create* a page, an
-article, a document or a discussion. Editing and deleting a page, an article or
-a document is then reserved to its author and to the group animators.
+**Who may edit what inside a group** (#33, amendé par #43). Any member may
+*create* a page, an article, a document or a discussion. Editing and deleting a
+page or an article is then reserved to its author and to the group animators.
+
+**Les documents font exception depuis #43 :** tout membre du groupe peut
+modifier n'importe quel document — la fiche comme le contenu bureautique. Le
+réseau l'a demandé en découvrant l'édition en ligne, et l'argument est
+imparable : un tableau de suivi qu'une seule personne peut modifier n'est pas
+un tableau de suivi, c'est une pièce jointe. **Supprimer reste réservé** à
+l'auteur et aux animateurs : ouvrir la modification n'est pas ouvrir
+l'effacement, et remplacer un fichier laisse au moins la fiche, ses étiquettes
+et les discussions qui y renvoient — supprimer n'en laisse rien. Ne pas
+« harmoniser » les trois voteurs en relisant : l'écart est voulu, et
+`ContentEditRightsTest` le tient des deux côtés.
 Discussions stay open: everyone edits or removes their own messages, animators
 may remove any message or topic. The rule is spelled out to members on each tab
 through `templates/components/permission-note.html.twig`.

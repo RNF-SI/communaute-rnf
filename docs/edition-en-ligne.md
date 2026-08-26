@@ -310,9 +310,16 @@ sous Linux.
 | **Lecture seule** | `.doc` `.xls` `.ppt` — les modifier reviendrait à les convertir, donc à changer le format du fichier sous les pieds de celui qui l'a déposé. La page le dit avant d'ouvrir l'éditeur. |
 | **Pas concernés** | Les **PDF** : le navigateur les affiche seul, sans dépendance et sans aller-retour. Les images aussi. |
 
-Le droit de modifier est celui de la fiche, et rien d'autre : l'auteur du
-document et les animateurs du groupe (`GroupDocumentVoter::EDIT`). Un lecteur
-ouvre l'éditeur en consultation.
+Le droit de modifier est celui de la fiche, et rien d'autre : **tout membre du
+groupe** (`GroupDocumentVoter::EDIT`). Un document est un outil de travail
+commun, pas la pièce jointe de celui qui l'a posée — un tableau de suivi qu'une
+seule personne peut modifier n'est pas un tableau de suivi. Qui n'est pas
+membre, et lit le document parce que le groupe est public, ouvre l'éditeur en
+consultation.
+
+**Supprimer, en revanche, reste réservé** à l'auteur et aux animateurs.
+Remplacer un fichier laisse la fiche, ses étiquettes et les discussions qui y
+renvoient ; supprimer n'en laisse rien.
 
 ---
 

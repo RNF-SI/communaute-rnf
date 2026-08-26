@@ -612,7 +612,7 @@ pages:
     document:
         list:
             title: "Documents"
-            rights: "Tout membre du groupe peut déposer un document. Sa fiche se modifie ensuite par la personne qui l’a déposé, ou par un animateur du groupe."
+            rights: "Tout membre du groupe peut déposer un document, et modifier ceux qui s’y trouvent — la fiche comme le contenu. Seuls la personne qui l’a déposé et les animateurs peuvent le supprimer."
             filters:
                 title: "Filtres"
                 filetype:

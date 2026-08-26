@@ -481,7 +481,7 @@ pages:
     document:
         list:
             title: "Documents"
-            rights: "Any member of the group may add a document. Its description can then be edited by whoever added it, or by a group animator."
+            rights: "Any member of the group may add a document, and edit the ones already there — the description as well as the contents. Only whoever added it and the animators may delete it."
             filters:
                 title: "Filters"
                 filetype:

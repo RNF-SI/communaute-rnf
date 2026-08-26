@@ -73,15 +73,21 @@ class GroupDocumentVoter extends Voter {
 				 */
 				$document = $subject;
 
-				// La fiche d'un document appartient à qui l'a déposé : lui
-				// seul sait ce qu'il a mis dedans. Un animateur passe derrière
-				// si le classement dérive. C'est déjà la règle pour le
-				// supprimer. (#33)
-				if ( $user === $document->getUser() ) {
-					return $this->security->isGranted( GroupVoter::PARTICIPATE, $document->getUsergroup() );
-				}
-
-				return $this->security->isGranted( GroupVoter::EDIT, $document->getUsergroup() );
+				// Un document est un outil de travail commun : tout membre du
+				// groupe le reprend, comme il reprendrait un compte rendu posé
+				// sur une table. (#43)
+				//
+				// C'est un revirement assumé sur #33, qui réservait la fiche à
+				// qui l'avait déposée. La raison est venue avec l'édition en
+				// ligne : un tableau de suivi qu'une seule personne peut
+				// modifier n'est pas un tableau de suivi, c'est une pièce
+				// jointe. Le réseau a demandé l'inverse.
+				//
+				// **Supprimer reste réservé** à l'auteur et aux animateurs :
+				// ouvrir la modification n'est pas ouvrir l'effacement, et
+				// remplacer un fichier laisse au moins la fiche, ses
+				// étiquettes et les discussions qui y renvoient.
+				return $this->security->isGranted( GroupVoter::PARTICIPATE, $document->getUsergroup() );
 
 			case self::DELETE:
 				/**

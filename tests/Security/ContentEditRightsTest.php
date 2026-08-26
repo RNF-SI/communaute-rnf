@@ -268,16 +268,53 @@ class ContentEditRightsTest extends WebTestCase {
 		$this->assertEquals( 200, $this->statusOf( $this->documentEditUrl( $this->document( $author ) ) ) );
 	}
 
-	public function testAnotherMemberCannotEditADocument () {
+	/**
+	 * Revirement assumé sur #33, demandé par le réseau : un document est un
+	 * outil de travail commun, pas la pièce jointe de celui qui l'a posée. Un
+	 * tableau de suivi qu'une seule personne peut modifier n'est pas un
+	 * tableau de suivi. (#43)
+	 */
+	public function testAnyMemberCanEditADocument () {
+		$document = $this->document( $this->user() );
+
+		$this->logIn( $this->user() );
+
+		$this->assertEquals(
+				200,
+				$this->statusOf( $this->documentEditUrl( $document ) ),
+				'Assert a document is a shared working tool, not its author\'s attachment'
+		);
+	}
+
+	/**
+	 * L'autre moitié de la règle, et celle qu'il ne faut pas perdre en la
+	 * relisant : **ouvrir la modification n'est pas ouvrir l'effacement.**
+	 * Remplacer un fichier laisse au moins la fiche, ses étiquettes et les
+	 * discussions qui y renvoient ; supprimer n'en laisse rien.
+	 */
+	public function testAnotherMemberStillCannotDeleteADocument () {
 		$document = $this->document( $this->user() );
 
 		$this->logIn( $this->user() );
 
 		$this->assertEquals(
 				403,
-				$this->statusOf( $this->documentEditUrl( $document ) ),
-				'Assert the description of a document belongs to whoever wrote it'
+				$this->statusOf(
+						'/groups/' . $this->group->getSlug() . '/documents/' . $document->getId() . '/delete'
+				),
+				'Assert deleting stays with the author and the animators'
 		);
+	}
+
+	/**
+	 * « Tout membre » veut bien dire membre : le groupe reste un groupe.
+	 */
+	public function testSomebodyOutsideTheGroupCannotEditADocument () {
+		$document = $this->document( $this->user() );
+
+		$this->logIn( $this->user( UsergroupMembership::ROLE_USER, FALSE ) );
+
+		$this->assertEquals( 403, $this->statusOf( $this->documentEditUrl( $document ) ) );
 	}
 
 	public function testAnAnimatorCanEditAnyDocument () {
