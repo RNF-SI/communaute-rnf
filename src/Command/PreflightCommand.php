@@ -313,15 +313,26 @@ class PreflightCommand extends Command {
 		else {
 			$reachable = $this->onlyofficeReachable();
 
+			$internal = $this->onlyoffice->internalUrl();
+			$public   = $this->onlyoffice->serverUrl();
+
 			$checks[] = [
 					'Serveur de documents',
 					$reachable,
 					$reachable
-							? $this->onlyoffice->serverUrl() . ' — joignable depuis la plateforme'
+							? sprintf(
+									'%s — joignable depuis la plateforme%s',
+									$internal,
+									$internal === $public ? '' : sprintf( ' (navigateur : %s)', $public )
+							)
 							: sprintf(
 									'%s injoignable depuis la plateforme — rien de ce qui est modifié '
-									. 'en ligne ne sera enregistré',
-									$this->onlyoffice->serverUrl()
+									. 'en ligne ne sera enregistré%s',
+									$internal,
+									$internal === $public
+											? '. Une seule adresse publique pour les deux services ? '
+											  . 'Voir ONLYOFFICE_INTERNAL_URL'
+											: ''
 							),
 					FALSE,
 			];
@@ -356,11 +367,15 @@ class PreflightCommand extends Command {
 	 * le texte « true ». On se contente d'un code de réponse : ce qu'on veut
 	 * savoir est si le réseau et le nom d'hôte tiennent.
 	 *
+	 * C'est bien l'adresse **interne** qu'on éprouve — celle par laquelle la
+	 * plateforme ira chercher les fichiers modifiés. Éprouver l'adresse
+	 * publique dirait « joignable » là où le lien qui compte est coupé.
+	 *
 	 * @return bool
 	 */
 	private function onlyofficeReachable (): bool {
 		try {
-			$response = $this->http->request( 'GET', $this->onlyoffice->serverUrl() . '/healthcheck', [
+			$response = $this->http->request( 'GET', $this->onlyoffice->internalUrl() . '/healthcheck', [
 					'timeout' => 5,
 			] );
 

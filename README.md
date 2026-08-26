@@ -163,6 +163,7 @@ RNF_EXPORT_RESERVES_ID=3
 # téléchargent, et les PDF s'affichent quand même dans la page.
 ONLYOFFICE_URL=            # adresse vue par le NAVIGATEUR
 ONLYOFFICE_JWT_SECRET=     # secret partagé avec le serveur de documents
+ONLYOFFICE_INTERNAL_URL=   # adresse du serveur de documents vue par LA PLATEFORME
 ONLYOFFICE_PLATFORM_URL=   # adresse de la plateforme vue par le SERVEUR DE DOCUMENTS
 
 # Analytics feature flag

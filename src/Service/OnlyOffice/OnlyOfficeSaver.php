@@ -58,16 +58,23 @@ class OnlyOfficeSaver {
 	 */
 	private $logger;
 
+	/**
+	 * @var \App\Service\OnlyOffice\OnlyOfficeService
+	 */
+	private $onlyoffice;
+
 	public function __construct (
 			EntityManagerInterface $manager,
 			FileManager $files,
 			HttpClientInterface $client,
+			OnlyOfficeService $onlyoffice,
 			?LoggerInterface $logger = NULL
 	) {
-		$this->manager = $manager;
-		$this->files   = $files;
-		$this->client  = $client;
-		$this->logger  = $logger;
+		$this->manager    = $manager;
+		$this->files      = $files;
+		$this->client     = $client;
+		$this->onlyoffice = $onlyoffice;
+		$this->logger     = $logger;
 	}
 
 	/**
@@ -85,6 +92,11 @@ class OnlyOfficeSaver {
 		if ( !$previous || !$group ) {
 			return FALSE;
 		}
+
+		// L'adresse annoncée porte le nom public du serveur de documents ; on
+		// n'en garde que le chemin, et on le repose sur l'adresse par laquelle
+		// la plateforme sait le joindre.
+		$url = $this->onlyoffice->fetchUrl( $url );
 
 		try {
 			$response = $this->client->request( 'GET', $url, [ 'timeout' => 60 ] );

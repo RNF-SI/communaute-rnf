@@ -213,6 +213,7 @@ services:
     arguments:
       $serverUrl: "%env(string:ONLYOFFICE_URL)%"
       $platformUrl: "%env(string:ONLYOFFICE_PLATFORM_URL)%"
+      $internalUrl: "%env(string:ONLYOFFICE_INTERNAL_URL)%"
 
   App\Util\Geocoder:
     public: true

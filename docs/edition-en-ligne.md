@@ -69,7 +69,55 @@ précisément ce lien-là (`/healthcheck`).
 |---|---|---|
 | `ONLYOFFICE_URL` | le navigateur | `https://docs.exemple.fr`. En **https** si la plateforme est en https, sinon le navigateur refuse le script. |
 | `ONLYOFFICE_JWT_SECRET` | les deux | le `JWT_SECRET` du serveur de documents. Vide ⇒ rien n'est signé. |
+| `ONLYOFFICE_INTERNAL_URL` | la plateforme | `http://10.0.20.44`. À renseigner dès que la plateforme ne peut pas joindre le serveur de documents à son adresse publique — voir « Une seule adresse publique » ci-dessous. Vide, on garde l'adresse publique. |
 | `ONLYOFFICE_PLATFORM_URL` | le serveur de documents | `https://communaute-rnf.fr`. À ne renseigner que si elle diffère de l'adresse publique — un conteneur pour qui « localhost » désigne lui-même. |
+
+### Une seule adresse publique pour les deux services
+
+Le cas le plus fréquent en auto-hébergement, et celui qui casse le lien 3.
+
+`only-office.exemple.fr` et `communaute.exemple.fr` pointent sur la même IP
+publique, parce qu'un reverse proxy les distingue au nom d'hôte. De
+l'extérieur, tout répond. De l'**intérieur**, joindre cette IP revient à taper
+sur sa propre passerelle, et la plupart ne savent pas renvoyer le paquet vers
+le réseau interne — le « hairpin NAT » ne se fait pas. La connexion échoue en
+une fraction de milliseconde, ce qui la distingue d'un filtrage (qui, lui,
+laisse expirer le délai) :
+
+```
+curl: (7) Failed to connect ... port 443 after 0 ms: Could not connect to server
+```
+
+**Le symptôme, si on ne le traite pas :** tout s'ouvre, tout s'édite, et rien
+ne s'enregistre. Le lien 2 souffre du même mal, en sens inverse.
+
+Trois remèdes, du meilleur au moindre :
+
+1. **Le hairpin NAT sur la passerelle.** Un réglage, une fois, et les deux sens
+   sont réglés sans rien changer ailleurs.
+2. **`ONLYOFFICE_INTERNAL_URL`** pour le lien 3 (`http://10.0.20.44`), et une
+   entrée `/etc/hosts` sur le CT du serveur de documents pour le lien 2 —
+   faisant pointer le nom de la plateforme vers l'IP interne de ce qui termine
+   son TLS. Ne demande rien à la passerelle.
+3. **Une entrée `/etc/hosts` de chaque côté**, si et seulement si l'adresse
+   interne sert elle-même le TLS avec le bon certificat. Souvent faux : le CT
+   du serveur de documents n'écoute qu'en clair sur 80, le TLS étant terminé
+   par le reverse proxy.
+
+Pour savoir dans quel cas on est, depuis la plateforme :
+
+```bash
+curl -sS -m 5 -o /dev/null -w 'http/80  → %{http_code}\n'    http://10.0.20.44/healthcheck
+curl -sS -m 5 -k -o /dev/null -w 'https/443 → %{http_code}\n' https://10.0.20.44/healthcheck
+```
+
+`http/80` répond et `https/443` non : c'est le remède 2.
+
+**Une propriété qui vient avec.** Le fichier modifié n'est jamais cherché
+ailleurs que sur le serveur de documents configuré : `fetchUrl()` ne garde de
+l'adresse annoncée que son chemin, et le repose sur la nôtre. Un rappel forgé
+qui désignerait un autre hôte — possible si le secret partagé venait à
+manquer — ne ferait donc pas sortir la plateforme de son réseau.
 
 ### Installer le serveur de documents
 
@@ -304,7 +352,7 @@ découvrir : pour une rédaction vraiment simultanée, ouvrez le document
 |---|---|
 | Cadre blanc, rien ne se charge | Le navigateur ne joint pas `ONLYOFFICE_URL`. Page en https et serveur de documents en http : le navigateur refuse le script sans rien dire. Au bout de quinze secondes la page l'annonce. |
 | « Le document n'a pas pu être téléchargé » dans l'éditeur | Le serveur de documents ne joint pas la plateforme. Renseigner `ONLYOFFICE_PLATFORM_URL`. |
-| Tout s'ouvre et se modifie, mais rien n'est enregistré | Lien 3 : la plateforme ne joint pas le serveur de documents. `app:preflight`, puis les journaux de la plateforme — l'échec y est écrit. |
+| Tout s'ouvre et se modifie, mais rien n'est enregistré | Lien 3 : la plateforme ne joint pas le serveur de documents. `app:preflight`, puis les journaux de la plateforme — l'échec y est écrit. Si les deux services partagent une adresse publique, voir « Une seule adresse publique ». |
 | `app:preflight` dit « joignable », et pourtant rien ne s'enregistre | Le lien 3 se fait en **deux temps** : joindre le serveur, puis aller chercher le fichier à l'adresse qu'il indique — et cette adresse-là, il la fabrique avec le nom public (`docs.exemple.fr`), pas avec son IP. La plateforme doit donc résoudre ce nom **et** l'atteindre, en repassant par l'hôte virtuel. Un DNS interne qui ne connaît pas le sous-domaine, ou un certificat que le CT de la plateforme ne valide pas, coupe là. À éprouver depuis le CT de la plateforme : `curl -I https://docs.exemple.fr/healthcheck`. |
 | « Le jeton n'est pas valide » | `ONLYOFFICE_JWT_SECRET` diffère du `JWT_SECRET` du serveur de documents. |
 | L'éditeur se charge puis se fige | Le WebSocket ne passe pas dans l'hôte virtuel. |

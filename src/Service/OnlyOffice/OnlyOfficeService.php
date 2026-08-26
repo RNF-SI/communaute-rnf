@@ -63,6 +63,11 @@ class OnlyOfficeService {
 	private $platformUrl;
 
 	/**
+	 * @var string
+	 */
+	private $internalUrl;
+
+	/**
 	 * @var \App\Service\OnlyOffice\OnlyOfficeJwt
 	 */
 	private $jwt;
@@ -82,13 +87,15 @@ class OnlyOfficeService {
 			OnlyOfficeToken $tokens,
 			UrlGeneratorInterface $router,
 			string $serverUrl = '',
-			string $platformUrl = ''
+			string $platformUrl = '',
+			string $internalUrl = ''
 	) {
 		$this->jwt         = $jwt;
 		$this->tokens      = $tokens;
 		$this->router      = $router;
 		$this->serverUrl   = rtrim( trim( $serverUrl ), '/' );
 		$this->platformUrl = rtrim( trim( $platformUrl ), '/' );
+		$this->internalUrl = rtrim( trim( $internalUrl ), '/' );
 	}
 
 	public function isEnabled (): bool {
@@ -96,13 +103,71 @@ class OnlyOfficeService {
 	}
 
 	/**
-	 * L'adresse du serveur de documents, pour ce qui a besoin de la joindre —
-	 * le contrôle d'environnement, en pratique.
+	 * L'adresse du serveur de documents telle que le NAVIGATEUR la voit.
 	 *
 	 * @return string
 	 */
 	public function serverUrl (): string {
 		return $this->serverUrl;
+	}
+
+	/**
+	 * L'adresse du serveur de documents telle que LA PLATEFORME peut le
+	 * joindre. (#43)
+	 *
+	 * Les deux diffèrent dès que les services partagent une seule adresse
+	 * publique : de l'intérieur, joindre cette adresse revient à taper sur sa
+	 * propre passerelle, et la plupart ne savent pas renvoyer le paquet vers
+	 * l'intérieur — le « hairpin NAT » ne se fait pas. La conséquence est
+	 * exactement celle que ce fichier passe son temps à éviter : l'édition
+	 * marche, et rien ne s'enregistre.
+	 *
+	 * Vide, on garde l'adresse publique — c'est le cas quand les deux se
+	 * joignent normalement.
+	 *
+	 * @return string
+	 */
+	public function internalUrl (): string {
+		return $this->internalUrl !== '' ? $this->internalUrl : $this->serverUrl;
+	}
+
+	/**
+	 * L'adresse à laquelle aller chercher un fichier que le serveur de
+	 * documents vient d'annoncer.
+	 *
+	 * Il fabrique cette adresse avec le nom sous lequel *lui* se connaît,
+	 * c'est-à-dire le nom public. On n'en garde donc que le chemin, et on le
+	 * repose sur l'adresse par laquelle nous, nous savons le joindre.
+	 *
+	 * Cette réécriture a un second effet, et il vaut mieux qu'il soit
+	 * délibéré : **on ne va jamais chercher un fichier ailleurs que sur le
+	 * serveur de documents configuré.** Une réponse de rappel qui désignerait
+	 * un autre hôte — un rappel forgé, si le secret partagé venait à manquer —
+	 * ne ferait pas sortir la plateforme de son réseau.
+	 *
+	 * @param string $advertised l'adresse annoncée par le serveur de documents
+	 *
+	 * @return string
+	 */
+	public function fetchUrl ( string $advertised ): string {
+		$base  = $this->internalUrl();
+		$parts = parse_url( $advertised );
+
+		if ( !is_array( $parts ) ) {
+			return $base;
+		}
+
+		$path  = $parts[ 'path' ] ?? '/';
+		$query = isset( $parts[ 'query' ] ) ? '?' . $parts[ 'query' ] : '';
+
+		// `parse_url` accepte une adresse relative sans broncher, et rend
+		// alors un chemin qui ne commence pas par une barre : recollé tel quel
+		// il ne ferait pas un chemin, il ferait un autre hôte.
+		if ( strpos( $path, '/' ) !== 0 ) {
+			$path = '/' . $path;
+		}
+
+		return $base . $path . $query;
 	}
 
 	/**

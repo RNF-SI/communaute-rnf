@@ -247,6 +247,65 @@ class OnlyOfficeServiceTest extends TestCase {
 	}
 
 	/**************************************************
+	 * L'ADRESSE PAR LAQUELLE NOUS LE JOIGNONS
+	 **************************************************/
+
+	/**
+	 * Sans adresse interne, il n'y en a qu'une : celle du navigateur.
+	 */
+	public function testTheInternalAddressFallsBackOnThePublicOne () {
+		$this->assertSame( 'https://docs.exemple.fr', $this->service()->internalUrl() );
+	}
+
+	/**
+	 * Le cas qui a motivé ce réglage : les deux services derrière une seule
+	 * adresse publique. De l'intérieur, joindre cette adresse revient à taper
+	 * sur sa propre passerelle, et le paquet ne revient pas.
+	 */
+	public function testTheInternalAddressIsUsedWhenGiven () {
+		$service = $this->service( 'https://docs.exemple.fr', '', '', 'http://10.0.20.44' );
+
+		$this->assertSame( 'http://10.0.20.44', $service->internalUrl() );
+		// Le navigateur, lui, garde l'adresse publique.
+		$this->assertSame( 'https://docs.exemple.fr', $service->serverUrl() );
+		$this->assertStringStartsWith( 'https://docs.exemple.fr/', $service->apiUrl() );
+	}
+
+	/**
+	 * Le serveur de documents annonce le fichier modifié sous le nom par
+	 * lequel *lui* se connaît. On n'en garde que le chemin.
+	 */
+	public function testTheAdvertisedFileIsFetchedOnTheInternalAddress () {
+		$service = $this->service( 'https://docs.exemple.fr', '', '', 'http://10.0.20.44' );
+
+		$this->assertSame(
+				'http://10.0.20.44/cache/files/data/abc_1234/output.docx?md5=x&expires=9',
+				$service->fetchUrl( 'https://docs.exemple.fr/cache/files/data/abc_1234/output.docx?md5=x&expires=9' )
+		);
+	}
+
+	/**
+	 * Second effet, voulu : on ne va jamais chercher un fichier ailleurs que
+	 * sur le serveur de documents configuré. Un rappel forgé — possible si le
+	 * secret partagé venait à manquer — ne fait pas sortir la plateforme de
+	 * son réseau.
+	 */
+	public function testAFileIsNeverFetchedFromSomewhereElse () {
+		$service = $this->service( 'https://docs.exemple.fr', '', '', 'http://10.0.20.44' );
+
+		$this->assertSame(
+				'http://10.0.20.44/secret',
+				$service->fetchUrl( 'http://169.254.169.254/secret' )
+		);
+		// Une adresse relative est acceptée par `parse_url` : son chemin doit
+		// rester un chemin, et ne pas venir s'agglutiner à l'hôte.
+		$this->assertSame(
+				'http://10.0.20.44/output.docx',
+				$service->fetchUrl( 'output.docx' )
+		);
+	}
+
+	/**************************************************
 	 * OUTILLAGE
 	 **************************************************/
 
@@ -257,13 +316,14 @@ class OnlyOfficeServiceTest extends TestCase {
 	 *
 	 * @return \App\Service\OnlyOffice\OnlyOfficeService
 	 */
-	private function service ( $serverUrl = 'https://docs.exemple.fr', $platformUrl = '', $jwtSecret = '' ) {
+	private function service ( $serverUrl = 'https://docs.exemple.fr', $platformUrl = '', $jwtSecret = '', $internalUrl = '' ) {
 		return new OnlyOfficeService(
 				new OnlyOfficeJwt( $jwtSecret ),
 				new OnlyOfficeToken( self::SECRET ),
 				new FakeUrlGenerator(),
 				$serverUrl,
-				$platformUrl
+				$platformUrl,
+				$internalUrl
 		);
 	}
 

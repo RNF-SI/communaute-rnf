@@ -216,7 +216,20 @@ le nom du type « pdf » a changé d'une version d'OnlyOffice à l'autre.
 charge l'éditeur chez le serveur de documents ; le serveur de documents vient
 chercher le fichier chez nous ; et **la plateforme va chercher la version
 modifiée chez lui**. Une installation où seul le navigateur le voit enregistre
-zéro modification, en silence. `app:preflight` éprouve ce lien-là.
+zéro modification, en silence. `app:preflight` éprouve ce lien-là — et il
+éprouve l'adresse **interne**, pas la publique : contrôler celle du navigateur
+dirait « joignable » là où le lien qui compte est coupé.
+
+**Les deux adresses ne sont pas la même dès qu'il n'y a qu'une IP publique.**
+Un reverse proxy distingue les services au nom d'hôte ; de l'intérieur, joindre
+cette IP revient à taper sur sa propre passerelle, qui ne sait généralement pas
+renvoyer le paquet — le hairpin NAT ne se fait pas. D'où `ONLYOFFICE_INTERNAL_URL`,
+que `fetchUrl()` substitue à l'hôte annoncé par le serveur de documents en n'en
+gardant que le chemin. Effet voulu qui vient avec : **on ne va jamais chercher
+un fichier ailleurs que sur le serveur configuré** — un rappel forgé ne fait pas
+sortir la plateforme de son réseau. Et `parse_url` acceptant une adresse
+relative, le chemin est reforcé à commencer par une barre : recollé tel quel il
+ne ferait pas un chemin, il ferait un autre hôte.
 
 **Le serveur de documents n'a pas de session** : `/office/{token}/content` et
 `/office/{token}/callback` vivent dans **leur propre pare-feu**, `security:
