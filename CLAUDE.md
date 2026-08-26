@@ -255,6 +255,18 @@ chaque version, sans quoi l'éditeur rouvre la précédente et l'écrit par-dess
 la nouvelle. L'enregistrement suit le remplacement de fichier de #41 : nouveau
 `File` d'abord, ancien effacé ensuite.
 
+**Trois pannes, et aucune ne doit être muette** (`assets/js/ui/onlyoffice.js`).
+Le script du serveur de documents qui ne vient pas ; l'éditeur qui démarre et
+ne finit jamais de charger — arrivé en préproduction, une extension bloquant
+`Analytics.js` que le serveur servait pourtant en 200, son nom ressemblant à du
+pistage ; et l'erreur qu'OnlyOffice signale lui-même. Les deux dernières
+passent par `events.onDocumentReady` / `onError`, ajoutés **côté navigateur** :
+ce sont des fonctions, elles ne traversent pas le jeton signé. Et tout ce que le
+gabarit met en attributs est lu **avant** de construire l'éditeur —
+`DocsAPI.DocEditor` ne remplit pas l'élément qu'on lui désigne, il le remplace,
+et ses attributs partent avec lui. C'est la même raison qui met la hauteur sur
+le cadre parent.
+
 Les formats hérités — `.doc`, `.xls`, `.ppt` — s'ouvrent en **lecture seule** :
 les réenregistrer reviendrait à les convertir sous les pieds de qui les a
 déposés. La page le dit avant d'ouvrir l'éditeur, plutôt que de le laisser

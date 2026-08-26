@@ -522,6 +522,7 @@ pages:
                 back: "Back to the document"
                 readonly: "This format opens read-only: saving it would convert it to another format. To edit it, download it, or upload a version as .odt, .docx, .ods, .xlsx, .odp or .pptx."
                 unreachable: "The online editor is not responding. The document can still be downloaded from its page; please tell a platform administrator."
+                stalled: "The editor started but never finished loading. The most common cause is a browser extension — an ad blocker or tracking protection — refusing one of its files. Try again in a private window, or allow the editor's domain in your extension."
             talk:
                 title: "What was said about it"
                 discussions: "Discussions mentioning it"
