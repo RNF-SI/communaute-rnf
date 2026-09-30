@@ -40,7 +40,7 @@
 				<section class="empty-state narrow">
 					<div class="empty-state__content">
 						<p>{{ 'pages.group.subgroups.empty'|trans({'%group_name%': group.name})|default('Ce groupe n\'a pas encore de sous-groupes.') }}</p>
-						{% if user_group_relation.isCommunityAdmin(app.user) %}
+						{% if user_group_relation.isPlatformModerator(app.user) %}
 							<p>
 								<a class="cta" href="{{ path('group_edit', {'groupSlug':group.slug}) }}">{{ 'pages.group.subgroups.manage'|trans|default('Gérer les sous-groupes') }}</a>
 							</p>

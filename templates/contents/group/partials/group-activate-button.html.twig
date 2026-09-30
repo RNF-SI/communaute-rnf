@@ -1,5 +1,5 @@
 <div class="group-activate-actions">
-	{% if user_group_relation.isCommunityAdmin(app.user) %}
+	{% if user_group_relation.isPlatformModerator(app.user) %}
 		<a class="cta" href="{{ path('group_activate', {'groupSlug':group.slug, 'doActivate':1}) }}">{{ 'pages.group.activation_button.accept'|trans }}</a>
 		<a class="cta__inverted cta__red" href="{{ path('group_activate', {'groupSlug':group.slug, 'doActivate':0}) }}">{{ 'pages.group.activation_button.deny'|trans }}</a>
 	{% elseif user_group_relation.isAdmin(app.user, group) %}

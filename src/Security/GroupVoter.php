@@ -49,7 +49,7 @@ class GroupVoter extends Voter {
 	protected function voteOnAttribute ( $attribute, $subject, TokenInterface $token ) {
 		$user = $token->getUser();
 
-		if ( ( $user instanceof User ) && ( $user->isAdmin() || $this->userGroupRelation->isCommunityAdmin( $user ) ) ) {
+		if ( $this->userGroupRelation->isPlatformModerator( $user ) ) {
 			return TRUE;
 		}
 

@@ -41,6 +41,26 @@ class UserGroupRelation {
 		return $this->isAdmin( $user, $communityGroup );
 	}
 
+	/**
+	 * Qui modère la plateforme : un administrateur (`ROLE_ADMIN`) ou un
+	 * animateur du groupe communauté. `GroupVoter` accorde tout à l'un comme à
+	 * l'autre ; valider un groupe, le créer sans validation ou ranger la
+	 * hiérarchie doit suivre la même définition, sans quoi un administrateur
+	 * qui n'anime pas la communauté voit ses propres groupes partir en
+	 * attente de validation. (#42)
+	 *
+	 * @param \App\Entity\User|null $user
+	 *
+	 * @return bool
+	 */
+	public function isPlatformModerator ( ?User $user ) {
+		if ( !( $user instanceof User ) ) {
+			return FALSE;
+		}
+
+		return $user->isAdmin() || $this->isCommunityAdmin( $user );
+	}
+
 	public function isMember ( ?User $user, Usergroup $group ) {
 		return $this->manager->getRepository( UsergroupMembership::class )
 							 ->isMember( $user, $group );
@@ -66,7 +86,7 @@ class UserGroupRelation {
 			return FALSE;
 		}
 
-		if ( $this->isCommunityAdmin( $user ) ) {
+		if ( $this->isPlatformModerator( $user ) ) {
 			return $groups;
 		}
 

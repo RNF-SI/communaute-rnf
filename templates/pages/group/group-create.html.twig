@@ -29,7 +29,11 @@
 							<a href="{{ path('group_page_index', { 'groupSlug': group_creation_help.group_slug, 'pageSlug': group_creation_help.page_slug }) }}">{{ 'pages.group.group_create.help.creation_info_link'|trans }}</a>
 						</p>
 					{% endif %}
-					<p>{{ 'pages.group.group_create.help.validation_info'|trans }}</p>
+					{# Seulement pour qui verra vraiment son groupe attendre : un
+					   administrateur le crée actif d'emblée. (#42) #}
+					{% if needsValidation %}
+						<p class="group-creation-validation">{{ 'pages.group.group_create.help.validation_info'|trans }}</p>
+					{% endif %}
 				</section>
 
 				<section class="group-form">

@@ -128,6 +128,13 @@ both are granted everything in *every* group, including private ones they are
 not a member of. That is deliberate — the RNF team must be able to moderate
 anywhere — but it is easy to miss when reading a single voter.
 
+Both cases are one method, `UserGroupRelation::isPlatformModerator()`, and
+everything that means « the platform's moderators » must go through it — the
+voter, but also creating a group without validation, validating a pending one,
+editing the group hierarchy. Before #42 those three only knew the community
+animator: a platform administrator saw their own groups wait for validation
+while the voter already granted them everything.
+
 **Who may edit what inside a group** (#33, amendé par #43). Any member may
 *create* a page, an article, a document or a discussion. Editing and deleting a
 page or an article is then reserved to its author and to the group animators.

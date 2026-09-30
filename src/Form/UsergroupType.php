@@ -107,7 +107,7 @@ class UsergroupType extends AbstractType {
 
 		// Ajouter les champs de hiérarchie uniquement pour les administrateurs de la communauté
 		$user = $this->security->getUser();
-		if ( $user && $this->userGroupRelation->isCommunityAdmin( $user ) ) {
+		if ( $user && $this->userGroupRelation->isPlatformModerator( $user ) ) {
 			$currentGroup = $options['data'] ?? null;
 			
 			$builder

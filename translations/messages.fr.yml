@@ -1023,6 +1023,7 @@ messages:
         user_banned: "Vous avez été banni·e de ce groupe."
         already_active: "Le groupe a déjà été activé"
         group_created: "Votre groupe a bien été créé, il est en cours de validation par un administrateur."
+        group_created_active: "Votre groupe a bien été créé et il est déjà visible : un administrateur n’a pas à faire valider ses groupes."
         group_activated: "Le groupe a été activé"
         group_updated: "Les informations du groupe ont été mises à jour"
         group_deleted: "Le groupe a été supprimé"

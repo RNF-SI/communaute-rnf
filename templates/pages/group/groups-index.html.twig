@@ -31,7 +31,7 @@
 			{% if groupsToActivate is defined and displayableGroupsToActivate is not empty %}
 				<section class="groups-list groups-pending">
 					<p class="small-title">
-						{{ user_group_relation.isCommunityAdmin(app.user) ? 'pages.group.groups.list.pending.admins'|trans : 'pages.group.groups.list.pending.yours'|trans }}
+						{{ user_group_relation.isPlatformModerator(app.user) ? 'pages.group.groups.list.pending.admins'|trans : 'pages.group.groups.list.pending.yours'|trans }}
 						<span class="pending-groups-help" data-tooltip="{{ 'pages.group.groups.pending.info.description'|trans|default('Ces groupes ne sont pas indexés et n\'apparaissent pas dans les résultats de recherche tant qu\'ils ne sont pas validés par un administrateur.') }}">
 							<img src="/media/layout/help.svg" alt="?" style="width: 16px; height: 16px; margin-left: 8px; vertical-align: middle;">
 						</span>

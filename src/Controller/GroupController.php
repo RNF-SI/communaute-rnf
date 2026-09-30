@@ -221,7 +221,7 @@ class GroupController extends AbstractController {
 		 */
 		$user = $this->getUser();
 
-		$doActivate = $userGroupRelation->isCommunityAdmin( $user );
+		$doActivate = $userGroupRelation->isPlatformModerator( $user );
 
 		/**
 		 * @var \App\Entity\Usergroup $group
@@ -300,55 +300,61 @@ class GroupController extends AbstractController {
 
 			// --
 
+			// Un groupe créé par qui modère la plateforme est actif d'emblée :
+			// rien à valider, on l'emmène directement dessus. (La redirection
+			// vers group_activate qui se trouvait là était calculée puis
+			// jetée, faute de `return` — et elle aurait répondu « déjà
+			// actif ».)
+			if ( $doActivate ) {
+				$this->addFlash( 'notice', 'messages.group.group_created_active' );
+
+				return $this->redirectToRoute( 'group_index', [ 'groupSlug' => $group->getSlug() ] );
+			}
+
 			$this->addFlash( 'notice', 'messages.group.group_created' );
 
-			if ( $doActivate ) {
-				$this->redirectToRoute( 'group_activate', [ 'groupSlug' => $group->getSlug(), 'doActivate' => TRUE ] );
-			} else {
+			$communityGroup = $community->getGroup();
+			if ( $communityGroup ) {
+				$communityAdmins = $communityGroup->getMembersByRole( UsergroupMembership::ROLE_ADMIN );
+				$multiple = count( $communityAdmins ) > 1;
+				$emailsSent = 0;
+				$totalAdmins = count( $communityAdmins );
 
-				$communityGroup = $community->getGroup();
-				if ( $communityGroup ) {
-					$communityAdmins = $communityGroup->getMembersByRole( UsergroupMembership::ROLE_ADMIN );
-					$multiple = count( $communityAdmins ) > 1;
-					$emailsSent = 0;
-					$totalAdmins = count( $communityAdmins );
+				foreach ( $communityAdmins as $communityAdminMembership ) {
+					$communityAdmin = $communityAdminMembership->getUser();
+					
+					// Vérifier que l'email est valide avant d'envoyer
+					if ($communityAdmin->getEmail() && filter_var($communityAdmin->getEmail(), FILTER_VALIDATE_EMAIL)) {
+						try {
+							$message = $this->renderView(
+								'emails/usergroup-activation.html.twig',
+								[
+									'admin'     => $communityAdmin,
+									'user'      => $user,
+									'usergroup' => $group,
+									'url'       => $this->generateUrl( 'group_index', [ 'groupSlug' => $group->getSlug() ], UrlGeneratorInterface::ABSOLUTE_URL ),
+									'multiple'  => $multiple,
+								]
+							);
 
-					foreach ( $communityAdmins as $communityAdminMembership ) {
-						$communityAdmin = $communityAdminMembership->getUser();
-						
-						// Vérifier que l'email est valide avant d'envoyer
-						if ($communityAdmin->getEmail() && filter_var($communityAdmin->getEmail(), FILTER_VALIDATE_EMAIL)) {
-							try {
-								$message = $this->renderView(
-									'emails/usergroup-activation.html.twig',
-									[
-										'admin'     => $communityAdmin,
-										'user'      => $user,
-										'usergroup' => $group,
-										'url'       => $this->generateUrl( 'group_index', [ 'groupSlug' => $group->getSlug() ], UrlGeneratorInterface::ABSOLUTE_URL ),
-										'multiple'  => $multiple,
-									]
-								);
-
-								$mailer->send(
-									[ $this->getParameter( 'plateform' )[ 'from' ] => $this->getParameter( 'plateform' )[ 'name' ] ],
-									$communityAdmin->getEmail(),
-									$mailer->getSubjectFromTitle( $message ),
-									$message
-								);
-								$emailsSent++;
-							} catch (\Exception $e) {
-								// Log l'erreur mais continue le processus
-							}
+							$mailer->send(
+								[ $this->getParameter( 'plateform' )[ 'from' ] => $this->getParameter( 'plateform' )[ 'name' ] ],
+								$communityAdmin->getEmail(),
+								$mailer->getSubjectFromTitle( $message ),
+								$message
+							);
+							$emailsSent++;
+						} catch (\Exception $e) {
+							// Log l'erreur mais continue le processus
 						}
 					}
-					
-					// Informer l'utilisateur si aucun email n'a pu être envoyé
-					if ($totalAdmins > 0 && $emailsSent == 0) {
-						$this->addFlash('warning', 'Le groupe a été créé mais les administrateurs n\'ont pas pu être notifiés par email.');
-					} elseif ($emailsSent < $totalAdmins) {
-						$this->addFlash('info', 'Le groupe a été créé. Certains administrateurs n\'ont pas pu être notifiés par email.');
-					}
+				}
+				
+				// Informer l'utilisateur si aucun email n'a pu être envoyé
+				if ($totalAdmins > 0 && $emailsSent == 0) {
+					$this->addFlash('warning', 'Le groupe a été créé mais les administrateurs n\'ont pas pu être notifiés par email.');
+				} elseif ($emailsSent < $totalAdmins) {
+					$this->addFlash('info', 'Le groupe a été créé. Certains administrateurs n\'ont pas pu être notifiés par email.');
 				}
 			}
 
@@ -356,8 +362,9 @@ class GroupController extends AbstractController {
 		}
 
 		return $this->render( 'pages/group/group-create.html.twig', [
-				'group' => $group,
-				'form'  => $form->createView(),
+				'group'           => $group,
+				'form'            => $form->createView(),
+				'needsValidation' => !$doActivate,
 		] );
 	}
 
@@ -385,7 +392,7 @@ class GroupController extends AbstractController {
 			return $this->redirectToRoute('user_login');
 		}
 
-		if ( !$userGroupRelation->isCommunityAdmin( $this->getUser() ) ) {
+		if ( !$userGroupRelation->isPlatformModerator( $this->getUser() ) ) {
 			throw new AccessDeniedException( 'Your are not allowed to activate groups' );
 		}
 
