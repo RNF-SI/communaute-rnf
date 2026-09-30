@@ -513,6 +513,7 @@ pages:
             added: "Added on"
             size: "Size"
             no_file: "No file is attached to this document."
+            file_missing: "This document’s file cannot be found on the server: it can neither be shown nor downloaded for now. Please tell a platform administrator."
             preview:
                 fallback: "Your browser cannot display this document?"
                 download: "Download it"
@@ -874,6 +875,7 @@ messages:
         article_deleted: "The article has been deleted"
 
     document:
+        file_missing: "This document’s file cannot be found on the server. It is not your doing: please tell a platform administrator."
         document_created: "The document has been added"
         document_updated: "The document has been updated"
         document_deleted: "The document has been deleted"

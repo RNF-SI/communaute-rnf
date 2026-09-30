@@ -60,6 +60,45 @@ class FileManager {
 		return $response;
 	}
 
+	/**
+	 * Le fichier est-il vraiment là, et lisible par ce processus ?
+	 *
+	 * La base peut porter un document dont le stockage n'a pas le fichier :
+	 * une préproduction montée sur une copie de la base de production, sans
+	 * le rsync de `var/files` qui ne passe pas par le dump ; ou des fichiers
+	 * copiés sous un autre utilisateur que celui du serveur web. Chaque
+	 * téléchargement répondait alors 500, aperçu compris, sans rien dire de
+	 * la cause. (#42)
+	 *
+	 * On ouvre le flux plutôt que de demander s'il existe : un fichier présent
+	 * mais illisible échoue exactement comme un fichier absent.
+	 *
+	 * @param \App\Entity\File $file
+	 *
+	 * @return bool
+	 */
+	public function isAvailable ( File $file ): bool {
+		if ( !$file->getFilesystem() || !$file->getPath() ) {
+			return FALSE;
+		}
+
+		// Gaufrette ne rend pas FALSE sur un fichier absent : il lève.
+		try {
+			$handle = @fopen( sprintf( 'gaufrette://%s/%s', $file->getFilesystem(), $file->getPath() ), 'r' );
+		}
+		catch ( \Throwable $error ) {
+			return FALSE;
+		}
+
+		if ( !$handle ) {
+			return FALSE;
+		}
+
+		fclose( $handle );
+
+		return TRUE;
+	}
+
 	public function deleteFile ( File $file ) {
 		/**
 		 * @var \Gaufrette\FilesystemInterface $fs

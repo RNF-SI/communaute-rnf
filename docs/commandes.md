@@ -32,7 +32,11 @@ cite toutes : une commande ajoutée sans être documentée fait échouer la suit
 Vérifie, sur la machine qui fera tourner la plateforme, tout ce dont l'absence
 provoque une panne **silencieuse** plutôt qu'une erreur : extension manquante,
 jeton vide, hôte de routeur absent, répertoire non inscriptible, migrations en
-retard, durée de session trop courte.
+retard, durée de session trop courte — et **documents dont le fichier manque au
+stockage** : une base copiée de la production sans le rsync de `var/files`, ou
+des fichiers copiés sous un autre utilisateur que le serveur web. Sur la
+plateforme, ces documents disent « fichier introuvable » au lieu de répondre
+500 ; ici, on les compte et on en cite trois. (#42)
 
 N'écrit rien. Sort en code 1 s'il reste une vérification bloquante en échec.
 

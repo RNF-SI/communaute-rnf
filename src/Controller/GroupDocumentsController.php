@@ -21,6 +21,7 @@ use App\Service\OnlyOffice\OnlyOfficeService;
 use App\Service\SlugGenerator;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use App\Repository\DocumentTagRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
@@ -586,9 +587,18 @@ class GroupDocumentsController extends AbstractController {
 
 		$file = $document->getFile();
 
+		// Un fichier que le stockage n'a pas : ni aperçu, ni bouton qui mène à
+		// une erreur — la fiche le dit. (#42)
+		$fileMissing = $file && !$fileManager->isAvailable( $file );
+
+		if ( $fileMissing ) {
+			$file = NULL;
+		}
+
 		return $this->render( 'pages/document/document-index.html.twig', [
 				'group'       => $group,
 				'document'    => $document,
+				'fileMissing' => $fileMissing,
 				'size'        => $file && $file->getSize() ? $fileManager->formatSize( $file->getSize() ) : NULL,
 				// Ce que la page sait montrer elle-même : un PDF et une image
 				// s'affichent dans le navigateur, sans rien installer et sans
@@ -627,7 +637,8 @@ class GroupDocumentsController extends AbstractController {
 			$documentId,
 			Request $request,
             EntityManagerInterface $manager,
-			FileManager $fileManager
+			FileManager $fileManager,
+			LoggerInterface $logger
 	) {
 		/**
 		 * @var  \App\Entity\Usergroup $group
@@ -654,6 +665,25 @@ class GroupDocumentsController extends AbstractController {
 		$file = $document->getFile();
 		if ( !$file ) {
 			throw $this->createNotFoundException( 'The document file does not exist' );
+		}
+
+		// Le lien vient d'une liste, d'une recherche, d'une vignette : plutôt
+		// qu'une erreur 500 sans explication, on ramène sur la fiche, qui dit
+		// ce qui se passe. Et on le note : c'est une panne d'installation, pas
+		// une erreur de la personne qui clique. (#42)
+		if ( !$fileManager->isAvailable( $file ) ) {
+			$logger->error( 'Document file missing from storage', [
+					'document'   => $document->getId(),
+					'filesystem' => $file->getFilesystem(),
+					'path'       => $file->getPath(),
+			] );
+
+			$this->addFlash( 'error', 'messages.document.file_missing' );
+
+			return $this->redirectToRoute( 'group_document_index', [
+					'groupSlug'  => $group->getSlug(),
+					'documentId' => $document->getId(),
+			] );
 		}
 
 		return $fileManager->getFile( $file, $request->query->getBoolean( 'download' ) );

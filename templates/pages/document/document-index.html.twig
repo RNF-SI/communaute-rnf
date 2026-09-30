@@ -15,12 +15,12 @@
 					   geste utile — le téléchargement reste à côté, et reste un
 					   téléchargement (`download`), y compris pour un PDF que la page
 					   sait pourtant afficher. (#43) #}
-					{% if office and app.user %}
+					{% if office and app.user and not fileMissing %}
 						<a class="cta" href="{{ path('group_document_office', {'groupSlug': group.slug, 'documentId': document.id}) }}">
 							{{ (officeEdit ? 'pages.document.view.office.edit' : 'pages.document.view.office.open')|trans }}
 						</a>
 					{% endif %}
-					{% if document.file %}
+					{% if document.file and not fileMissing %}
 						<a class="{{ (office and app.user) ? 'cta__inverted' : 'cta' }}" href="{{ path('group_document_get', {'groupSlug': group.slug, 'documentId': document.id, 'download': 1}) }}">{{ 'pages.document.view.download'|trans }}</a>
 					{% endif %}
 					{% if is_granted(constant('App\\Security\\GroupDocumentVoter::EDIT'), document) %}
@@ -122,6 +122,11 @@
 
 					{% if document.file is empty %}
 						<p class="document-sheet--nofile">{{ 'pages.document.view.no_file'|trans }}</p>
+					{% elseif fileMissing %}
+						{# Le document existe, son fichier non : on le dit, et à qui
+						   s'adresser, plutôt qu'un bouton qui mènerait à une erreur.
+						   (#42) #}
+						<p class="document-sheet--nofile document-sheet--missing">{{ 'pages.document.view.file_missing'|trans }}</p>
 					{% endif %}
 				</article>
 

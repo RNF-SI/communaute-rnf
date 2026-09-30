@@ -2,6 +2,8 @@
 
 namespace App\Command;
 
+use App\Entity\Document;
+use App\Service\FileManager;
 use App\Service\MailGuard;
 use App\Service\OnlyOffice\OnlyOfficeJwt;
 use App\Service\OnlyOffice\OnlyOfficeService;
@@ -41,6 +43,8 @@ class PreflightCommand extends Command {
 
 	private $http;
 
+	private $files;
+
 	public function __construct (
 			EntityManagerInterface $manager,
 			ParameterBagInterface $parameters,
@@ -48,7 +52,8 @@ class PreflightCommand extends Command {
 			MailGuard $guard,
 			OnlyOfficeService $onlyoffice,
 			OnlyOfficeJwt $onlyofficeJwt,
-			HttpClientInterface $http
+			HttpClientInterface $http,
+			FileManager $files
 	) {
 		$this->manager       = $manager;
 		$this->parameters    = $parameters;
@@ -57,6 +62,7 @@ class PreflightCommand extends Command {
 		$this->onlyoffice    = $onlyoffice;
 		$this->onlyofficeJwt = $onlyofficeJwt;
 		$this->http          = $http;
+		$this->files         = $files;
 
 		parent::__construct();
 	}
@@ -212,6 +218,29 @@ class PreflightCommand extends Command {
 					FALSE,
 			];
 		}
+
+		// La base peut citer des fichiers que le disque n'a pas : une
+		// préproduction montée sur une copie de la production sans le rsync
+		// de `var/files`, ou des fichiers copiés sous un autre utilisateur
+		// que le serveur web. Chaque document y répond alors « introuvable ».
+		// (#42)
+		list( $total, $missing ) = $this->missingDocumentFiles();
+
+		$checks[] = [
+				'Fichiers des documents',
+				empty( $missing ),
+				empty( $missing )
+						? sprintf( '%d fichier(s), tous lisibles', $total )
+						: sprintf(
+								'%d sur %d introuvable(s) ou illisible(s) — ils ne s’afficheront ni ne se '
+								. 'téléchargeront. var/files a-t-il été copié, et appartient-il au serveur '
+								. 'web ? Ex. : %s',
+								count( $missing ),
+								$total,
+								implode( ', ', array_slice( $missing, 0, 3 ) )
+						),
+				FALSE,
+		];
 
 		// TNTSearch écrit ses index dans des fichiers SQLite. Une commande
 		// console lancée par un autre utilisateur qu'Apache les rend
@@ -495,6 +524,37 @@ class PreflightCommand extends Command {
 	/**
 	 * @return bool
 	 */
+	/**
+	 * @return array [nombre de documents portant un fichier, chemins manquants]
+	 */
+	private function missingDocumentFiles () {
+		try {
+			$documents = $this->manager->getRepository( Document::class )->findAll();
+		}
+		catch ( Throwable $error ) {
+			return [ 0, [] ];
+		}
+
+		$total   = 0;
+		$missing = [];
+
+		foreach ( $documents as $document ) {
+			$file = $document->getFile();
+
+			if ( !$file ) {
+				continue;
+			}
+
+			$total++;
+
+			if ( !$this->files->isAvailable( $file ) ) {
+				$missing[] = $file->getFilesystem() . '/' . $file->getPath();
+			}
+		}
+
+		return [ $total, $missing ];
+	}
+
 	private function canReachDatabase () {
 		try {
 			$this->manager->getConnection()->connect();

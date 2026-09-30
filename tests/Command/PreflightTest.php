@@ -48,6 +48,7 @@ class PreflightTest extends KernelTestCase {
 				'Écriture des sessions',
 				'Durée de session',
 				'Assets compilés',
+				'Fichiers des documents',
 		] as $check ) {
 			$this->assertStringContainsString(
 					$check,

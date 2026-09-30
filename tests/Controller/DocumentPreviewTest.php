@@ -88,6 +88,10 @@ class DocumentPreviewTest extends WebTestCase {
 			if ( file_exists( $path ) ) {
 				unlink( $path );
 			}
+
+			if ( dirname( $path ) !== sys_get_temp_dir() && is_dir( dirname( $path ) ) ) {
+				rmdir( dirname( $path ) );
+			}
 		}
 
 		$connection = $this->manager->getConnection();
@@ -192,6 +196,65 @@ class DocumentPreviewTest extends WebTestCase {
 				'attachment',
 				(string) $this->client->getResponse()->headers->get( 'Content-Disposition' )
 		);
+	}
+
+	/**
+	 * Issue #42 (4) — « je n'arrive pas à télécharger ou consulter les
+	 * documents ». Le nom du fichier est celui qu'il portait sur le poste de
+	 * qui l'a déposé ; Symfony refuse de l'écrire tel quel dans
+	 * Content-Disposition s'il n'est pas en ASCII, et la route répondait 500 —
+	 * aperçu compris. Autant dire à presque tous les documents d'un réseau
+	 * francophone.
+	 */
+	public function testAFileNamedInFrenchIsServed () {
+		$this->member();
+
+		$document = $this->deposit( 'Réunion ' . uniqid(), 'pdf', FALSE, 'Compte rendu réunion été 100%.pdf' );
+
+		foreach ( [ '', '?download=1' ] as $query ) {
+			$this->client->request( 'GET', $this->file( $document ) . $query );
+
+			$response = $this->client->getResponse();
+			$header   = (string) $response->headers->get( 'Content-Disposition' );
+
+			$this->assertSame( 200, $response->getStatusCode(), 'Assert the file is served' . $query );
+			$this->assertRegExp( '/^[\\x20-\\x7e]*$/', $header, 'Assert the header stays ASCII' );
+			$this->assertStringContainsString(
+					"filename*=utf-8''" . rawurlencode( 'Compte rendu réunion été 100%.pdf' ),
+					$header,
+					'Assert the browser still gets the real name'
+			);
+		}
+	}
+
+	/**
+	 * Issue #42 (4) — une installation dont le stockage n'a pas le fichier
+	 * (préproduction montée sur une copie de la base sans le rsync de
+	 * `var/files`, fichiers illisibles par le serveur web). Chaque clic
+	 * répondait 500, sans un mot de la cause.
+	 */
+	public function testAFileMissingFromStorageIsSaidNotCrashed () {
+		$this->member();
+
+		$document = $this->deposit( 'Disparu ' . uniqid(), 'pdf' );
+
+		$this->files->deleteFile( $document->getFile() );
+
+		$crawler = $this->client->request( 'GET', $this->sheet( $document ) );
+
+		$this->assertTrue( $this->client->getResponse()->isSuccessful() );
+		$this->assertCount( 1, $crawler->filter( '.document-sheet--missing' ), 'Assert the sheet says the file is gone' );
+		$this->assertCount( 0, $crawler->filter( 'iframe.document-preview--frame' ), 'Assert no preview points at an error' );
+		$this->assertCount( 0, $crawler->filter( 'a[href*="download=1"]' ), 'Assert no button leads to an error' );
+
+		// Un lien direct — depuis la liste, la recherche — ramène sur la fiche.
+		$this->client->request( 'GET', $this->file( $document ) . '?download=1' );
+
+		$this->assertTrue( $this->client->getResponse()->isRedirect( $this->sheet( $document ) ) );
+
+		$crawler = $this->client->followRedirect();
+
+		$this->assertStringContainsString( 'introuvable sur le serveur', $crawler->filter( 'body' )->text() );
 	}
 
 	/**************************************************
@@ -339,10 +402,11 @@ class DocumentPreviewTest extends WebTestCase {
 	 * @param string $title
 	 * @param string $kind « pdf », « svg » ou « txt »
 	 * @param bool   $connect ouvrir une session avant de déposer
+	 * @param string $name    le nom du fichier sur le poste de qui le dépose
 	 *
 	 * @return \App\Entity\Document
 	 */
-	private function deposit ( $title, $kind, $connect = FALSE ) {
+	private function deposit ( $title, $kind, $connect = FALSE, $name = NULL ) {
 		if ( $connect ) {
 			$this->member();
 		}
@@ -351,7 +415,7 @@ class DocumentPreviewTest extends WebTestCase {
 		$form    = $crawler->filter( 'form[name="document"]' )->form();
 
 		$form[ 'document[title]' ] = $title;
-		$form[ 'document[filefile]' ]->upload( $this->temporaryFile( $kind ) );
+		$form[ 'document[filefile]' ]->upload( $this->temporaryFile( $kind, $name ) );
 
 		$this->client->submit( $form );
 
@@ -372,11 +436,12 @@ class DocumentPreviewTest extends WebTestCase {
 	}
 
 	/**
-	 * @param string $kind
+	 * @param string      $kind
+	 * @param string|null $name
 	 *
 	 * @return string
 	 */
-	private function temporaryFile ( $kind ) {
+	private function temporaryFile ( $kind, $name = NULL ) {
 		$contents = [
 				// Le type est deviné du contenu : l'en-tête suffit à faire un PDF.
 				'pdf' => [ 'pdf', "%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n" ],
@@ -387,6 +452,12 @@ class DocumentPreviewTest extends WebTestCase {
 		list( $extension, $content ) = $contents[ $kind ];
 
 		$path = sys_get_temp_dir() . '/' . uniqid( 'document-' ) . '.' . $extension;
+
+		if ( $name ) {
+			$directory = sys_get_temp_dir() . '/' . uniqid( 'document-' );
+			mkdir( $directory );
+			$path = $directory . '/' . $name;
+		}
 
 		file_put_contents( $path, $content );
 

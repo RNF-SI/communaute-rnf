@@ -644,6 +644,7 @@ pages:
             added: "Déposé le"
             size: "Taille"
             no_file: "Aucun fichier n’est attaché à ce document."
+            file_missing: "Le fichier de ce document est introuvable sur le serveur : il ne peut être ni affiché ni téléchargé pour le moment. Prévenez un administrateur de la plateforme."
             preview:
                 fallback: "Votre navigateur n’affiche pas ce document ?"
                 download: "Le télécharger"
@@ -1063,6 +1064,7 @@ messages:
         article_deleted: "L’article a été supprimé"
 
     document:
+        file_missing: "Le fichier de ce document est introuvable sur le serveur. Ce n’est pas de votre fait : prévenez un administrateur de la plateforme."
         document_created: "Le document a été ajouté"
         document_updated: "Le document a été mis à jour"
         document_deleted: "Le document a été supprimé"

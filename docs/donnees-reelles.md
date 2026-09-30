@@ -208,6 +208,17 @@ Après copie, vider le cache des vignettes :
 rm -rf public/media/cache/thumbnail public/media/cache/avatar
 ```
 
+**Sans cette copie, aucun document ne s'ouvre** : la base les cite, le disque
+ne les a pas. Même chose si les fichiers appartiennent à l'utilisateur qui a
+lancé le rsync et non au serveur web. La fiche du document le dit (« fichier
+introuvable sur le serveur »), et `php bin/console app:preflight` compte ceux
+qui manquent — c'est la première chose à regarder quand la recette rapporte
+« je n'arrive pas à télécharger ou consulter les documents ». (#42)
+
+```bash
+sudo chown -R www-data: var/files   # l'utilisateur du serveur web
+```
+
 ### 4. Vérifier
 
 ```bash
