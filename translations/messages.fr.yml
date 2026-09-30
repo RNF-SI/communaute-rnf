@@ -487,8 +487,14 @@ pages:
             subtitle: "Trouvez les groupes de discussion qui vous intéressent"
             no_results: "Aucun groupe trouvé"
             filter:
-                label: "Filtrer par commission"
-                all: "Toutes les commissions"
+                label: "Filtrer par commission, pôle ou groupe"
+                all: "Toutes les structures"
+                kinds:
+                    commission: "Commissions"
+                    pole: "Pôles"
+                    groupe: "Groupes"
+                    atelier: "Ateliers"
+                    other: "Autres"
                 theme_label: "Filtrer par thématique"
                 theme_all: "Toutes les thématiques"
                 search_label: "Rechercher un groupe"
@@ -721,7 +727,7 @@ pages:
                 body: "Votre profil, vos groupes, vos discussions, vos notifications et vos réglages : tout ce qui vous concerne s’ouvre depuis ce menu, sur n’importe quelle page."
             groups:
                 title: "Les groupes du réseau"
-                body: "Un groupe par commission, par thématique ou par atelier. Deux listes, au-dessus, réduisent l’affichage : la commission dont un groupe dépend, et la thématique dont il traite. Les groupes publics se rejoignent d’un clic ; les groupes privés demandent l’accord d’un animateur."
+                body: "Un groupe par commission, par thématique ou par atelier. Deux listes, au-dessus, réduisent l’affichage : la commission, le pôle ou le groupe dont un groupe dépend, et la thématique dont il traite. Les groupes publics se rejoignent d’un clic ; les groupes privés demandent l’accord d’un animateur."
                 link: "Voir tous les groupes"
             groups_graph:
                 title: "Les groupes vus comme un réseau"

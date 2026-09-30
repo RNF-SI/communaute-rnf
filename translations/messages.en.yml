@@ -366,8 +366,14 @@ pages:
             events: "Recent activity"
         groups:
             filter:
-                label: "Filter by commission"
-                all: "All commissions"
+                label: "Filter by commission, hub or group"
+                all: "All structures"
+                kinds:
+                    commission: "Commissions"
+                    pole: "Hubs"
+                    groupe: "Groups"
+                    atelier: "Workshops"
+                    other: "Others"
                 theme_label: "Filter by theme"
                 theme_all: "All themes"
                 search_label: "Search for a group"
@@ -607,7 +613,7 @@ pages:
                 body: "Your profile, your groups, your discussions, your notifications and your settings: everything about you opens from this menu, on any page."
             groups:
                 title: "The groups of the network"
-                body: "One group per commission, topic or workshop. Two lists above narrow what is shown: the commission a group answers to, and the theme it deals with. Public groups are joined in one click; private ones need an animator to agree."
+                body: "One group per commission, topic or workshop. Two lists above narrow what is shown: the commission, hub or group a group answers to, and the theme it deals with. Public groups are joined in one click; private ones need an animator to agree."
                 link: "See every group"
             groups_graph:
                 title: "The groups seen as a network"

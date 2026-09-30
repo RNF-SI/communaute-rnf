@@ -685,6 +685,16 @@ class AppFixtures extends Fixture {
 		$groups = $this->buildReferenceGroups( $manager, $named, $categories, $documentTags );
 
 		/**
+		 * UN PÔLE ET UN GROUPE QUI ENCADRENT
+		 *
+		 * Le filtre de la liste des groupes range ce qui en encadre d'autres
+		 * par ce que dit son nom — commissions, pôles, groupes (#42). Sans un
+		 * pôle et un groupe de travail qui aient leur atelier, la recette ne
+		 * verrait que des commissions.
+		 */
+		$this->buildStructureSamples( $manager, $named[ 'referent@example.org' ] );
+
+		/**
 		 * MESSAGERIE
 		 *
 		 * Des conversations privées déjà écrites, entre les comptes nommés.
@@ -981,6 +991,45 @@ class AppFixtures extends Fixture {
 		$manager->flush();
 
 		return $built;
+	}
+
+	/**
+	 * @param \Doctrine\Persistence\ObjectManager $manager
+	 * @param \App\Entity\User                    $animator
+	 */
+	private function buildStructureSamples ( ObjectManager $manager, User $animator ) {
+		$built = [];
+
+		foreach ( [
+				'pole-de-test'              => 'Pôle de test',
+				'groupe-de-travail-de-test' => 'Groupe de travail de test',
+				'atelier-de-test'           => 'Atelier de test',
+		] as $slug => $name ) {
+			$group = new Usergroup();
+			$group->setName( $name );
+			$group->setSlug( $slug );
+			$group->setDescription( 'Créé par les fixtures pour éprouver le filtre par commission, pôle ou groupe.' );
+			$group->setVisibility( Usergroup::PUBLIC );
+			$group->setCreatedAt( new \DateTime() );
+			$group->setIsActive( TRUE );
+			$manager->persist( $group );
+
+			$membership = new UsergroupMembership();
+			$membership->setUsergroup( $group );
+			$membership->setUser( $animator );
+			$membership->setJoinedAt( new \DateTime() );
+			$membership->setRole( UsergroupMembership::ROLE_ADMIN );
+			$membership->setStatus( UsergroupMembership::STATUS_MEMBER );
+			$manager->persist( $membership );
+
+			$built[ $slug ] = $group;
+		}
+
+		// Un atelier peut dépendre de plusieurs structures à la fois.
+		$built[ 'atelier-de-test' ]->addParent( $built[ 'pole-de-test' ] );
+		$built[ 'atelier-de-test' ]->addParent( $built[ 'groupe-de-travail-de-test' ] );
+
+		$manager->flush();
 	}
 
 	/**

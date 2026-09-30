@@ -71,6 +71,7 @@ class GroupController extends AbstractController {
 				'groupsTree' => $userGroupsManager->asTree( $groups ),
 				'groupsToActivate' => $userGroupsManager->getGroupsToActivate(),
 				'parents' => $userGroupsManager->getParentGroups(),
+				'parentFamilies' => $userGroupsManager->getParentGroupsByKind(),
 				'selectedCommission' => $parent ? $parent->getSlug() : '',
 				'categories' => $userGroupsManager->getCategories(),
 				'selectedTheme' => $category ? $category->getSlug() : '',

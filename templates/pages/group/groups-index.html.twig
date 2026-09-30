@@ -87,12 +87,20 @@
 						<form method="get" class="groups-filter" id="groups-filter">
 							{% if parents is defined and parents is not empty %}
 								<div class="groups-filter--field">
+								{# Commissions, pôles et groupes qui en encadrent d'autres,
+								   rangés par ce que dit leur nom (GroupKind). Le paramètre
+								   garde son nom, « commission », pour ne pas casser les
+								   adresses déjà partagées. (#42) #}
 								<label for="groups-filter-commission">{{ 'pages.group.groups.filter.label'|trans }}</label>
 								<select id="groups-filter-commission" name="commission">
 									<option value="">{{ 'pages.group.groups.filter.all'|trans }}</option>
-									{% for parent in parents %}
-										<option value="{{ parent.slug }}"
-												{{ selectedCommission == parent.slug ? 'selected' : '' }}>{{ parent.name }}</option>
+									{% for family in parentFamilies %}
+										<optgroup label="{{ ('pages.group.groups.filter.kinds.' ~ (family.kind ?: 'other'))|trans }}">
+											{% for parent in family.groups %}
+												<option value="{{ parent.slug }}"
+														{{ selectedCommission == parent.slug ? 'selected' : '' }}>{{ parent.name }}</option>
+											{% endfor %}
+										</optgroup>
 									{% endfor %}
 								</select>
 								</div>

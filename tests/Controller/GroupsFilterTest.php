@@ -135,4 +135,34 @@ class GroupsFilterTest extends WebTestCase {
 				'Assert typing in the search box does not bring back the whole list'
 		);
 	}
+
+	/**
+	 * Issue #42 (2) — proposer « Pôle » et « Groupe » en plus de
+	 * « Commission ». Ce qui encadre d'autres groupes est rangé par ce que dit
+	 * son nom.
+	 */
+	public function testTheFilterSortsStructuresByKind () {
+		$crawler = $this->client->request( 'GET', '/groups' );
+
+		$families = [];
+
+		$crawler->filter( '#groups-filter-commission optgroup' )->each( function ( $optgroup ) use ( &$families ) {
+			$families[ $optgroup->attr( 'label' ) ] = $optgroup->filter( 'option' )->extract( [ 'value' ] );
+		} );
+
+		$this->assertContains( 'commission-de-test', $families[ 'Commissions' ] ?? [] );
+		$this->assertContains( 'pole-de-test', $families[ 'Pôles' ] ?? [], 'Assert a pôle is offered as such' );
+		$this->assertContains( 'groupe-de-travail-de-test', $families[ 'Groupes' ] ?? [], 'Assert a group is offered as such' );
+		$this->assertArrayNotHasKey( 'Ateliers', $families, 'Assert a family nobody belongs to is left out' );
+	}
+
+	public function testFilteringOnAPoleKeepsItAndItsAteliers () {
+		$crawler = $this->client->request( 'GET', '/groups?commission=pole-de-test' );
+
+		$text = $crawler->filter( '#all-groups-container' )->text();
+
+		$this->assertStringContainsString( 'Pôle de test', $text );
+		$this->assertStringContainsString( 'Atelier de test', $text );
+		$this->assertStringNotContainsString( 'Commission de test', $text );
+	}
 }

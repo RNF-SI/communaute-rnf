@@ -108,6 +108,33 @@ class UserGroupsManager {
 	}
 
 	/**
+	 * Les mêmes, rangés par ce qu'ils sont : commissions, pôles, groupes,
+	 * ateliers, puis ceux dont le nom ne dit rien. (#42)
+	 *
+	 * Le filtre ne s'appelait « commission » que parce qu'en production
+	 * presque tout ce qui encadre d'autres groupes en est une ; un pôle ou un
+	 * groupe de travail qui a ses ateliers y figurait déjà, noyé dans la
+	 * liste. Seules les familles représentées sont rendues.
+	 *
+	 * @return array[] chacun : ['kind' => GroupKind::*|null, 'groups' => Usergroup[]]
+	 */
+	public function getParentGroupsByKind(): array {
+		$families = [];
+
+		foreach ( array_merge( GroupKind::all(), [ NULL ] ) as $kind ) {
+			$families[ (string) $kind ] = [ 'kind' => $kind, 'groups' => [] ];
+		}
+
+		foreach ( $this->getParentGroups() as $group ) {
+			$families[ (string) GroupKind::of( $group ) ][ 'groups' ][] = $group;
+		}
+
+		return array_values( array_filter( $families, function ( array $family ) {
+			return !empty( $family[ 'groups' ] );
+		} ) );
+	}
+
+	/**
 	 * Les thématiques qui classent réellement au moins un groupe. (#23)
 	 *
 	 * Une entrée du vocabulaire que personne n'a encore attribuée ne serait
