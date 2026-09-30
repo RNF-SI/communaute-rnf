@@ -56,6 +56,15 @@ class Page {
 	private $editedAt;
 
 	/**
+	 * Une page qui porte sur un format ou un projet qui n'existe plus : on
+	 * l'archive plutôt que de la supprimer. Elle reste lisible à son adresse,
+	 * sort des listes et des suggestions, et se désarchive. (#42)
+	 *
+	 * @ORM\Column(type="datetime", nullable=true)
+	 */
+	private $archivedAt;
+
+	/**
 	 * @ORM\OneToOne(targetEntity="App\Entity\File", cascade={"persist", "remove"})
 	 */
 	private $cover;
@@ -150,6 +159,20 @@ class Page {
 		$this->createdAt = $createdAt;
 
 		return $this;
+	}
+
+	public function getArchivedAt (): ?\DateTimeInterface {
+		return $this->archivedAt;
+	}
+
+	public function setArchivedAt ( ?\DateTimeInterface $archivedAt ): self {
+		$this->archivedAt = $archivedAt;
+
+		return $this;
+	}
+
+	public function isArchived (): bool {
+		return !empty( $this->archivedAt );
 	}
 
 	public function getEditedAt (): ?\DateTimeInterface {

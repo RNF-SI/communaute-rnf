@@ -295,6 +295,27 @@ class Usergroup {
 		return $this->pages;
 	}
 
+	/**
+	 * Les pages en cours, dans l'ordre de getPages() : c'est ce que montrent
+	 * les listes. (#42)
+	 *
+	 * @return \App\Entity\Page[]
+	 */
+	public function getActivePages (): array {
+		return array_values( $this->pages->filter( function ( Page $page ) {
+			return !$page->isArchived();
+		} )->toArray() );
+	}
+
+	/**
+	 * @return \App\Entity\Page[]
+	 */
+	public function getArchivedPages (): array {
+		return array_values( $this->pages->filter( function ( Page $page ) {
+			return $page->isArchived();
+		} )->toArray() );
+	}
+
 	public function addPage ( Page $usergroupPage ): self {
 		if ( !$this->pages->contains( $usergroupPage ) ) {
 			$this->pages[] = $usergroupPage;

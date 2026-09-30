@@ -35,13 +35,29 @@
 
 			<section class="pages-list narrow">
 				<ul>
-					{% for page in group.pages %}
+					{% for page in group.activePages %}
 						<li>
 							{% include 'contents/page/page--teaser.html.twig' with {'page':page} %}
 						</li>
 					{% endfor %}
 				</ul>
 			</section>
+
+			{# Les pages dont le format ou le projet n'existe plus : à l'écart,
+			   repliées, mais pas perdues. (#42) #}
+			{% set archived = group.archivedPages %}
+			{% if archived is not empty %}
+				<details class="pages-archived narrow">
+					<summary>{{ 'pages.page.archive.section'|trans({'%count%': archived|length}) }}</summary>
+					<ul>
+						{% for page in archived %}
+							<li>
+								{% include 'contents/page/page--teaser.html.twig' with {'page':page} %}
+							</li>
+						{% endfor %}
+					</ul>
+				</details>
+			{% endif %}
 		</div>
 	</section>
 {% endblock %}

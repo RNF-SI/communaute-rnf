@@ -325,6 +325,65 @@ class GroupPagesController extends AbstractController {
 	}
 
 	/**
+	 * Archiver une page, ou la ressortir des archives. (#42)
+	 *
+	 * Le même droit que la modifier — l'auteur et les animateurs : archiver
+	 * ne détruit rien, la page reste lisible à son adresse et se désarchive
+	 * d'un clic, mais elle quitte les listes, et ce n'est pas à n'importe
+	 * quel membre d'en décider pour l'auteur.
+	 *
+	 * @Route("/groups/{groupSlug}/pages/{pageSlug}/archive", name="group_page_archive", methods={"POST"})
+	 *
+	 * @param                                           $groupSlug
+	 * @param                                           $pageSlug
+	 * @param \Symfony\Component\HttpFoundation\Request $request
+	 * @param \Doctrine\ORM\EntityManagerInterface      $manager
+	 *
+	 * @return \Symfony\Component\HttpFoundation\RedirectResponse
+	 */
+	public function groupPageArchive (
+			$groupSlug,
+			$pageSlug,
+			Request $request,
+			EntityManagerInterface $manager
+	) {
+		$group = $manager->getRepository( Usergroup::class )
+						 ->findOneBy( [ 'slug' => $groupSlug ] );
+
+		if ( !$group ) {
+			throw $this->createNotFoundException( 'The group does not exist' );
+		}
+
+		/**
+		 * @var \App\Entity\Page $page
+		 */
+		$page = $manager->getRepository( Page::class )
+						->findOneBy( [ 'usergroup' => $group, 'slug' => $pageSlug ] );
+
+		if ( !$page ) {
+			throw $this->createNotFoundException( 'The page does not exist' );
+		}
+
+		$this->denyAccessUnlessGranted( GroupPageVoter::EDIT, $page );
+
+		if ( !$this->isCsrfTokenValid( 'page-archive-' . $page->getId(), $request->request->get( '_token' ) ) ) {
+			throw $this->createAccessDeniedException( 'Invalid token' );
+		}
+
+		$archive = $request->request->getBoolean( 'archive' );
+
+		$page->setArchivedAt( $archive ? new DateTime() : NULL );
+		$manager->flush();
+
+		$this->addFlash( 'notice', $archive ? 'messages.page.page_archived' : 'messages.page.page_restored' );
+
+		return $this->redirectToRoute( 'group_page_index', [
+				'groupSlug' => $group->getSlug(),
+				'pageSlug'  => $page->getSlug(),
+		] );
+	}
+
+	/**
 	 * @Route("/groups/{groupSlug}/pages/{pageSlug}/delete", name="group_page_delete")
 	 * @param                                            $groupSlug
 	 * @param                                            $pageSlug

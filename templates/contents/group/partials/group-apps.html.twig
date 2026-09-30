@@ -3,11 +3,11 @@
 	<div class="group-app group-app__pages">
 		<h2 class="h4">
 			<a href="{{ path('group_pages_index', {'groupSlug':group.slug}) }}">{{ 'pages.group.pages.title'|trans }}</a>
-			<span class="count">{{ group.pages|length }}</span>
+			<span class="count">{{ group.activePages|length }}</span>
 		</h2>
-		{% if group.pages is not empty %}
+		{% if group.activePages is not empty %}
 			<ul class="items-list">
-				{% for page in group.pages|slice(0, 5) %}
+				{% for page in group.activePages|slice(0, 5) %}
 					<li>
 						{% include 'contents/page/page--in-items-list.html.twig' with {'page':page} %}
 					</li>

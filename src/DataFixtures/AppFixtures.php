@@ -1157,6 +1157,21 @@ class AppFixtures extends Fixture {
 		$deMembre->setCreatedAt( new \DateTime() );
 		$manager->persist( $deMembre );
 
+		// Une page archivée : son sujet n'existe plus, elle reste lisible
+		// mais sort de la liste, rangée dans « Pages archivées ». (#42)
+		$archivee = new Page();
+		$archivee->setTitle( 'Stage d’été 2019 (format abandonné)' );
+		$archivee->setSlug( $this->slugGenerator->generateSlug( 'Stage ete 2019 ' . $group->getSlug() ) );
+		$archivee->setUsergroup( $group );
+		$archivee->setAuthor( $referent );
+		$archivee->setBody( NetworkContent::body( [
+				'Le stage d’été réunissait chaque année les nouveaux gardes pendant une semaine.',
+				'Le format a été remplacé par les journées d’accueil régionales.',
+		] ) );
+		$archivee->setCreatedAt( new \DateTime( '-2 years' ) );
+		$archivee->setArchivedAt( new \DateTime( '-6 months' ) );
+		$manager->persist( $archivee );
+
 		/**
 		 * ACTUALITÉS
 		 *

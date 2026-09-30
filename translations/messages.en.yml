@@ -414,6 +414,11 @@ pages:
             title: "Activities"
 
     page:
+        archive:
+            button: "Archive"
+            restore: "Restore from archive"
+            banner: "Page archived on %date%: it is about a format or project that no longer exists. It can still be read here, but no longer appears in the pages list."
+            section: "{1} 1 archived page|]1,Inf[ %count% archived pages"
         is_important: "Page highlighted by the group animators"
         list:
             title: "Pages"
@@ -862,6 +867,8 @@ messages:
         page_created: "The page has been created"
         page_updated: "The page has been updated"
         page_deleted: "The page has been deleted"
+        page_archived: "The page has been archived. It can still be read at its address."
+        page_restored: "The page has been restored from the archive."
 
     discussion:
         join_required: "You need to join the group to create a topic."

@@ -481,6 +481,29 @@ class TagParser {
 	 *
 	 * @return \App\Service\Tagging\TaggedThing[]
 	 */
+	/**
+	 * Ce qui se propose : tout ce que queryFor() sait retrouver, moins les
+	 * pages archivées. (#42)
+	 *
+	 * Le filtre n'est pas dans queryFor(), et c'est voulu : la résolution
+	 * d'un tag déjà écrit (findThingsByTitle) passe aussi par là, et un
+	 * message envoyé avant l'archivage doit garder son lien — la page reste
+	 * lisible à son adresse.
+	 *
+	 * @param string $kind
+	 *
+	 * @return \Doctrine\ORM\QueryBuilder
+	 */
+	private function proposableFor ( $kind ) {
+		$builder = $this->queryFor( $kind );
+
+		if ( $kind === TaggedThing::PAGE ) {
+			$builder->andWhere( 'e.archivedAt IS NULL' );
+		}
+
+		return $builder;
+	}
+
 	private function findThingsByTitle ( $kind, array $titles ) {
 		return $this->wrap( $kind, $this->queryFor( $kind )
 										->andWhere( 'e.' . $this->titleField( $kind ) . ' IN (:titles)' )
@@ -498,7 +521,7 @@ class TagParser {
 	private function searchThings ( $kind, $query ) {
 		$field = $this->titleField( $kind );
 
-		return $this->wrap( $kind, $this->queryFor( $kind )
+		return $this->wrap( $kind, $this->proposableFor( $kind )
 										->andWhere( 'e.' . $field . ' LIKE :needle' )
 										->setParameter( 'needle', $query . '%' )
 										->orderBy( 'e.' . $field, 'ASC' )
@@ -523,7 +546,7 @@ class TagParser {
 	 */
 	private function browseThings ( $kind, $query, $limit ) {
 		$field   = $this->titleField( $kind );
-		$builder = $this->queryFor( $kind );
+		$builder = $this->proposableFor( $kind );
 
 		if ( $query === '' ) {
 			// Le plus récent d'abord : ce qu'on vient de déposer est ce

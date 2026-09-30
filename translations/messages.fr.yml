@@ -544,6 +544,11 @@ pages:
             manage: "Gérer les sous-groupes"
 
     page:
+        archive:
+            button: "Archiver"
+            restore: "Sortir des archives"
+            banner: "Page archivée le %date% : elle porte sur un format ou un projet qui n’existe plus. Elle reste consultable ici, mais n’apparaît plus dans la liste des pages."
+            section: "{1} 1 page archivée|]1,Inf[ %count% pages archivées"
         is_important: "Page mise en avant par les animateurs du groupe"
         list:
             title: "Pages"
@@ -1051,6 +1056,8 @@ messages:
         page_created: "La page a été créée"
         page_updated: "La page a été mise à jour"
         page_deleted: "La page a été supprimée"
+        page_archived: "La page a été archivée. Elle reste consultable à son adresse."
+        page_restored: "La page est sortie des archives."
 
     discussion:
         join_required: "Vous devez rejoindre le groupe pour créer un sujet."

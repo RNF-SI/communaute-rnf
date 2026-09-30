@@ -59,9 +59,19 @@
 			{% if is_granted(constant('App\\Security\\GroupPageVoter::EDIT'), page) %}
 				<div class="panel--edit">
 					<a class="cta__inverted" href="{{ path('group_page_edit', {'groupSlug': page.usergroup.slug, 'pageSlug':page.slug}) }}"><span>{{ 'pages.page.page_edit.link'|trans }}</span></a>
+					{# Archiver plutôt que supprimer une page dont le sujet n'existe
+					   plus : elle reste lisible ici, et se ressort. (#42) #}
+					<form class="page-archive-form" method="post" action="{{ path('group_page_archive', {'groupSlug': page.usergroup.slug, 'pageSlug': page.slug}) }}">
+						<input type="hidden" name="_token" value="{{ csrf_token('page-archive-' ~ page.id) }}">
+						<input type="hidden" name="archive" value="{{ page.archived ? 0 : 1 }}">
+						<button type="submit" class="cta__inverted">{{ (page.archived ? 'pages.page.archive.restore' : 'pages.page.archive.button')|trans }}</button>
+					</form>
 				</div>
 			{% endif %}
 		</div>
+		{% if page.archived %}
+			<p class="page-archived" role="note">{{ 'pages.page.archive.banner'|trans({'%date%': page.archivedAt|localizeddate('long', 'none', app.request.locale)}) }}</p>
+		{% endif %}
 		<div class="page-body wysiwyg-content">
 			{{ page.body|raw }}
 		</div>
@@ -88,7 +98,7 @@
 		<div class="group-pages">
 			<div class="group-pages--title">{{ 'pages.page.view.pages_index'|trans }}</div>
 			<ul class="index-list">
-				{% for page in page.usergroup.pages %}
+				{% for page in page.usergroup.activePages %}
 					<li>
 						{% include 'contents/page/page--in-index-list.html.twig' with {'page':page} %}
 					</li>

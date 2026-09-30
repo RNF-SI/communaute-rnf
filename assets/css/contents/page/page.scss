@@ -313,3 +313,45 @@
 	font-size:   .9em;
 	margin-right: rem(4px);
 }
+
+/**************************************************
+* ARCHIVES (#42)
+**************************************************/
+
+// Le bouton d'archivage se range à côté de « Modifier », dans le même panneau.
+.page-archive-form {
+	display: contents;
+
+	button {
+		width:         100%;
+		padding-left:  .5em;
+		padding-right: .5em;
+	}
+}
+
+// Dire d'emblée qu'on lit une page archivée, avant son contenu.
+.page-archived {
+	margin:           $space_4 0;
+	padding:          $space_3 $space_4;
+
+	background-color: $color_warning_surface;
+	border-left:      4px solid $color_warning;
+	border-radius:    $radius_sm;
+}
+
+.pages-archived {
+	margin-top: $space_8;
+
+	> summary {
+		padding:       $space_3 0;
+
+		color:         $color_text_muted;
+		cursor:        pointer;
+
+		@include font_title_bold;
+	}
+
+	> ul {
+		@include clearulli(true);
+	}
+}
