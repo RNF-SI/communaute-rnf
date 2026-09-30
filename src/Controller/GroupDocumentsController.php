@@ -207,6 +207,9 @@ class GroupDocumentsController extends AbstractController {
 		return $this->render( 'pages/document/documents-index.html.twig', [
 				'group'     => $group,
 				'folders'   => $folders,
+				// Une recherche ou un filtre en cours déplie tout : replier ce
+				// qu'on vient de chercher le cacherait. (#42)
+				'unfolded'  => !empty( array_filter( $filters ) ),
 				'documents' => $documents,
 				'form'      => $form->createView(),
 		] );
@@ -250,10 +253,19 @@ class GroupDocumentsController extends AbstractController {
 				continue;
 			}
 
+			// Ce que contient le dossier, sous-dossiers compris : c'est ce que
+			// dit son intitulé une fois replié. (#42)
+			$count = count( $documents );
+
+			foreach ( $children as $child ) {
+				$count += $child[ 'count' ];
+			}
+
 			$tree[] = [
 					'folder'    => $folder,
 					'documents' => $documents,
 					'children'  => $children,
+					'count'     => $count,
 			];
 		}
 

@@ -635,7 +635,7 @@ pages:
                 docs: "Documents"
                 images: "Images"
                 archives: "Archives"
-            toggle: "Ouvrir / Fermer"
+            folder_count: "{0} Vide|{1} 1 document|]1,Inf[ %count% documents"
         document_create:
             title: "Envoi d’un document"
             link: "Ajouter un document"

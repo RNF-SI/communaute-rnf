@@ -1,10 +1,17 @@
-{% macro folder(node, depth, group) %}
+{# Les dossiers sont repliés par défaut : dans un groupe qui range bien, la
+   page s'ouvrait sur tous les documents de tous les dossiers, et l'on
+   cherchait le dossier voulu au milieu de leur contenu. (#42)
+
+   `<details>` natif : il se déplie sans JavaScript, au clavier, et dit
+   lui-même aux lecteurs d'écran s'il est ouvert. Une recherche ou un filtre
+   en cours déplie tout (`unfolded`). #}
+{% macro folder(node, depth, group, unfolded) %}
 	{% import _self as tree %}
-	<div class="documents-folder documents-folder__depth-{{ depth }}">
-		<div class="documents-folder--name">
-			<span>{{ node.folder.title }}</span>
-			<button type="button" class="list-toggle"><span>{{ 'pages.document.list.toggle'|trans }}</span></button>
-		</div>
+	<details class="documents-folder documents-folder__depth-{{ depth }}"{{ unfolded ? ' open' : '' }}>
+		<summary class="documents-folder--name">
+			<span class="documents-folder--title">{{ node.folder.title }}</span>
+			<span class="documents-folder--count">{{ 'pages.document.list.folder_count'|trans({'%count%': node.count}) }}</span>
+		</summary>
 		{% if node.documents is not empty %}
 			<ul class="documents-list">
 				{% for document in node.documents %}
@@ -15,9 +22,9 @@
 			</ul>
 		{% endif %}
 		{% for child in node.children %}
-			{{ tree.folder(child, depth + 1, group) }}
+			{{ tree.folder(child, depth + 1, group, unfolded) }}
 		{% endfor %}
-	</div>
+	</details>
 {% endmacro %}
 
 {% extends 'base.html.twig' %}
@@ -92,7 +99,7 @@
 						</ul>
 					{% endif %}
 					{% for node in folders %}
-						{{ tree.folder(node, 0, group) }}
+						{{ tree.folder(node, 0, group, unfolded) }}
 					{% endfor %}
 					{% include 'components/pager.html.twig' %}
 				</div>

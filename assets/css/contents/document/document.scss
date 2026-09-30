@@ -11,54 +11,50 @@
 	display:       flex;
 	flex-flow:     row nowrap;
 	align-items:   center;
+	gap:           $space_3;
 
 	padding:       padding_vertical() padding_horizontal();
 
 	border-bottom: 1px solid $color_grey_border;
 
-	span {
-		flex:      1;
+	cursor:        pointer;
+	list-style:    none;
 
-		@include font_title_bold;
-		font-size: rem(20px);
+	// Le triangle du navigateur laisse la place au chevron de la charte.
+	&::-webkit-details-marker {
+		display: none;
 	}
 
-	.list-toggle {
-		@include button-reset;
+	&::after {
+		content:             '';
+		display:             block;
+		flex:                0 0 auto;
+		width:               1em;
+		height:              1em;
 
-		display: block;
+		$color:              $color_default;
+		@import '../../_assets/folding.svg';
+		background-repeat:   no-repeat;
+		background-position: center center;
 
-		&::before {
-			content:             '';
-			display:             block;
-			width:               1em;
-			height:              1em;
-
-			$color:              $color_default;
-			@import '../../_assets/folding.svg';
-			background-repeat:   no-repeat;
-			background-position: center center;
-
-			transition:          transform .15s ease-in-out;
-		}
-
-		&:not([data-list-aria-expanded="false"])::before {
-			transform: rotate(-180deg);
-		}
-
-		&::after {
-			content:  '';
-			position: absolute;
-			top:      0;
-			right:    0;
-			bottom:   0;
-			left:     0;
-		}
-
-		span {
-			@include visually-hidden;
-		}
+		@include transition(transform);
 	}
+
+	.documents-folder[open] > &::after {
+		transform: rotate(-180deg);
+	}
+}
+
+.documents-folder--title {
+	flex:      1;
+
+	@include font_title_bold;
+	font-size: rem(20px);
+}
+
+.documents-folder--count {
+	font-size: rem(14px);
+	color:     $color_text_muted;
 }
 
 .documents-list {

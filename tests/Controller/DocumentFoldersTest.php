@@ -252,4 +252,36 @@ class DocumentFoldersTest extends WebTestCase {
 
 		$this->written[] = $file;
 	}
+
+	/**
+	 * Issue #42 (4) — les dossiers sont repliés par défaut, et disent ce
+	 * qu'ils contiennent.
+	 */
+	public function testFoldersAreFoldedByDefault () {
+		$this->logIn( 'membre@example.org' );
+
+		$crawler = $this->client->request( 'GET', '/groups/groupe-de-test/documents' );
+
+		$folders = $crawler->filter( 'details.documents-folder' );
+
+		$this->assertGreaterThan( 0, $folders->count() );
+		$this->assertCount( 0, $crawler->filter( 'details.documents-folder[open]' ), 'Assert nothing is unfolded at first' );
+
+		// « Comptes rendus » n'a qu'un sous-dossier, qui a un document :
+		// l'intitulé compte ce que contiennent les sous-dossiers.
+		$summaries = implode( ' | ', $crawler->filter( 'details.documents-folder > summary' )->each( function ( $node ) {
+			return trim( preg_replace( '/\s+/u', ' ', $node->text() ) );
+		} ) );
+
+		$this->assertStringContainsString( 'Comptes rendus 1 document', $summaries );
+	}
+
+	public function testASearchUnfoldsTheFolders () {
+		$this->logIn( 'membre@example.org' );
+
+		$crawler = $this->client->request( 'GET', '/groups/groupe-de-test/documents?form[query]=mars' );
+
+		$this->assertGreaterThan( 0, $crawler->filter( 'details.documents-folder[open]' )->count(), 'Assert a search does not hide what it found' );
+		$this->assertCount( 0, $crawler->filter( 'details.documents-folder:not([open])' ) );
+	}
 }
