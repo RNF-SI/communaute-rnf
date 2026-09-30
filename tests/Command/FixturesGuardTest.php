@@ -4,6 +4,7 @@ namespace App\Tests\Command;
 
 use App\DataFixtures\AppFixtures;
 use App\Service\SlugGenerator;
+use App\Service\UsergroupFileManager;
 use Doctrine\Persistence\ObjectManager;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -28,6 +29,7 @@ class FixturesGuardTest extends TestCase {
 		return new AppFixtures(
 				$this->createMock( UserPasswordEncoderInterface::class ),
 				$this->createMock( SlugGenerator::class ),
+				$this->createMock( UsergroupFileManager::class ),
 				'',
 				'communaute',
 				$environment,
