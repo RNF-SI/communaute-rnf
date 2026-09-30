@@ -491,3 +491,43 @@
 		color:     $color_grey_neutral;
 	}
 }
+
+/**************************************************
+* DEVENIR ANIMATEUR (#42)
+**************************************************/
+
+.animator-request,
+.animator-requests {
+	margin:           $space_4 0 $space_6;
+	padding:          $space_4;
+
+	background-color: $color_surface;
+	border:           1px solid $color_border;
+	border-radius:    $radius_md;
+
+	p {
+		margin: 0 0 $space_3;
+	}
+}
+
+.animator-requests {
+	ul {
+		@include clearulli(true);
+	}
+}
+
+.animator-requests--item {
+	display:     flex;
+	flex-wrap:   wrap;
+	align-items: center;
+	gap:         $space_3;
+	padding:     $space_2 0;
+
+	> span {
+		flex: 1 1 auto;
+	}
+
+	& + & {
+		border-top: 1px solid $color_border;
+	}
+}

@@ -442,6 +442,16 @@ pages:
             link: "Administration du site"
 
     group:
+        animator_request:
+            intro: "Vous animez ce groupe dans la réalité ? Les animateurs accueillent les nouveaux membres, renomment les discussions et peuvent modifier ou retirer n’importe quel contenu du groupe."
+            button: "Demander à devenir animateur"
+            waiting: "Vous avez demandé à devenir animateur le %date%. Les animateurs du groupe en ont été prévenus."
+            cancel: "Retirer ma demande"
+            link: "Demander à devenir animateur"
+            pending_title: "Demandes pour devenir animateur"
+            item: "%name%, depuis le %date%"
+            accept: "Accepter"
+            decline: "Décliner"
         group_create:
             title: "Créer un groupe"
             link: "Créer un groupe"
@@ -568,10 +578,11 @@ pages:
             pages_index: "Index"
 
     discussion:
+        rename_note: "Le titre de cette discussion se modifie par la personne qui l’a ouverte, ou par un animateur du groupe."
         about_document: "À propos de : %title%"
         list:
             title: "Listes de discussion"
-            rights: "Les discussions sont ouvertes à tous les membres du groupe. Chacun modifie ou retire ses propres messages ; les animateurs peuvent retirer un message ou un sujet entier."
+            rights: "Les discussions sont ouvertes à tous les membres du groupe. Chacun modifie ou retire ses propres messages, et renomme les discussions qu’il a ouvertes ; les animateurs du groupe peuvent renommer n’importe quelle discussion, retirer un message ou un sujet entier."
             subjects: "Sujets"
             messages_count: "Nb messages"
             activity: "Dernière activité"
@@ -1035,6 +1046,10 @@ messages:
         quit: "Vous avez quitté le groupe"
         access_denied: "Vous n’avez pas accès à ce groupe."
         user_set_admin: "L’utilisateur est maintenant administrateur du groupe."
+        animator_request_sent: "Votre demande a été envoyée aux animateurs du groupe."
+        animator_request_cancelled: "Votre demande a été retirée."
+        animator_request_declined: "La demande a été déclinée."
+        animator_request_gone: "Cette demande n’est plus en attente : un autre animateur y a peut-être déjà répondu."
         user_set_user: "L’utilisateur est maintenant membre du groupe."
         user_set_member: "L’utilisateur a rejoint le groupe."
         user_set_remove: "L’utilisateur a été retiré du groupe."

@@ -1,0 +1,42 @@
+{# Devenir animateur d'un groupe (#42).
+
+   Pour un membre : le demander, ou retirer sa demande. Pour un animateur :
+   les demandes qui attendent sa réponse. Rien pour qui n'est pas membre —
+   il a d'abord à rejoindre le groupe. #}
+{% set membership = user_group_relation.membership(app.user, group) %}
+
+{% if is_granted(constant('App\\Security\\GroupVoter::ADMIN'), group) %}
+	{% set requests = group.animatorRequests %}
+	{% if requests is not empty %}
+		<section class="animator-requests" id="animator-requests">
+			<h2 class="small-title">{{ 'pages.group.animator_request.pending_title'|trans }}</h2>
+			<ul>
+				{% for request in requests %}
+					<li class="animator-requests--item">
+						<span>{{ 'pages.group.animator_request.item'|trans({'%name%': request.user.name, '%date%': request.animatorRequestedAt|localizeddate('short', 'none', app.request.locale)}) }}</span>
+						{% for decision in ['accept', 'decline'] %}
+							<form method="post" action="{{ path('group_animator_decide', {'groupSlug': group.slug, 'userId': request.user.id, 'decision': decision}) }}">
+								<input type="hidden" name="_token" value="{{ csrf_token('animator-decide-' ~ group.id) }}">
+								<button type="submit" class="{{ decision == 'accept' ? 'cta' : 'cta__inverted' }}">{{ ('pages.group.animator_request.' ~ decision)|trans }}</button>
+							</form>
+						{% endfor %}
+					</li>
+				{% endfor %}
+			</ul>
+		</section>
+	{% endif %}
+{% elseif membership and membership.status == constant('App\\Entity\\UsergroupMembership::STATUS_MEMBER') %}
+	<section class="animator-request" id="animator-request">
+		<form method="post" action="{{ path('group_animator_request', {'groupSlug': group.slug}) }}">
+			<input type="hidden" name="_token" value="{{ csrf_token('animator-request-' ~ group.id) }}">
+			{% if membership.hasAnimatorRequest %}
+				<p>{{ 'pages.group.animator_request.waiting'|trans({'%date%': membership.animatorRequestedAt|localizeddate('long', 'none', app.request.locale)}) }}</p>
+				<input type="hidden" name="cancel" value="1">
+				<button type="submit" class="cta__inverted">{{ 'pages.group.animator_request.cancel'|trans }}</button>
+			{% else %}
+				<p>{{ 'pages.group.animator_request.intro'|trans }}</p>
+				<button type="submit" class="cta__inverted">{{ 'pages.group.animator_request.button'|trans }}</button>
+			{% endif %}
+		</form>
+	</section>
+{% endif %}

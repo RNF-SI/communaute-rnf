@@ -1,0 +1,19 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block title %}Demande pour animer le groupe{% endblock %}
+
+{% block preheader %}{% endblock %}
+
+{% block body %}
+	<h1>Bonjour {{ admin.displayName }},</h1>
+
+	<p>{{ user.name }} demande à devenir animateur ou animatrice du groupe <strong>{{ usergroup.name }}</strong>. Un animateur accueille les nouveaux membres et peut modifier ou retirer n'importe quel contenu du groupe. Rendez-vous dans l'annuaire des membres du groupe pour accepter ou décliner sa demande&nbsp;:</p>
+
+	{% include 'components/email-button.html.twig' with {'url':url, 'label':'Annuaire des membres'} %}
+
+	{% if multiple %}
+		<p>Si la demande n'apparaît plus en haut de l'annuaire, un autre animateur y a déjà répondu.</p>
+	{% endif %}
+
+	{% include 'components/email-signature.html.twig' %}
+{% endblock %}

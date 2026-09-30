@@ -325,6 +325,16 @@ pages:
             link: "My discussions"
 
     group:
+        animator_request:
+            intro: "Do you actually run this group? Animators welcome new members, rename discussions and may edit or remove any content of the group."
+            button: "Ask to become an animator"
+            waiting: "You asked to become an animator on %date%. The group’s animators have been told."
+            cancel: "Withdraw my request"
+            link: "Ask to become an animator"
+            pending_title: "Requests to become an animator"
+            item: "%name%, since %date%"
+            accept: "Accept"
+            decline: "Decline"
         group_create:
             title: "Create a group"
             link: "Create a group"
@@ -438,10 +448,11 @@ pages:
             pages_index: "Index"
 
     discussion:
+        rename_note: "This discussion's title can be changed by the person who opened it, or by an animator of the group."
         about_document: "About: %title%"
         list:
             title: "Discussions"
-            rights: "Discussions are open to every member of the group. Everyone edits or removes their own messages; animators may remove a message or a whole topic."
+            rights: "Discussions are open to every member of the group. Everyone edits or removes their own messages, and renames the discussions they opened; the group's animators may rename any discussion, remove a message or a whole topic."
             subjects: "Topics"
             messages_count: "Messages #"
             activity: "Latest activity"
@@ -846,6 +857,10 @@ messages:
         quit: "You have left this group"
         access_denied: "You do not have access to this group."
         user_set_admin: "The user is now administrator of this group."
+        animator_request_sent: "Your request has been sent to the group’s animators."
+        animator_request_cancelled: "Your request has been withdrawn."
+        animator_request_declined: "The request has been declined."
+        animator_request_gone: "This request is no longer pending: another animator may already have answered it."
         user_set_user: "The user is now member of this group."
         user_set_member: "The user joined the group."
         user_set_remove: "The user has been removed from this group."

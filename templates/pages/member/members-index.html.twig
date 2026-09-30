@@ -17,6 +17,10 @@
 
 			{% include 'components/permission-note.html.twig' with {'group': group is defined ? group : null, 'label': 'pages.member.list.rights'} %}
 
+			{% if group is defined and group %}
+				{% include 'components/animator-request.html.twig' with {'group': group} %}
+			{% endif %}
+
 			{% if group is defined %}
 				{% include 'components/breadcrumb.html.twig' with {'items':[
 					{

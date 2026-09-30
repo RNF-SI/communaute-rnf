@@ -50,6 +50,14 @@ class UsergroupMembership {
 	private $role;
 
 	/**
+	 * Un membre qui demande à devenir animateur du groupe : la demande
+	 * attend que l'un des animateurs l'accepte ou la décline. (#42)
+	 *
+	 * @ORM\Column(type="datetime", nullable=true)
+	 */
+	private $animatorRequestedAt;
+
+	/**
 	 * @ORM\Column(type="json", nullable=true)
 	 */
 	private $notificationsSettings = [];
@@ -71,6 +79,24 @@ class UsergroupMembership {
 		$this->user = $user;
 
 		return $this;
+	}
+
+	public function getAnimatorRequestedAt (): ?\DateTimeInterface {
+		return $this->animatorRequestedAt;
+	}
+
+	public function setAnimatorRequestedAt ( ?\DateTimeInterface $animatorRequestedAt ): self {
+		$this->animatorRequestedAt = $animatorRequestedAt;
+
+		return $this;
+	}
+
+	/**
+	 * Une demande en attente : posée, et pas encore satisfaite. Un membre
+	 * devenu animateur par un autre chemin n'a plus rien à attendre.
+	 */
+	public function hasAnimatorRequest (): bool {
+		return !empty( $this->animatorRequestedAt ) && ( $this->role !== self::ROLE_ADMIN );
 	}
 
 	public function getJoinedAt (): ?\DateTimeInterface {

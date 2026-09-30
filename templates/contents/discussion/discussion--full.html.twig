@@ -38,6 +38,16 @@
 			{% endif %}
 		</div>
 
+		{# Qui ne peut pas renommer la discussion apprend qui le peut, et
+		   comment le devenir : le retour de recette venait de quelqu'un qui
+		   aurait dû animer ce groupe. (#42) #}
+		{% if not canRename and is_granted(constant('App\\Security\\GroupVoter::PARTICIPATE'), group) %}
+			<p class="permission-note discussion-rename-note">
+				{{ 'pages.discussion.rename_note'|trans }}
+				<a href="{{ path('group_members_index', {'groupSlug': group.slug}) }}#animator-request">{{ 'pages.group.animator_request.link'|trans }}</a>
+			</p>
+		{% endif %}
+
 		{% include 'components/breadcrumb.html.twig' with {'items':[
 			{
 				label: 'pages.group.groups.title'|trans,

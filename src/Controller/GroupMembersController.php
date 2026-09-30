@@ -314,6 +314,189 @@ class GroupMembersController extends AbstractController {
 	}
 
 	/**
+	 * Demander à devenir animateur du groupe, ou retirer sa demande. (#42)
+	 *
+	 * Le retour de recette venait de quelqu'un qui aurait dû animer un groupe
+	 * et ne le pouvait pas : rien ne disait à qui s'adresser. La demande est
+	 * posée sur l'adhésion, et les animateurs en sont prévenus par e-mail —
+	 * les administrateurs de la plateforme si le groupe n'en a aucun, comme
+	 * pour une demande d'adhésion.
+	 *
+	 * @Route("/groups/{groupSlug}/animator-request", name="group_animator_request", methods={"POST"})
+	 *
+	 * @return \Symfony\Component\HttpFoundation\RedirectResponse
+	 */
+	public function groupAnimatorRequest (
+			$groupSlug,
+			Request $request,
+			EntityManagerInterface $manager,
+			EmailSender $mailer,
+			LoggerInterface $logger
+	) {
+		$group = $manager->getRepository( Usergroup::class )
+						 ->findOneBy( [ 'slug' => $groupSlug ] );
+
+		if ( !$group ) {
+			throw $this->createNotFoundException( 'The group does not exist' );
+		}
+
+		$this->denyAccessUnlessGranted( GroupVoter::PARTICIPATE, $group );
+
+		if ( !$this->isCsrfTokenValid( 'animator-request-' . $group->getId(), $request->request->get( '_token' ) ) ) {
+			throw $this->createAccessDeniedException( 'Invalid token' );
+		}
+
+		/**
+		 * @var \App\Entity\User $user
+		 */
+		$user       = $this->getUser();
+		$membership = $manager->getRepository( UsergroupMembership::class )
+							  ->getMembership( $user, $group );
+
+		// Seul un membre ordinaire a quelque chose à demander.
+		if ( empty( $membership )
+			 || ( $membership->getStatus() !== UsergroupMembership::STATUS_MEMBER )
+			 || ( $membership->getRole() === UsergroupMembership::ROLE_ADMIN ) ) {
+			throw $this->createAccessDeniedException( 'Nothing to request' );
+		}
+
+		if ( $request->request->getBoolean( 'cancel' ) ) {
+			$membership->setAnimatorRequestedAt( NULL );
+			$manager->flush();
+
+			$this->addFlash( 'notice', 'messages.group.animator_request_cancelled' );
+		}
+		elseif ( !$membership->hasAnimatorRequest() ) {
+			$membership->setAnimatorRequestedAt( new DateTime() );
+			$manager->flush();
+
+			$this->notifyAnimatorRequest( $manager, $mailer, $logger, $group, $user );
+
+			$this->addFlash( 'notice', 'messages.group.animator_request_sent' );
+		}
+
+		return $this->redirectToRoute( 'group_members_index', [ 'groupSlug' => $group->getSlug() ] );
+	}
+
+	/**
+	 * Accepter ou décliner une demande à devenir animateur. (#42)
+	 *
+	 * @Route(
+	 *     "/groups/{groupSlug}/animator-request/{userId}/{decision}",
+	 *     name="group_animator_decide",
+	 *     methods={"POST"},
+	 *     requirements={"userId"="\d+", "decision"="accept|decline"}
+	 * )
+	 *
+	 * @return \Symfony\Component\HttpFoundation\RedirectResponse
+	 */
+	public function groupAnimatorDecide (
+			$groupSlug,
+			$userId,
+			$decision,
+			Request $request,
+			EntityManagerInterface $manager
+	) {
+		$group = $manager->getRepository( Usergroup::class )
+						 ->findOneBy( [ 'slug' => $groupSlug ] );
+
+		if ( !$group ) {
+			throw $this->createNotFoundException( 'The group does not exist' );
+		}
+
+		$this->denyAccessUnlessGranted( GroupVoter::ADMIN, $group );
+
+		if ( !$this->isCsrfTokenValid( 'animator-decide-' . $group->getId(), $request->request->get( '_token' ) ) ) {
+			throw $this->createAccessDeniedException( 'Invalid token' );
+		}
+
+		$user       = $manager->getRepository( User::class )->find( $userId );
+		$membership = $user
+				? $manager->getRepository( UsergroupMembership::class )->getMembership( $user, $group )
+				: NULL;
+
+		if ( empty( $membership ) || !$membership->hasAnimatorRequest() ) {
+			$this->addFlash( 'notice', 'messages.group.animator_request_gone' );
+
+			return $this->redirectToRoute( 'group_members_index', [ 'groupSlug' => $group->getSlug() ] );
+		}
+
+		$membership->setAnimatorRequestedAt( NULL );
+
+		if ( $decision === 'accept' ) {
+			$membership->setRole( UsergroupMembership::ROLE_ADMIN );
+
+			$log = new LogEvent();
+			$log->setType( LogEvent::USER_ADMIN );
+			$log->setUser( $user );
+			$log->setUsergroup( $group );
+			$log->setCreatedAt( new DateTime() );
+			$log->setData( [ 'admin' => $this->getUser()->getId() ] );
+			$manager->persist( $log );
+
+			$this->addFlash( 'notice', 'messages.group.user_set_admin' );
+		}
+		else {
+			$this->addFlash( 'notice', 'messages.group.animator_request_declined' );
+		}
+
+		$manager->flush();
+
+		return $this->redirectToRoute( 'group_members_index', [ 'groupSlug' => $group->getSlug() ] );
+	}
+
+	/**
+	 * Prévient les animateurs d'une demande à rejoindre leurs rangs. Comme
+	 * pour une demande d'adhésion, un envoi qui échoue n'annule pas la
+	 * demande : il est journalisé. (#42)
+	 */
+	private function notifyAnimatorRequest (
+			EntityManagerInterface $manager,
+			EmailSender $mailer,
+			LoggerInterface $logger,
+			Usergroup $group,
+			User $user
+	) {
+		$recipients = [];
+
+		foreach ( $group->getMembersByRole( UsergroupMembership::ROLE_ADMIN ) as $adminMembership ) {
+			if ( $adminMembership->getStatus() === UsergroupMembership::STATUS_MEMBER ) {
+				$recipients[] = $adminMembership->getUser();
+			}
+		}
+
+		if ( empty( $recipients ) ) {
+			$recipients = $manager->getRepository( User::class )->findSiteAdmins();
+		}
+
+		foreach ( $recipients as $admin ) {
+			try {
+				$message = $this->renderView( 'emails/group-animator-request.html.twig', [
+						'admin'     => $admin,
+						'user'      => $user,
+						'usergroup' => $group,
+						'url'       => $this->generateUrl( 'group_members_index', [ 'groupSlug' => $group->getSlug() ], UrlGeneratorInterface::ABSOLUTE_URL ),
+						'multiple'  => count( $recipients ) > 1,
+				] );
+
+				$mailer->send(
+						[ $this->getParameter( 'plateform' )[ 'from' ] => $this->getParameter( 'plateform' )[ 'name' ] ],
+						$admin->getEmail(),
+						$mailer->getSubjectFromTitle( $message ),
+						$message
+				);
+			}
+			catch ( Throwable $e ) {
+				$logger->error( 'Could not warn {admin} of a request to animate {group}: {error}', [
+						'admin' => $admin->getId(),
+						'group' => $group->getSlug(),
+						'error' => $e->getMessage(),
+				] );
+			}
+		}
+	}
+
+	/**
 	 * @Route("/groups/{groupSlug}/members/{userId}/admin/{status}", name="group_member_admin")
 	 * @param                                            $groupSlug
 	 * @param                                            $userId
@@ -405,6 +588,8 @@ class GroupMembersController extends AbstractController {
 				if ( !empty( $membership ) ) {
 					$membership->setRole( UsergroupMembership::ROLE_ADMIN );
 					$membership->setStatus( UsergroupMembership::STATUS_MEMBER );
+					// Nommé par un autre chemin : la demande est satisfaite. (#42)
+					$membership->setAnimatorRequestedAt( NULL );
 
 					$this->addFlash( 'notice', 'messages.group.user_set_admin' );
 

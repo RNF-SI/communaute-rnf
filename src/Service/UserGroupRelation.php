@@ -61,6 +61,21 @@ class UserGroupRelation {
 		return $user->isAdmin() || $this->isCommunityAdmin( $user );
 	}
 
+	/**
+	 * @param \App\Entity\User|null $user
+	 * @param \App\Entity\Usergroup $group
+	 *
+	 * @return \App\Entity\UsergroupMembership|null
+	 */
+	public function getMembership ( ?User $user, Usergroup $group ) {
+		if ( !( $user instanceof User ) ) {
+			return NULL;
+		}
+
+		return $this->manager->getRepository( UsergroupMembership::class )
+							 ->getMembership( $user, $group );
+	}
+
 	public function isMember ( ?User $user, Usergroup $group ) {
 		return $this->manager->getRepository( UsergroupMembership::class )
 							 ->isMember( $user, $group );

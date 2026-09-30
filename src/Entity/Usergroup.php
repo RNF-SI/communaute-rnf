@@ -296,6 +296,25 @@ class Usergroup {
 	}
 
 	/**
+	 * Les membres qui demandent à devenir animateurs, les plus anciennes
+	 * demandes d'abord. (#42)
+	 *
+	 * @return \App\Entity\UsergroupMembership[]
+	 */
+	public function getAnimatorRequests (): array {
+		$requests = array_values( $this->members->filter( function ( UsergroupMembership $membership ) {
+			return ( $membership->getStatus() === UsergroupMembership::STATUS_MEMBER )
+				   && $membership->hasAnimatorRequest();
+		} )->toArray() );
+
+		usort( $requests, function ( UsergroupMembership $a, UsergroupMembership $b ) {
+			return $a->getAnimatorRequestedAt() <=> $b->getAnimatorRequestedAt();
+		} );
+
+		return $requests;
+	}
+
+	/**
 	 * Les pages en cours, dans l'ordre de getPages() : c'est ce que montrent
 	 * les listes. (#42)
 	 *

@@ -150,7 +150,12 @@ et les discussions qui y renvoient — supprimer n'en laisse rien. Ne pas
 « harmoniser » les trois voteurs en relisant : l'écart est voulu, et
 `ContentEditRightsTest` le tient des deux côtés.
 Discussions stay open: everyone edits or removes their own messages, animators
-may remove any message or topic. The rule is spelled out to members on each tab
+may remove any message or topic. Renaming a discussion belongs to its author and the
+animators (`GroupDiscussionVoter::RENAME`); a member who cannot is told so on
+the discussion itself, with a way to **ask to become an animator** (#42) —
+`UsergroupMembership::$animatorRequestedAt`, answered by the group's animators
+from the members page. Rights did not change: what was missing was knowing who
+holds them, and how to join them. The rule is spelled out to members on each tab
 through `templates/components/permission-note.html.twig`.
 
 ### Service Layer (`src/Service/`)
