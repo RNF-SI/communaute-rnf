@@ -1,6 +1,46 @@
 import domready from 'mf-js/modules/dom/ready';
 import live from './live';
 import { attach as attachTags } from '../ui/message-tags';
+import { attach as attachPicker } from '../ui/tag-picker';
+import { attach as attachEmoji } from '../ui/emoji-picker';
+
+// Chaque champ du dock a son identifiant : les panneaux « Insérer un lien »
+// et emoji le désignent par là.
+let fields = 0;
+
+/**
+ * Les outils du champ — « Insérer un lien », les emojis —, clonés du
+ * <template> que pose le gabarit du dock, et rattachés au champ `id`. (#42)
+ *
+ * Le retour de recette : l'insertion d'un lien n'existait que sur la grande
+ * page, et personne ne la retrouvait dans la petite fenêtre. Le libellé et
+ * la liste restent en Twig ; ce qui est cloné ici n'a qu'à changer d'adresse.
+ *
+ * @param {string} id
+ * @returns {HTMLElement|null}
+ */
+export function composerTools (id) {
+	const template = document.getElementById('dock-composer-tools');
+	const source   = template ? template.content.querySelector('.message-composer--tools') : null;
+
+	if (!source) {
+		return null;
+	}
+
+	const tools = source.cloneNode(true);
+
+	[ tools ].concat(Array.from(tools.querySelectorAll('*'))).forEach((node) => {
+		[ 'id', 'aria-controls', 'data-picker-for', 'data-emoji-for' ].forEach((name) => {
+			const value = node.getAttribute(name);
+
+			if (value && value.indexOf('__field__') !== -1) {
+				node.setAttribute(name, value.split('__field__').join(id));
+			}
+		});
+	});
+
+	return tools;
+}
 
 /**
  * Les conversations qui restent ouvertes en bas de l'écran pendant qu'on lit
@@ -537,6 +577,7 @@ class Dock {
 		const form = el('form', 'dock-window--reply');
 		const field = document.createElement('textarea');
 		field.className = 'dock-window--field';
+		field.id = 'dock-field-' + (fields += 1);
 		field.rows = 1;
 		field.placeholder = this.say('placeholder', '');
 		field.setAttribute('aria-label', this.say('write', 'Votre message'));
@@ -551,6 +592,12 @@ class Dock {
 		const send = el('button', 'dock-window--send');
 		send.type = 'submit';
 		send.textContent = this.say('send', 'Envoyer');
+
+		const composer = composerTools(field.id);
+
+		if (composer) {
+			form.appendChild(composer);
+		}
 
 		form.appendChild(field);
 		form.appendChild(send);
@@ -604,6 +651,11 @@ class Dock {
 		if (this.urls.suggestions) {
 			attachTags(field);
 		}
+
+		// Les panneaux cherchent le champ par son identifiant : il faut que la
+		// fenêtre soit dans la page.
+		Array.from(node.querySelectorAll('.tag-picker[data-picker]')).forEach(attachPicker);
+		Array.from(node.querySelectorAll('.emoji-picker[data-emoji-for]')).forEach(attachEmoji);
 
 		this.trim();
 		this.remember();

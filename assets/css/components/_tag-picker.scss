@@ -208,3 +208,108 @@
 	color:       $color_text_muted;
 	border-top:  1px solid $color_border;
 }
+
+/**************************************************
+* EMOJIS (#42)
+**************************************************/
+
+.message-composer--tools {
+	display:     flex;
+	flex-wrap:   wrap;
+	align-items: center;
+	gap:         $space_2;
+}
+
+.emoji-picker--open {
+	padding:       $space_1 $space_2;
+
+	font-size:     rem(16px);
+	line-height:   1;
+	background:    transparent;
+	border:        1px solid $color_border_strong;
+	border-radius: $radius_full;
+	cursor:        pointer;
+
+	@include transition(background-color, border-color);
+
+	&:hover,
+	&[aria-expanded='true'] {
+		border-color: $color_action;
+		background:   $color_canvas;
+	}
+}
+
+.emoji-picker {
+	position:      absolute;
+	z-index:       30;
+	bottom:        calc(100% + #{$space_2});
+	left:          0;
+
+	width:         rem(280px);
+	max-width:     calc(100vw - #{$space_5});
+	padding:       $space_2;
+
+	background:    $color_surface;
+	border:        1px solid $color_border;
+	border-radius: $radius_lg;
+	box-shadow:    $shadow_lg;
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+.emoji-picker--list {
+	display:               grid;
+	grid-template-columns: repeat(auto-fill, minmax(rem(36px), 1fr));
+	gap:                   $space_1;
+
+	margin:                0;
+	padding:               0;
+	list-style:            none;
+}
+
+.emoji-picker--item {
+	width:         100%;
+	padding:       $space_1;
+
+	font-size:     rem(20px);
+	line-height:   1;
+	background:    transparent;
+	border:        0;
+	border-radius: $radius_sm;
+	cursor:        pointer;
+
+	&:hover {
+		background: $color_canvas;
+	}
+}
+
+/**
+ * Dans une fenêtre du dock (300 px, `overflow: hidden`), un panneau qui
+ * flotterait serait rogné : il se pose dans le flux, au-dessus du champ, et
+ * c'est le fil qui lui cède la place.
+ */
+.dock-window--reply {
+	flex-wrap: wrap;
+
+	.message-composer--tools {
+		flex:   1 0 100%;
+		order:  -1;
+		margin: 0;
+	}
+
+	.tag-picker--open {
+		font-size: rem(13px);
+	}
+
+	.tag-picker,
+	.emoji-picker {
+		position:   static;
+		flex:       1 0 100%;
+		width:      auto;
+		max-height: rem(240px);
+		overflow:   auto;
+		box-shadow: none;
+	}
+}

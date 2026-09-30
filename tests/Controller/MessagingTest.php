@@ -732,4 +732,41 @@ class MessagingTest extends WebTestCase {
 		// doit pouvoir réécrire.
 		$this->assertNull( $conversation->getPairKey() );
 	}
+
+	/**
+	 * Issue #42 (7) — « Insérer un lien » et les emojis, sur la page comme
+	 * dans la petite fenêtre du dock, où la recette ne retrouvait pas
+	 * l'insertion d'un lien.
+	 */
+	public function testTheComposerOffersLinksAndEmojis () {
+		$recipient = $this->user( 'Jeanne Réserve' );
+
+		$this->logIn( $this->user( 'Paul Garde' ) );
+
+		$crawler = $this->client->request( 'GET', '/messages/new?to=' . $recipient->getId() );
+
+		$tools = $crawler->filter( '.message-composer .message-composer--tools' );
+
+		$this->assertCount( 1, $tools->filter( '.tag-picker--open' ) );
+		$this->assertCount( 1, $tools->filter( '.emoji-picker--open[aria-label]' ) );
+		$this->assertGreaterThan( 10, $tools->filter( '.emoji-picker--item' )->count() );
+	}
+
+	public function testTheDockCarriesTheSameToolsForEachWindow () {
+		$this->logIn( $this->user( 'Paul Garde' ) );
+
+		// Le dock est posé partout sauf sur /messages.
+		$this->client->request( 'GET', '/groups' );
+
+		$html = $this->client->getResponse()->getContent();
+
+		$this->assertStringContainsString( '<template id="dock-composer-tools">', $html );
+
+		$template = substr( $html, strpos( $html, '<template id="dock-composer-tools">' ) );
+		$template = substr( $template, 0, strpos( $template, '</template>' ) );
+
+		$this->assertStringContainsString( 'tag-picker--open', $template );
+		$this->assertStringContainsString( 'emoji-picker--open', $template );
+		$this->assertStringContainsString( 'data-picker-for="__field__"', $template, 'Assert each window can point the panel at its own field' );
+	}
 }

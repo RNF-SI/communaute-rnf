@@ -167,6 +167,7 @@ Cette partie demande les deux comptes : une messagerie ne se regarde pas seul.
 | Envoyer, puis relire | Les tags sont devenus des liens colorés, chacun avec une pastille qui dit son type, et ils mènent là où ils disent |
 | Écrire un tag **à la main**, sans passer par la liste | Il est reconnu pareil : rien ne dépend de la liste de suggestions |
 | Citer `@` quelqu'un qui n'est pas dans la conversation | Un message prévient que la citation ne l'atteint pas — il faut l'ajouter pour qu'il lise |
+| Ouvrir une conversation dans la **petite fenêtre** en bas de l'écran | Au-dessus du champ : « Insérer un lien » (pour joindre un document du groupe) et un bouton emoji. Les deux marchent dans la petite fenêtre, sans être coupés |
 
 ### Le point le plus important : un tag ne donne accès à rien
 

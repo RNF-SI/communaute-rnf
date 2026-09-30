@@ -1,0 +1,89 @@
+{#
+	Ce qui accompagne le champ d'un message : « Insérer un lien » et les
+	emojis. (#42)
+
+	Un seul gabarit pour la page `/messages` et pour chaque fenêtre du dock :
+	le retour de recette demandait de retrouver l'insertion d'un lien dans la
+	petite fenêtre, pas seulement sur la grande page. Le dock en garde une
+	copie dans un <template>, que `dock.js` clone pour chaque fenêtre en
+	remplaçant `__field__` par l'identifiant de son champ.
+
+	Caché tant que le JavaScript ne l'a pas allumé : les deux boutons ne font
+	rien sans lui, et la phrase d'aide dit déjà comment taper un tag.
+#}
+{% set picker_id = composer_id ~ '-picker' %}
+{% set emoji_id  = composer_id ~ '-emoji' %}
+<div class="message-composer--tools" hidden>
+	<button type="button"
+			class="tag-picker--open"
+			aria-expanded="false"
+			aria-controls="{{ picker_id }}">{{ 'pages.messages.insert.open'|trans }}</button>
+
+	<div class="tag-picker"
+		 id="{{ picker_id }}"
+		 hidden
+		 role="dialog"
+		 aria-label="{{ 'pages.messages.insert.title'|trans }}"
+		 data-picker="{{ path('messages_picker') }}"
+		 data-picker-for="{{ composer_id }}">
+
+		<div class="tag-picker--head">
+			<h2 class="tag-picker--title">{{ 'pages.messages.insert.title'|trans }}</h2>
+
+			<button type="button"
+					class="tag-picker--close"
+					aria-label="{{ 'pages.messages.insert.close'|trans }}">&times;</button>
+		</div>
+
+		<div class="tag-picker--filters">
+			<label class="tag-picker--field">
+				<span>{{ 'pages.messages.insert.search'|trans }}</span>
+				<input type="search"
+					   class="tag-picker--search"
+					   autocomplete="off"
+					   placeholder="{{ 'pages.messages.insert.placeholder'|trans }}">
+			</label>
+
+			<label class="tag-picker--field">
+				<span>{{ 'pages.messages.insert.kind'|trans }}</span>
+				<select class="tag-picker--kind">
+					<option value="">{{ 'pages.messages.insert.all'|trans }}</option>
+					{% for kind in ['group', 'document', 'page', 'article', 'discussion'] %}
+						<option value="{{ kind }}">{{ ('pages.messages.insert.kinds.' ~ kind)|trans }}</option>
+					{% endfor %}
+				</select>
+			</label>
+		</div>
+
+		<p class="tag-picker--state"
+		   role="status"
+		   data-empty="{{ 'pages.messages.insert.empty'|trans }}"
+		   data-failed="{{ 'pages.messages.insert.failed'|trans }}"
+		   data-loading="{{ 'pages.messages.insert.loading'|trans }}"></p>
+
+		<ul class="tag-picker--list" role="listbox" aria-label="{{ 'pages.messages.insert.title'|trans }}"></ul>
+
+		<p class="tag-picker--hint">{{ 'pages.messages.insert.hint'|trans }}</p>
+	</div>
+	{# Un emoji, au clic (#42). Comme le lien, il écrit dans le champ et rien
+	   d'autre : un message privé reste du texte, et un emoji en est. #}
+	<button type="button"
+			class="emoji-picker--open"
+			aria-expanded="false"
+			aria-controls="{{ emoji_id }}"
+			title="{{ 'pages.messages.emoji.open'|trans }}"
+			aria-label="{{ 'pages.messages.emoji.open'|trans }}">&#x1F642;</button>
+
+	<div class="emoji-picker"
+		 id="{{ emoji_id }}"
+		 hidden
+		 role="dialog"
+		 aria-label="{{ 'pages.messages.emoji.title'|trans }}"
+		 data-emoji-for="{{ composer_id }}">
+		<ul class="emoji-picker--list">
+			{% for emoji in ['🙂', '😀', '😉', '😊', '😂', '🙏', '👍', '👏', '🙌', '💪', '👀', '🤔', '😅', '😮', '😢', '❤️', '🎉', '✅', '❌', '⚠️', '📎', '📅', '📌', '💡', '☀️', '🌧️', '🌿', '🌳', '🌊', '🦋', '🐦', '🦉', '🐸', '🦌', '🐝', '🍄'] %}
+				<li><button type="button" class="emoji-picker--item" data-emoji="{{ emoji }}">{{ emoji }}</button></li>
+			{% endfor %}
+		</ul>
+	</div>
+</div>

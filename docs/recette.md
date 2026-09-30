@@ -319,6 +319,8 @@ public) et « **Note de cadrage du bureau** » (groupe privé).
 | Mes paramètres → décocher **Accepter de recevoir des messages privés** | Sur votre fiche, le bouton « Écrire » disparaît ; les conversations en cours restent ouvertes |
 | Mes paramètres → réglage général | Une **cinquième ligne**, « Messages privés », réglée sur e-mail immédiat par défaut — et **aucune ligne « messages » sous les groupes** |
 | Filtrer la liste avec le nom de l'autre personne | La conversation remonte, même si le mot n'est dans aucun message |
+| Ouvrir une conversation **dans le dock** (la petite fenêtre en bas de l'écran, depuis n'importe quelle page) | Au-dessus du champ, « Insérer un lien » et un bouton emoji ; le panneau de liens s'ouvre **dans** la fenêtre, sans être rogné, et choisir un document écrit son tag dans le champ (#42) |
+| Bouton emoji, sur la page comme dans le dock | Une grille d'emojis ; en choisir un l'écrit à l'endroit du curseur et referme la grille ; Échap la referme sans rien écrire (#42) |
 
 ### Signaler, et ce que l'équipe voit
 

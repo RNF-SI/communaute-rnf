@@ -59,6 +59,12 @@
 			 'deleted':         'pages.messages.deleted'|trans
 		 }|json_encode|escape('html_attr') }}">
 
+		{# Les outils du champ d'une fenêtre, « Insérer un lien » et emojis,
+		   que chaque fenêtre clone : le libellé reste ici, en Twig. (#42) #}
+		<template id="dock-composer-tools">
+			{% include 'components/composer-tools.html.twig' with {'composer_id': '__field__'} %}
+		</template>
+
 		{# Les fenêtres ouvertes. Remplies par le JavaScript, jamais par le
 		   serveur : ce qui est ouvert dépend de l'onglet, pas du compte. #}
 		<div class="dock--stack" role="region" aria-label="{{ 'pages.messages.dock.stack'|trans }}"></div>

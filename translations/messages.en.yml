@@ -709,6 +709,9 @@ pages:
                 title: "Over to you"
                 body: "That is the gist of it. Join a group and introduce yourself in a discussion: that is the best way to start."
     messages:
+        emoji:
+            open: "Insert an emoji"
+            title: "Emojis"
         title: "Messages"
         link: "Messages"
         new: "New message"

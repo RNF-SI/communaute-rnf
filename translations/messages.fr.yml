@@ -823,6 +823,9 @@ pages:
                 title: "À vous de jouer"
                 body: "C’est tout pour l’essentiel. Rejoignez un groupe et présentez-vous dans une discussion : c’est la meilleure façon de commencer."
     messages:
+        emoji:
+            open: "Insérer un emoji"
+            title: "Emojis"
         title: "Messagerie"
         link: "Messages"
         new: "Nouveau message"

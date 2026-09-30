@@ -46,6 +46,7 @@ import './ui/add-form';
 import './ui/link-order-change';
 import './ui/message-tags';
 import './ui/tag-picker';
+import './ui/emoji-picker';
 import './ui/onlyoffice';
 //
 // Le direct de la messagerie. `badge` s'abonne au chargement du module,
