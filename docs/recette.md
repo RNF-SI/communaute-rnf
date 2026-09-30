@@ -153,14 +153,36 @@ Aller dans **Groupe de test**.
 | Taper une lettre dans la recherche, filtre posé | Le filtre tient : la recherche ne ramène pas les 58 groupes (#23) |
 | Administration → **Thématiques** | Créer une thématique, la retrouver sur le formulaire d'un groupe, la retirer : les groupes restent, déclassés (#23) |
 | Description d'un groupe | Visible de ses membres (#5) |
+| Liste des groupes → **Filtrer par commission, pôle ou groupe** | Les choix sont rangés en familles : Commissions, Pôles, Groupes. « Pôle de test » ne montre que le pôle et « Atelier de test » ; « Groupe de travail de test » aussi (#42) |
+| Créer un groupe avec un compte **administrateur de la plateforme qui n'anime pas le groupe Communauté** | Pas de phrase « devra être validé » ; à l'enregistrement, on arrive **sur le groupe**, déjà visible dans la liste (#42) |
+| Créer un groupe en **Manon Membre** | La phrase de validation est là ; le groupe attend, dans « Groupes en attente » (#42) |
+| Même compte administrateur, un groupe en attente | Les boutons « Accepter » / « Refuser » sont proposés (#42) |
+| Onglet Pages | « Stage d'été 2019 (format abandonné) » n'est **pas** dans la liste, mais dans « Pages archivées », repliée en dessous ; ouverte, elle porte un bandeau « Page archivée le… » (#42) |
+| Sur une page dont on est l'auteur (ou en animateur) → **Archiver** | La page sort de la liste et de l'accueil du groupe, reste lisible à son adresse ; « Sortir des archives » la remet (#42) |
+| La même page, avec un simple membre qui n'en est pas l'auteur | Pas de bouton « Archiver » (#42) |
+| Éditeur d'une page → bouton **séparateur** (à côté de la citation) | Un trait horizontal s'insère, le curseur repart dessous ; il est toujours là une fois la page enregistrée et rouverte (#42) |
+| **Manon Membre** → annuaire du groupe → « Demander à devenir animateur » | La demande part ; le bloc dit qu'elle attend, et propose de la retirer (#42) |
+| **Rémi Référent** (animateur) → annuaire du même groupe | La demande de Manon en tête ; « Accepter » fait d'elle une animatrice, « Décliner » la retire (#42) |
 
 ---
 
 ## 4. Les documents
 
+⚠️ Depuis #42, les données de test donnent **un vrai fichier** à chaque document
+(PDF, image, .docx, .csv, .txt). Sur une préproduction chargée avant, il faut
+**recharger les fixtures** : sans cela les documents n'ont rien à montrer.
+`php bin/console app:preflight` le dit à la ligne « Fichiers des documents ».
+
 | À faire | Attendu |
 |---|---|
-| Onglet Documents | Une arborescence de dossiers, dont un sous-dossier (#8) |
+| Onglet Documents | Une arborescence de dossiers, dont un sous-dossier (#8), **tous repliés**, chacun avec le nombre de documents qu'il contient ; un clic déplie (#42) |
+| Chercher un mot dans la liste | Les dossiers se déplient d'eux-mêmes : on voit ce qu'on a trouvé (#42) |
+| Ouvrir « Document de test » | Le PDF **s'affiche** dans la fiche, « Télécharger » l'enregistre (#42) |
+| Depuis l'accueil du groupe, cliquer un document de la liste courte | La **fiche** s'ouvre, jamais une page d'erreur (#42) |
+| Ouvrir « Site des Réserves naturelles de France » | Un document-**lien** : « Ouvrir le lien » ouvre le site dans un nouvel onglet ; ni aperçu, ni « Télécharger » (#42) |
+| Déposer un document avec **seulement un lien** | Accepté ; sans titre, il prend l'adresse du site (#42) |
+| Déposer un fichier **et** un lien à la fois | Refusé : « un fichier ou un lien, pas les deux » (#42) |
+| Donner un lien à un document qui avait un fichier | Le document devient un lien, l'ancien fichier disparaît (#42) |
 | Cliquer le titre d'un document | **Une fiche s'ouvre** — description, étiquettes, dossier, déposant, date (#32) |
 | Sur la fiche | « Ce qui en a été dit » liste une page **et** une discussion qui y renvoient (#32) |
 | Bouton « En discuter » | Un sujet s'ouvre, **prérempli**, avec le lien vers le document dans le corps (#32) |
@@ -217,6 +239,7 @@ les documents se téléchargent comme avant. Passez à la section suivante.
 | Menu profil | Entrée « Mes discussions » (#21) |
 | Une page avec des listes à puces | Les puces s'affichent (#11) |
 | L'éditeur de texte | **Neuf groupes de boutons**, plus d'exposant ni de sens d'écriture RTL (#32) |
+| Discussion ouverte par quelqu'un d'autre, en **simple membre** | Pas de « Renommer », mais une note : le titre se modifie par la personne qui l'a ouverte ou par un animateur — avec un lien « Demander à devenir animateur » (#42) |
 
 ---
 
@@ -340,6 +363,8 @@ public) et « **Note de cadrage du bureau** » (groupe privé).
 |---|---|
 | Administration → **Étiquettes** | Six étiquettes, dont « Grand public » et « Cycle 1 » ; on peut en ajouter une, pas deux fois la même (#26) |
 | Retirer une étiquette | Elle disparaît aussi des documents qui la portaient |
+| Administration → **Menus** | Une section « Nos autres plateformes », avec le site RNF déjà renseigné ; aucun « aaa » en haut de la page (#42) |
+| Y ajouter un lien (SOCLE, Pearltrees, OPNL…), enregistrer | Le pied de page passe à **quatre colonnes** ; les liens vers d'autres sites s'ouvrent dans un nouvel onglet (#42) |
 
 ---
 

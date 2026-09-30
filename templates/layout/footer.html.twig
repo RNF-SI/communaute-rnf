@@ -10,10 +10,12 @@
 				{% set appFooterFirstMenus = render(controller( 'App\\Controller\\AppController::appFooterMenus', {'position': 'first'} )) %}
 				{% set appFooterSecondMenus = render(controller( 'App\\Controller\\AppController::appFooterMenus', {'position': 'second'} )) %}
 				{% set appFooterThirdMenus = render(controller( 'App\\Controller\\AppController::appFooterMenus', {'position': 'third'} )) %}
+				{% set appFooterPlatforms = render(controller( 'App\\Controller\\AppController::appFooterMenus', {'position': 'platforms'} )) %}
 
 				{{ appFooterFirstMenus|raw }}
 				{{ appFooterSecondMenus|raw }}
 				{{ appFooterThirdMenus|raw }}
+				{{ appFooterPlatforms|raw }}
 
 			</ul>
 		</div>

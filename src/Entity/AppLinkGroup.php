@@ -19,11 +19,13 @@ class AppLinkGroup
     private $footbarFirstLiensTitle;
     private $footbarSecondLiensTitle;
     private $footbarThirdLiensTitle;
+    private $footbarPlatformsLiensTitle;
 
     private $navbarLiens;
     private $footbarFirstLiens;
     private $footbarSecondLiens;
     private $footbarThirdLiens;
+    private $footbarPlatformsLiens;
 
     public function __construct()
     {
@@ -31,6 +33,7 @@ class AppLinkGroup
         $this->footbarFirstLiens = new ArrayCollection();
         $this->footbarSecondLiens = new ArrayCollection();
         $this->footbarThirdLiens = new ArrayCollection();
+        $this->footbarPlatformsLiens = new ArrayCollection();
     }
 
     public function getNavbarLiensTitle(): string
@@ -91,5 +94,27 @@ class AppLinkGroup
     public function getFootbarThirdLiens(): Collection
     {
         return $this->footbarThirdLiens;
+    }
+
+    // La colonne « Nos autres plateformes » du pied de page (#42).
+
+    public function getFootbarPlatformsLiensTitle(): ?string
+    {
+        return $this->footbarPlatformsLiensTitle;
+    }
+
+    public function setFootbarPlatformsLiensTitle($footbarPlatformsLiensTitle)
+    {
+        $this->footbarPlatformsLiensTitle = $footbarPlatformsLiensTitle;
+    }
+
+    public function getFootbarPlatformsLiens()
+    {
+        return $this->footbarPlatformsLiens;
+    }
+
+    public function setFootbarPlatformsLiens($footbarPlatformsLiens)
+    {
+        $this->footbarPlatformsLiens = $footbarPlatformsLiens;
     }
 }

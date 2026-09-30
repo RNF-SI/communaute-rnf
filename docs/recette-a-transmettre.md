@@ -74,8 +74,22 @@ Ouvre **Groupe de test**.
 - Onglet **Pages** : « Page importante de test » est mise en avant, en tête.
 - La page « Page rédigée par un membre » est modifiable par son auteur et par
   un animateur — **pas** par un autre membre. À éprouver avec les deux comptes.
-- Liste des groupes : la hiérarchie commission → groupes apparaît, et un filtre
-  par commission fonctionne.
+- Liste des groupes : la hiérarchie commission → groupes apparaît. Le filtre
+  « **Filtrer par commission, pôle ou groupe** » range ses choix en familles —
+  Commissions, Pôles, Groupes ; « Pôle de test » ne montre que le pôle et son
+  atelier.
+- Onglet **Pages** : « Stage d'été 2019 » n'est pas dans la liste mais dans
+  « **Pages archivées** », repliée dessous. Sur une page dont tu es l'auteur,
+  le bouton « **Archiver** » la range là ; elle reste lisible, et « Sortir des
+  archives » la remet.
+- En écrivant une page, un bouton **séparateur** (à côté de la citation) trace
+  une ligne horizontale.
+- Avec **Manon Membre**, dans l'annuaire du groupe : « **Demander à devenir
+  animateur** ». Avec **Rémi Référent**, la demande apparaît en tête de
+  l'annuaire, avec « Accepter » et « Décliner ».
+- Crée un groupe avec un compte **administrateur** : il n'y a plus de phrase
+  « devra être validé », et le groupe est visible tout de suite. Avec un simple
+  membre, la phrase est là et le groupe attend.
 - Onglet **Actualités** : trois actualités, la plus récente en tête. Celle
   « rédigée par un membre » suit la même règle que la page — son auteur et un
   animateur la modifient, un autre membre non.
@@ -86,7 +100,14 @@ Ouvre **Groupe de test**.
 
 Onglet **Documents** du groupe de test.
 
-- Une arborescence de dossiers, dont un **sous-dossier**.
+- Une arborescence de dossiers, dont un **sous-dossier** — tous **repliés**,
+  chacun avec son nombre de documents. Un clic déplie ; une recherche déplie
+  tout.
+- Chaque document a un vrai fichier : « Document de test » (un PDF)
+  **s'affiche** dans sa fiche et se télécharge.
+- « Site des Réserves naturelles de France » est un **lien** : sa fiche
+  l'ouvre dans un nouvel onglet. Au dépôt, on peut donner un lien **à la
+  place** d'un fichier — pas les deux.
 - **Clique le titre d'un document** : une fiche s'ouvre — description,
   étiquettes, dossier, qui l'a déposé, date, taille. C'est nouveau.
 - Sur cette fiche, « **Ce qui en a été dit** » liste une page **et** une
@@ -109,7 +130,9 @@ Onglet **Documents** du groupe de test.
   Choisis-en un, le nom s'insère.
 - Ton propre message est **modifiable et supprimable**.
 - En tant qu'animateur, tu peux supprimer le message d'un autre.
-- Sur un sujet dont tu es l'auteur : « **Renommer le sujet** ».
+- Sur un sujet dont tu es l'auteur : « **Renommer le sujet** ». Sur celui
+  d'un autre, en simple membre : une phrase dit qui peut le renommer, avec un
+  lien pour demander à devenir animateur.
 - Menu profil : une entrée « **Mes discussions** ».
 - L'éditeur de texte est allégé : **neuf groupes de boutons**, plus d'exposant
   ni de sens d'écriture de droite à gauche.
@@ -208,6 +231,11 @@ Avec le compte administrateur : **Administration → Étiquettes**.
 - Six étiquettes, dont « Grand public » et « Cycle 1 ».
 - On peut en ajouter une, mais **pas deux fois la même**.
 - En retirer une la retire aussi des documents qui la portaient.
+
+Puis **Administration → Menus** : une section « **Nos autres plateformes** »,
+avec le site RNF déjà renseigné. Ajoute-y un lien (SOCLE, Pearltrees, OPNL…) :
+le pied de page passe à quatre colonnes, et ces liens s'ouvrent dans un nouvel
+onglet.
 
 Puis **Administration → Signalements**.
 

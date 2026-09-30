@@ -20,10 +20,6 @@ class AdminLinkType extends AbstractType {
 	 * {@inheritdoc}
 	 */
 	public function buildForm ( FormBuilderInterface $builder, array $options ) {
-
-		print('aaa');
-
-		// print($options);
 		$builder
 			->add( 'nom', TextType::class, [
 				'required' => FALSE,

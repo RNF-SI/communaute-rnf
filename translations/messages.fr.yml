@@ -312,6 +312,10 @@ forms:
             footbar_third:
                 title: "Titre de la troisième colonne"
                 name: "Pied de page – Troisième colonne de liens"
+            footbar_platforms:
+                title: "Titre de la colonne"
+                name: "Pied de page – Nos autres plateformes"
+                hint: "Les autres outils du réseau : portail RNF, SOCLE, Pearltrees, OPNL… Chaque lien vers un autre site s’ouvre dans un nouvel onglet. Sans aucun lien, la colonne ne s’affiche pas."
         admin:
             name: "Administrateurs communauté"
             introduction: "Liste des administrateurs de la plateforme. Ajoutez, supprimez les rôles d'admin dans %link_start%l'annuaire du groupe Communauté%link_end%"

@@ -56,6 +56,24 @@
 		<span>{{ 'forms.administration.menus.add'|trans }}</span>
 	</a>
 </div>
+{# Relier la communauté au reste du réseau : portail RNF, SOCLE, Pearltrees,
+   OPNL… Une colonne sans lien ne s'affiche pas. (#42) #}
+<div class="form-rows">
+
+	<p class="element_title">{{ 'forms.administration.menus.footbar_platforms.name'|trans }}</p>
+	<p class="hint">{{ 'forms.administration.menus.footbar_platforms.hint'|trans }}</p>
+
+	<div class="form-row form-row__field subtitle-input">
+		{{ form_label(form.footbarPlatformsLiensTitle, 'forms.administration.menus.footbar_platforms.title') }}
+		{{ form_widget(form.footbarPlatformsLiensTitle) }}
+	</div>
+
+	{% include 'forms/user/admin/admin-menus-form-unit.html.twig' with {'liens': form.footbarPlatformsLiens, 'id_liens': 'admin_menus_footbarPlatformsLiens'} %}
+
+	<a class="add_item_link">
+		<span>{{ 'forms.administration.menus.add'|trans }}</span>
+	</a>
+</div>
 <div class="form-row form-row__submit">
 	{{ form_widget(form.submit, {'label': 'forms.administration.submit'|trans}) }}
 </div>

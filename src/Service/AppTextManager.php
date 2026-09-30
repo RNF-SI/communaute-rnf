@@ -28,11 +28,21 @@ class AppTextManager
 
     public function getTabText($tab)
     {
-        $adminYamlTab = Yaml::parse(file_get_contents($this->projectDir.'/config/platform/config.yaml'))[$tab];
-        $defaultAdminYamlTab = Yaml::parse(file_get_contents($this->projectDir.'/config/platform/default.config.yaml'))[$tab];
+        $adminYamlTab = Yaml::parse(file_get_contents($this->projectDir.'/config/platform/config.yaml'))[$tab] ?? [];
+        $defaultAdminYamlTab = Yaml::parse(file_get_contents($this->projectDir.'/config/platform/default.config.yaml'))[$tab] ?? [];
         foreach ($adminYamlTab as $key => $text) {
             if (is_null($text)) {
                 $adminYamlTab[$key] = $defaultAdminYamlTab[$key];
+            }
+        }
+
+        // config.yaml est copié de default.config.yaml à l'installation, et
+        // n'est pas versionné : une section ajoutée depuis (la colonne « Nos
+        // autres plateformes », #42) n'y figure pas. Elle vient du défaut
+        // tant que l'administration ne l'a pas enregistrée.
+        foreach ($defaultAdminYamlTab as $key => $text) {
+            if (!array_key_exists($key, $adminYamlTab)) {
+                $adminYamlTab[$key] = $text;
             }
         }
 
@@ -41,8 +51,9 @@ class AppTextManager
 
     public function getTabSectionText($tab, $section)
     {
-        $adminYamlTab = Yaml::parse(file_get_contents($this->projectDir.'/config/platform/config.yaml'))[$tab][$section];
-        $defaultAdminYamlTab = Yaml::parse(file_get_contents($this->projectDir.'/config/platform/default.config.yaml'))[$tab][$section];
+        $defaultAdminYamlTab = Yaml::parse(file_get_contents($this->projectDir.'/config/platform/default.config.yaml'))[$tab][$section] ?? [];
+        // Même repli que getTabText() pour une section absente de config.yaml.
+        $adminYamlTab = Yaml::parse(file_get_contents($this->projectDir.'/config/platform/config.yaml'))[$tab][$section] ?? $defaultAdminYamlTab;
         foreach ($adminYamlTab as $key => $text) {
             if (is_null($text)) {
                 $adminYamlTab[$key] = $defaultAdminYamlTab[$key];

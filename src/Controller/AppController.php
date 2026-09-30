@@ -143,10 +143,15 @@ class AppController extends AbstractController {
 			case 'third':
 				$liens = $appTextManager->getTabSectionText('menus', 'footbarThirdLiens');
 				break;
+			case 'platforms':
+				$liens = $appTextManager->getTabSectionText('menus', 'footbarPlatformsLiens');
+				break;
+			default:
+				throw $this->createNotFoundException( 'Unknown footer column' );
 		}
 		return $this->render( 'layout/footer-menus.html.twig', [
-			'title' => $liens['title'],
-			'liens' => $liens['liens']
+			'title' => $liens['title'] ?? '',
+			'liens' => $liens['liens'] ?? [],
 		] );
 	} 
 

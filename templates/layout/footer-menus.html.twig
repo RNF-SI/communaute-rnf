@@ -1,8 +1,15 @@
-<li>
-	<span>{{title}}</span>
-	<ul>
-		{% for lien in liens %}
-			<li><a href="{{ lien.lien }}">{{lien.nom}}</a></li>
-		{% endfor %}
-	</ul>
-</li>
+{# Une colonne sans lien ne s'affiche pas : un titre au-dessus du vide se lit
+   comme une panne. Un lien vers un autre site — les autres plateformes du
+   réseau (#42) — s'ouvre dans un nouvel onglet, pour qu'on ne quitte pas la
+   communauté sans le vouloir. #}
+{% if liens is not empty %}
+	<li>
+		<span>{{ title }}</span>
+		<ul>
+			{% for lien in liens %}
+				{% set external = lien.lien starts with 'http://' or lien.lien starts with 'https://' %}
+				<li><a href="{{ lien.lien }}"{% if external %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ lien.nom }}</a></li>
+			{% endfor %}
+		</ul>
+	</li>
+{% endif %}

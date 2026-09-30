@@ -136,6 +136,11 @@ forms:
             hint: "What this group is about. Pick from the list kept by the administrators; a group may cover several themes. The commission says who the group answers to, the theme says what it deals with."
 
     administration:
+        menus:
+            footbar_platforms:
+                title: "Column title"
+                name: "Footer – Our other platforms"
+                hint: "The network’s other tools: RNF portal, SOCLE, Pearltrees, OPNL… Every link to another site opens in a new tab. With no link at all, the column is not shown."
         group_categories:
             name: "Group themes"
             introduction: "These themes sort the list of groups, alongside the commission each group answers to. The list is deliberately closed: everyone picks from it, nobody adds to it in passing, so that one notion does not end up spelled three ways."

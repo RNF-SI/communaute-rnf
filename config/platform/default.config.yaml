@@ -127,3 +127,11 @@ menus:
         lien: "/groups/plateforme-web/pages/regles"
       - nom: "Signaler un problème"
         lien: "mailto:support@communaute-rnf.fr"
+  # Relier la communauté au reste du réseau (#42). Seul le site RNF est
+  # posé d'office : les adresses des autres outils (SOCLE, Pearltrees, OPNL…)
+  # se renseignent dans l'administration, plutôt que d'être devinées ici.
+  footbarPlatformsLiens:
+    title: "Nos autres plateformes"
+    liens:
+      - nom: "Réserves naturelles de France"
+        lien: "https://www.reserves-naturelles.org/"

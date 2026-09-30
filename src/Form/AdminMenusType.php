@@ -59,6 +59,16 @@ class AdminMenusType extends AbstractType {
 				'allow_delete' => true,
 				'delete_empty' => true
 			] )
+			// Nos autres plateformes (#42)
+			->add( 'footbarPlatformsLiensTitle', TextType::class, [
+				'required' => FALSE,
+			] )
+			->add( 'footbarPlatformsLiens', CollectionType::class, [
+				'entry_type' => AdminLinkType::class,
+				'allow_add' => true,
+				'allow_delete' => true,
+				'delete_empty' => true
+			] )
 			->add( 'submit', SubmitType::class )
 			->addEventListener(FormEvents::PRE_SUBMIT, function(FormEvent $event){
 				$forms = $event->getData();

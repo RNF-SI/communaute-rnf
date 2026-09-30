@@ -44,6 +44,13 @@
 				margin-bottom: 0;
 			}
 		}
+
+		// Quatre colonnes quand « Nos autres plateformes » est renseignée
+		// (#42) : en tiers, la quatrième passait seule à la ligne.
+		> li:first-child:nth-last-child(4),
+		> li:first-child:nth-last-child(4) ~ li {
+			@include columns_item(math.div(1, 4));
+		}
 	}
 
 	span,
