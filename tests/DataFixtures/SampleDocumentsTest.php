@@ -78,6 +78,11 @@ class SampleDocumentsTest extends WebTestCase {
 			$this->assertNotEmpty( $documents );
 
 			foreach ( $documents as $document ) {
+				// Un document-lien n'a pas de fichier, c'est ce qu'il est.
+				if ( $document->isLink() ) {
+					continue;
+				}
+
 				$this->assertNotNull( $document->getFile(), sprintf( 'Assert « %s » has a file', $document->getTitle() ) );
 				$this->assertTrue(
 						$files->isAvailable( $document->getFile() ),
@@ -141,5 +146,13 @@ class SampleDocumentsTest extends WebTestCase {
 				'/groups/groupe-de-test/documents/' . $document->getId(),
 				self::$container->get( UrlManager::class )->documentUrlFromId( $document->getId() )
 		);
+	}
+
+	public function testTheReferenceGroupHoldsALinkToo () {
+		$links = array_filter( $this->documentsOf( 'groupe-de-test' ), function ( Document $document ) {
+			return $document->isLink();
+		} );
+
+		$this->assertCount( 1, $links, 'Assert the recette has a link document to try' );
 	}
 }

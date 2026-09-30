@@ -1331,6 +1331,18 @@ class AppFixtures extends Fixture {
 
 		$manager->persist( $document );
 
+		// Un document qui n'est qu'un lien vers une autre plateforme (#42) :
+		// sa fiche l'ouvre dans un nouvel onglet, sans aperçu ni fichier.
+		$lien = new Document();
+		$lien->setTitle( 'Site des Réserves naturelles de France' );
+		$lien->setSlug( $this->slugGenerator->generateSlug( 'Site RNF ' . $group->getSlug(), Document::class, 'slug' ) );
+		$lien->setDescription( 'Un lien plutôt qu’un fichier, pour éprouver les documents hébergés ailleurs.' );
+		$lien->setUrl( 'https://www.reserves-naturelles.org/' );
+		$lien->setUsergroup( $group );
+		$lien->setUser( $referent );
+		$lien->setCreatedAt( new \DateTime() );
+		$manager->persist( $lien );
+
 		$manager->flush();
 
 		// Une page et un message qui renvoient vers un document : sans eux, la

@@ -36,6 +36,12 @@
 		   href="{{ path('group_document_get', {'groupSlug': document.usergroup.slug, 'documentId': document.id}) }}"
 		   title="{{ 'pages.document.view.download'|trans|escape('html_attr') }}"
 		   target="_blank">{{ 'pages.document.view.download'|trans }}</a>
+	{% elseif document.link %}
+		{# Un lien vers un document hébergé ailleurs (#42). #}
+		<a class="document--download document--link"
+		   href="{{ document.url }}"
+		   title="{{ 'pages.document.view.open_link'|trans|escape('html_attr') }}"
+		   target="_blank" rel="noopener noreferrer nofollow">{{ 'pages.document.view.open_link'|trans }}</a>
 	{% endif %}
 
 	{% if is_granted(constant('App\\Security\\GroupDocumentVoter::EDIT'), document) %}

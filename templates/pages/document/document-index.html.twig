@@ -20,6 +20,11 @@
 							{{ (officeEdit ? 'pages.document.view.office.edit' : 'pages.document.view.office.open')|trans }}
 						</a>
 					{% endif %}
+					{# Un document-lien s'ouvre là où il vit, dans un nouvel onglet :
+					   ni aperçu, ni éditeur, ce n'est pas chez nous. (#42) #}
+					{% if document.link %}
+						<a class="cta" href="{{ document.url }}" target="_blank" rel="noopener noreferrer nofollow">{{ 'pages.document.view.open_link'|trans }}</a>
+					{% endif %}
 					{% if document.file and not fileMissing %}
 						<a class="{{ (office and app.user) ? 'cta__inverted' : 'cta' }}" href="{{ path('group_document_get', {'groupSlug': group.slug, 'documentId': document.id, 'download': 1}) }}">{{ 'pages.document.view.download'|trans }}</a>
 					{% endif %}
@@ -114,13 +119,18 @@
 						<dt>{{ 'pages.document.view.added'|trans }}</dt>
 						<dd>{{ document.createdAt|localizeddate('long', 'none', app.request.locale) }}</dd>
 
+						{% if document.link %}
+							<dt>{{ 'pages.document.view.link'|trans }}</dt>
+							<dd>{{ document.url|split('/')[2]|default(document.url) }}</dd>
+						{% endif %}
+
 						{% if size %}
 							<dt>{{ 'pages.document.view.size'|trans }}</dt>
 							<dd>{{ size }}</dd>
 						{% endif %}
 					</dl>
 
-					{% if document.file is empty %}
+					{% if document.file is empty and not document.link %}
 						<p class="document-sheet--nofile">{{ 'pages.document.view.no_file'|trans }}</p>
 					{% elseif fileMissing %}
 						{# Le document existe, son fichier non : on le dit, et à qui

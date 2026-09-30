@@ -69,7 +69,10 @@ class GroupDocumentsController extends AbstractController {
 		$matchKeywords = FALSE;
 
 		if ( !empty( $filters[ 'keywords' ] ) ) {
-			$title = SlugGenerator::slugify( $document->getTitle() . '-' . $document->getFile()->getName() );
+			// Un document-lien, ou un document hérité sans fichier, n'a pas de
+			// nom de fichier : c'est son adresse qu'on fouille. (#42)
+			$file  = $document->getFile();
+			$title = SlugGenerator::slugify( $document->getTitle() . '-' . ( $file ? $file->getName() : (string) $document->getUrl() ) );
 
 			foreach ( $filters[ 'keywords' ] as $keyword ) {
 				$matchKeywords = $matchKeywords || ( strpos( $title, $keyword ) !== FALSE );
@@ -89,7 +92,7 @@ class GroupDocumentsController extends AbstractController {
 			$matchFiletype = FALSE;
 
 			foreach ( $filters[ 'filetype' ] as $type ) {
-				$matchFiletype = $matchFiletype || ( in_array( $document->getFile()->getType(), FileMimeManager::getMimes( $type ) ) );
+				$matchFiletype = $matchFiletype || ( $document->getFile() && in_array( $document->getFile()->getType(), FileMimeManager::getMimes( $type ) ) );
 			}
 		}
 		else {
@@ -229,6 +232,22 @@ class GroupDocumentsController extends AbstractController {
 	 *
 	 * @return array liste de ['folder' => …, 'documents' => …, 'children' => …]
 	 */
+	/**
+	 * Un titre pour un lien déposé sans titre : l'hôte et le dernier segment
+	 * du chemin, plutôt que l'adresse entière. (#42)
+	 *
+	 * @param string $url
+	 *
+	 * @return string
+	 */
+	private function titleFromUrl ( $url ) {
+		$host = (string) parse_url( $url, PHP_URL_HOST );
+		$path = trim( (string) parse_url( $url, PHP_URL_PATH ), '/' );
+		$last = $path === '' ? '' : rawurldecode( basename( $path ) );
+
+		return mb_substr( $last === '' ? $host : $host . ' — ' . $last, 0, 100 );
+	}
+
 	private function folderTree ( $folders, array $filters, array $seen = [] ) {
 		$tree = [];
 
@@ -363,6 +382,11 @@ class GroupDocumentsController extends AbstractController {
 					$document->setTitle( pathinfo( $file->getName(), PATHINFO_FILENAME ) );
 				}
 			}
+			// Un lien à la place d'un fichier (#42) : le champ est lié à
+			// l'entité, il n'y a qu'à lui trouver un titre s'il n'en a pas.
+			elseif ( $document->isLink() && empty( $document->getTitle() ) ) {
+				$document->setTitle( $this->titleFromUrl( $document->getUrl() ) );
+			}
 
 			$manager->flush();
 
@@ -488,12 +512,28 @@ class GroupDocumentsController extends AbstractController {
 
 				$document->setFile( $file );
 
+				// Un fichier déposé remplace le lien qu'il y avait. (#42)
+				$document->setUrl( NULL );
+
 				// Le titre ne prend le nom du fichier que s'il n'y en a pas :
 				// remplacer un fichier ne renomme pas un document que
 				// quelqu'un a pris la peine d'intituler.
 				if ( empty( $document->getTitle() ) ) {
 					$document->setTitle( pathinfo( $file->getName(), PATHINFO_FILENAME ) );
 				}
+			}
+
+			// Et un lien donné remplace le fichier : même règle que le
+			// remplacement d'un fichier par un autre, l'ancien part une fois
+			// le document enregistré. (#42)
+			elseif ( !empty( $document->getUrl() ) && !empty( $document->getFile() ) ) {
+				$replacedFile = $document->getFile();
+
+				$document->setFile( NULL );
+			}
+
+			if ( empty( $document->getTitle() ) && $document->isLink() ) {
+				$document->setTitle( $this->titleFromUrl( $document->getUrl() ) );
 			}
 
 			$manager->flush();
@@ -675,6 +715,13 @@ class GroupDocumentsController extends AbstractController {
 		$this->denyAccessUnlessGranted( GroupDocumentVoter::READ, $document );
 
 		$file = $document->getFile();
+
+		// Un document-lien : « le fichier », c'est ce vers quoi il pointe.
+		// L'adresse a été validée au dépôt (http ou https seulement), et le
+		// voteur vient d'être consulté. (#42)
+		if ( !$file && $document->isLink() ) {
+			return $this->redirect( $document->getUrl() );
+		}
 
 		// Un lien vers le fichier d'un document qui n'en a pas : la fiche le
 		// dit, une page 404 ne disait rien. (#42)

@@ -192,6 +192,10 @@ forms:
             placeholder: "Saississez votre contenu ici…"
 
     document:
+        url:
+            label: "Ou un lien"
+            hint: "Pour un document qui vit sur une autre plateforme (Drive, SOCLE, site d’une réserve…) : collez son adresse à la place d’un fichier. Il aura sa fiche, ses étiquettes et ses discussions comme les autres."
+            placeholder: "https://…"
         file:
             label: "Ajouter un fichier"
             hint: "Format JPG ou PNG, DOC, … %s maximum"
@@ -652,6 +656,8 @@ pages:
             added: "Déposé le"
             size: "Taille"
             no_file: "Aucun fichier n’est attaché à ce document."
+            open_link: "Ouvrir le lien"
+            link: "Lien vers"
             file_missing: "Le fichier de ce document est introuvable sur le serveur : il ne peut être ni affiché ni téléchargé pour le moment. Prévenez un administrateur de la plateforme."
             preview:
                 fallback: "Votre navigateur n’affiche pas ce document ?"

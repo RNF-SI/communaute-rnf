@@ -10,6 +10,14 @@
 		{{ form_label(form.filefile, 'forms.document.file.button', {'required': false, 'label_attr': {'class': 'submit-style submit-style__inverted'}}) }}
 		<div class="form_errors">{{ form_errors(form.filefile) }}</div>
 	</div>
+	{# Ou un lien, vers un document qui vit sur une autre plateforme : l'un ou
+	   l'autre. (#42) #}
+	<div class="form-row form-row__field form-row__url">
+		{{ form_label(form.url, 'forms.document.url.label') }}
+		<div class="hint">{{ 'forms.document.url.hint'|trans }}</div>
+		{{ form_widget(form.url, {'attr': {'placeholder': 'forms.document.url.placeholder'}}) }}
+		<div class="form_errors">{{ form_errors(form.url) }}</div>
+	</div>
 	<div class="columns__66-33">
 		<div class="form-row form-row__field">
 			{{ form_label(form.title, 'forms.document.title.label') }}

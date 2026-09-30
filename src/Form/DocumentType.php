@@ -14,10 +14,16 @@ use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\UrlType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\File;
-use Symfony\Component\Validator\Constraints\NotNull;
+use Symfony\Component\Validator\Constraints\Length;
+use Symfony\Component\Validator\Constraints\Url;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class DocumentType extends AbstractType {
 	private $fileManager;
@@ -27,8 +33,11 @@ class DocumentType extends AbstractType {
 	 *
 	 * @param \App\Service\FileManager $fileManager
 	 */
-	public function __construct ( FileManager $fileManager ) {
+	private $translator;
+
+	public function __construct ( FileManager $fileManager, TranslatorInterface $translator ) {
 		$this->fileManager = $fileManager;
+		$this->translator  = $translator;
 	}
 
 	/**
@@ -58,18 +67,27 @@ class DocumentType extends AbstractType {
 				] ),
 		];
 
-		if ( $options[ 'require_file' ] ) {
-			// L'attribut HTML ne suffit pas : il ne tient que dans le
-			// navigateur, et une requête vidée par PHP n'en porte pas trace.
-			$fileConstraints[] = new NotNull( [ 'message' => 'file_required' ] );
-		}
-
+		// Le fichier n'est plus exigé par le navigateur : un lien peut en tenir
+		// lieu (#42). C'est le serveur qui refuse un dépôt sans l'un ni
+		// l'autre — il le faisait déjà, l'attribut HTML ne tenant que dans le
+		// navigateur et une requête vidée par PHP n'en portant pas trace.
 		$builder
 				->add( 'filefile', FileType::class, [
-						'required'    => (bool) $options[ 'require_file' ],
+						'required'    => FALSE,
 						'mapped'      => FALSE,
 						'attr'        => [ 'data-max-size' => $this->fileManager->formatSize( $maxFileSize ) ],
 						'constraints' => $fileConstraints,
+				] )
+				->add( 'url', UrlType::class, [
+						'required'         => FALSE,
+						'default_protocol' => 'https',
+						'attr'             => [ 'maxlength' => 2048 ],
+						'constraints'      => [
+								// Ni `javascript:`, ni `file:`, ni `data:` : le lien
+								// s'ouvre d'un clic depuis la fiche.
+								new Url( [ 'protocols' => [ 'http', 'https' ], 'message' => 'document_url_invalid' ] ),
+								new Length( [ 'max' => 2048 ] ),
+						],
 				] )
 				->add( 'folderTitle', TextType::class, [
 						// Le chemin complet, pour qu'un sous-dossier soit
@@ -106,6 +124,39 @@ class DocumentType extends AbstractType {
 						},
 				] )
 				->add( 'submit', SubmitType::class );
+
+		// Un fichier ou un lien : il faut l'un des deux, et pas les deux au
+		// dépôt. À la modification, déposer un fichier remplace le lien, et
+		// donner un lien remplace le fichier (le contrôleur s'en charge) ;
+		// seul compte qu'il reste quelque chose. (#42)
+		// L'adresse d'avant la soumission : à la modification, on n'interdit
+		// que de vider un lien. Un document hérité sans fichier (il en existe)
+		// doit rester modifiable sans qu'on lui en demande un. (#40)
+		$originalUrl = $document instanceof Document ? $document->getUrl() : NULL;
+
+		$builder->addEventListener( FormEvents::POST_SUBMIT, function ( FormEvent $event ) use ( $options, $originalUrl ) {
+			$form     = $event->getForm();
+			$document = $form->getData();
+			$upload   = $form->get( 'filefile' )->getData();
+			$url      = $document instanceof Document ? $document->getUrl() : NULL;
+
+			if ( $options[ 'require_file' ] && !empty( $upload ) && !empty( $url ) ) {
+				$form->get( 'url' )->addError( new FormError(
+						$this->translator->trans( 'document_file_and_link', [], 'validators' )
+				) );
+
+				return;
+			}
+
+			$existing = $document instanceof Document && !empty( $document->getFile() );
+			$emptied  = !empty( $originalUrl ) && !$existing;
+
+			if ( empty( $upload ) && empty( $url ) && ( $options[ 'require_file' ] || $emptied ) ) {
+				$form->get( 'filefile' )->addError( new FormError(
+						$this->translator->trans( 'file_required', [], 'validators' )
+				) );
+			}
+		} );
 	}
 
 	/**

@@ -33,6 +33,16 @@ class Document {
 	private $file;
 
 	/**
+	 * Un document peut être un lien vers ce qui est hébergé ailleurs, à la
+	 * place d'un fichier déposé ici : il a sa fiche, ses étiquettes, son
+	 * dossier et ses discussions comme les autres. L'un ou l'autre, jamais
+	 * les deux. (#42)
+	 *
+	 * @ORM\Column(type="string", length=2048, nullable=true)
+	 */
+	private $url;
+
+	/**
 	 * @ORM\Column(type="string", length=100, nullable=true)
 	 */
 	private $slug;
@@ -156,6 +166,24 @@ class Document {
 		$this->file = $file;
 
 		return $this;
+	}
+
+	public function getUrl (): ?string {
+		return $this->url;
+	}
+
+	public function setUrl ( ?string $url ): self {
+		$url       = is_string( $url ) ? trim( $url ) : NULL;
+		$this->url = ( $url === '' ) ? NULL : $url;
+
+		return $this;
+	}
+
+	/**
+	 * @return bool un lien plutôt qu'un fichier
+	 */
+	public function isLink (): bool {
+		return empty( $this->file ) && !empty( $this->url );
 	}
 
 	public function getSlug (): ?string {

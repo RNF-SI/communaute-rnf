@@ -1,3 +1,5 @@
 # validators.en.yaml
 filetype_incorrect: "Incorrect file type"
-file_required: "Please choose a file: a document without one would be of no use."
+file_required: "Please choose a file, or give the link to a document hosted elsewhere: an empty document would be of no use."
+document_url_invalid: "This link is not a valid web address (it must start with http:// or https://)."
+document_file_and_link: "Please choose either a file or a link, not both."

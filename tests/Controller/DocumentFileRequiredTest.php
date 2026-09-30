@@ -121,17 +121,21 @@ class DocumentFileRequiredTest extends WebTestCase {
 		return $document;
 	}
 
-	public function testTheDepositFormAsksForAFile () {
+	/**
+	 * Depuis #42, un lien peut tenir lieu de fichier : le champ fichier ne
+	 * peut plus être exigé par le navigateur, sans quoi un dépôt « lien
+	 * seul » ne partirait jamais. L'exigence est tenue par le serveur, ce que
+	 * vérifient les deux épreuves suivantes.
+	 */
+	public function testTheDepositFormAsksForAFileOrALink () {
 		$this->member();
 
 		$crawler = $this->client->request( 'GET', '/groups/test-group/documents/new' );
 
 		$this->assertEquals( 200, $this->client->getResponse()->getStatusCode() );
-		$this->assertEquals(
-				1,
-				$crawler->filter( '#document_filefile[required]' )->count(),
-				'Assert the file is announced as mandatory when depositing'
-		);
+		$this->assertCount( 1, $crawler->filter( '#document_filefile' ) );
+		$this->assertCount( 1, $crawler->filter( '#document_url' ), 'Assert a link is offered instead of a file' );
+		$this->assertCount( 0, $crawler->filter( '#document_filefile[required]' ) );
 	}
 
 	/**

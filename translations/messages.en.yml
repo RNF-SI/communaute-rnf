@@ -184,6 +184,10 @@ forms:
             placeholder: "Enter the content of your article here…"
 
     document:
+        url:
+            label: "Or a link"
+            hint: "For a document that lives on another platform (Drive, SOCLE, a reserve’s website…): paste its address instead of a file. It gets its own sheet, tags and discussions like any other."
+            placeholder: "https://…"
         file:
             label: "Add a file"
             hint: "JPG or PNG format, %s maximum"
@@ -521,6 +525,8 @@ pages:
             added: "Added on"
             size: "Size"
             no_file: "No file is attached to this document."
+            open_link: "Open the link"
+            link: "Link to"
             file_missing: "This document’s file cannot be found on the server: it can neither be shown nor downloaded for now. Please tell a platform administrator."
             preview:
                 fallback: "Your browser cannot display this document?"

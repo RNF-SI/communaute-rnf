@@ -1,3 +1,5 @@
 # validators.fr.yaml
 filetype_incorrect: "Type de fichier incorrect"
-file_required: "Choisissez un fichier : un document sans fichier ne servirait à personne."
+file_required: "Choisissez un fichier, ou indiquez le lien d’un document hébergé ailleurs : un document vide ne servirait à personne."
+document_url_invalid: "Ce lien n’est pas une adresse web valide (elle doit commencer par http:// ou https://)."
+document_file_and_link: "Choisissez un fichier ou un lien, pas les deux."
