@@ -47,9 +47,9 @@ Il n'y a rien à saisir : tout est déjà là.
 
 | Fiche | Ce qui doit s'afficher |
 |---|---|
-| **Rémi Référent** | Fonction, structure et réserves sous le nom ; adresse e-mail + bouton « Contacter » |
+| **Rémi Référent** | Fonction, structure et réserves sous le nom ; une **ligne** de pictos (Écrire, E-mail, Copier) et l'adresse en clair dessous. « Copier » répond « Adresse copiée ! » |
 | **Manon Membre** | Fonction et structure, mais **aucune coordonnée** — avec une phrase qui le dit, pas une zone vide |
-| **Éric Extérieur** | Un téléphone cliquable, **pas d'adresse e-mail** |
+| **Éric Extérieur** | Un seul picto : son numéro, qui lance l'appel — **pas d'adresse e-mail** |
 | **Camille Candidate** | Fiche vide — le cas « profil jamais rempli » |
 
 Puis, sur ton propre profil (**Mes paramètres → Modifier mon profil**) :

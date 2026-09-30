@@ -132,6 +132,8 @@ consulte depuis **Annuaire** ; inutile de s'y connecter.
 | Décocher « Afficher mon adresse », enregistrer, voir sa fiche depuis un autre compte | L'adresse et le bouton « Contacter » ont disparu |
 | La liste des compétences | S'affiche **d'emblée**, sans avoir à taper (#16) ; « plans de gestion (méthode CT88) » est lisible (#35) |
 | Enregistrer une modification de profil | Elle est bien conservée (#10) |
+| Ouvrir la fiche de **Rémi Référent** depuis un autre compte | Une **ligne** de pictos légendés — Écrire, E-mail, Copier —, séparés et alignés, l'adresse en clair dessous ; au survol, chaque picto dit ce qu'il fait. « Copier » affiche « Adresse copiée ! » sans perdre son icône. Sur téléphone, la ligne passe à la ligne sans déborder (#42) |
+| Ouvrir la fiche d'**Éric Extérieur** | Un seul picto, son numéro de téléphone, qui lance l'appel (#42) |
 
 ---
 

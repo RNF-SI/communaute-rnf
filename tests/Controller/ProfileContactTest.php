@@ -243,4 +243,26 @@ class ProfileContactTest extends WebTestCase {
 				'Assert whitespace does not make the profile look like it has a number'
 		);
 	}
+
+	/**
+	 * Issue #42 (6) — les moyens de contact tiennent en une ligne de pictos,
+	 * chacun avec un nom que le survol et les lecteurs d'écran donnent.
+	 */
+	public function testContactMeansFormOneRowOfNamedPictos () {
+		$member = $this->user();
+		$member->setPhone( '01 23 45 67 89' );
+		$this->manager->flush();
+
+		$this->logIn( $this->user() );
+
+		$actions = $this->openProfileOf( $member )->filter( '.user-contact ul.user-contact--actions > li > .contact-action' );
+
+		$this->assertGreaterThanOrEqual( 3, $actions->count(), 'Assert e-mail, copy and phone share one row' );
+
+		$actions->each( function ( $action ) {
+			$this->assertNotSame( '', trim( (string) $action->attr( 'title' ) ), 'Assert every picto says what it does' );
+			$this->assertCount( 1, $action->filter( 'svg[aria-hidden="true"]' ) );
+			$this->assertNotSame( '', trim( $action->filter( '.contact-action--label' )->text() ) );
+		} );
+	}
 }

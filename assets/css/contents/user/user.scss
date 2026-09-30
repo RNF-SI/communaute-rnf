@@ -214,30 +214,72 @@
 			text-align: right;
 		}
 
-		.user--email,
-		.user--phone {
-			margin-top: rem(6px);
+		// Une ligne de pictos légendés, plutôt qu'une colonne de boutons
+		// collés. (#42)
+		.user-contact--actions {
+			display:         flex;
+			flex-wrap:       wrap;
+			justify-content: flex-end;
+			gap:             $space_2;
 
-			font-size:  rem(14px);
-			color:      $color_grey_neutral;
+			margin:          0;
+			padding:         0;
+			list-style:      none;
 
-			a {
-				word-break: break-all;
+			@include small-or-less {
+				justify-content: flex-start;
 			}
 		}
 
-		.user--email-copy {
-			display:         block;
-			margin-left:     auto;
-			padding:         0;
+		.contact-action {
+			display:         flex;
+			flex-direction:  column;
+			align-items:     center;
+			gap:             $space_1;
 
-			border:          none;
-			background:      none;
+			min-width:       rem(64px);
+			padding:         $space_2;
 
-			font-size:       rem(14px);
+			border:          1px solid $color_border;
+			border-radius:   $radius_md;
+			background:      $color_surface;
+
+			font:            inherit;
+			font-size:       rem(13px);
 			color:           $color_action;
-			text-decoration: underline;
+			text-decoration: none;
 			cursor:          pointer;
+
+			@include transition(border-color, background-color);
+
+			svg {
+				width:  rem(22px);
+				height: rem(22px);
+			}
+
+			&:hover {
+				border-color:     $color_action;
+				background-color: $color_info_surface;
+			}
+
+			&.is-copied {
+				border-color: $color_success;
+				color:        $color_success;
+			}
+		}
+
+		.contact-action--label {
+			white-space: nowrap;
+		}
+
+		// L'adresse reste lisible en clair, sous la ligne : on la lit, on la
+		// dicte, on la recopie.
+		.user--email {
+			margin-top: $space_2;
+
+			font-size:  rem(14px);
+			color:      $color_text_muted;
+			word-break: break-all;
 		}
 
 		.user--name {

@@ -372,6 +372,11 @@ pages:
             contact: "Contacter par e-mail"
             email_copy: "Copier l’adresse"
             email_copied: "Adresse copiée !"
+            actions:
+                write_title: "Écrire à %name% par la messagerie de la plateforme"
+                email: "E-mail"
+                copy: "Copier"
+                phone: "Appeler"
             no_contact: "Ce membre n’a pas publié de coordonnées de contact."
             link: "Mon profil"
         is_admin: "Administrateur"

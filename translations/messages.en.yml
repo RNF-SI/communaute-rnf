@@ -259,6 +259,11 @@ pages:
             contact: "Send an email"
             email_copy: "Copy the address"
             email_copied: "Address copied!"
+            actions:
+                write_title: "Write to %name% through the platform’s messaging"
+                email: "E-mail"
+                copy: "Copy"
+                phone: "Call"
             no_contact: "This member has not published any contact details."
             link: "My profile"
         is_admin: "Administrator"
