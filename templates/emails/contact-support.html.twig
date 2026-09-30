@@ -1,0 +1,22 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block title %}{{ subject }}{% endblock %}
+
+{% block preheader %}{{ user.displayName }} — {{ user.email }}{% endblock %}
+
+{% block body %}
+	<h1>{{ subject }}</h1>
+
+	{# Répondre à cet e-mail écrit directement à la personne : c'est le
+	   Reply-To posé par SupportSender. L'adresse est rappelée ici pour les
+	   cas où l'on transfère le message ailleurs. (#45) #}
+	<p>
+		Message envoyé depuis le formulaire de contact de la plateforme par
+		<strong>{{ user.displayName }}</strong> (<a href="mailto:{{ user.email }}">{{ user.email }}</a>).
+		Répondre à cet e-mail lui répond directement.
+	</p>
+
+	<blockquote>{{ body|nl2br }}</blockquote>
+
+	{% include 'components/email-button.html.twig' with {'url': profile, 'label': 'Voir sa fiche membre'} %}
+{% endblock %}

@@ -7,6 +7,10 @@ parameters:
   plateform:
     name: "%env(string:PLATEFORM_NAME)%"
     from: "%env(string:POSTMARK_SENDER)%"
+    # Là où aboutit le formulaire de contact (#45). Dans `plateform` parce que
+    # le pied de page en a besoin pour ne pas afficher un lien vers une page
+    # qui répondrait 404 : les gabarits lisent déjà ce paramètre.
+    support: "%env(string:SUPPORT_EMAIL)%"
     analytics: "%env(bool:ANALYTICS_ENABLED)%"
   postmark:
     server_token: "%env(string:POSTMARK_SERVER_TOKEN)%"

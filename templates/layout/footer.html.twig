@@ -19,5 +19,17 @@
 
 			</ul>
 		</div>
+
+		{# Écrire au support sans quitter la plateforme (#45). En dur ici, et
+		   non dans les colonnes tenues depuis l'administration :
+		   config/platform/config.yaml n'est pas versionné, un lien ajouté au
+		   défaut n'apparaîtrait sur aucune installation déjà en place. Caché
+		   pour un visiteur — la page est réservée aux membres — et caché sans
+		   adresse de destination, où elle répondrait 404. #}
+		{% if app.user and plateform.support is not empty %}
+			<div class="footer--contact">
+				<a href="{{ path('contact') }}">{{ 'pages.contact.link'|trans }}</a>
+			</div>
+		{% endif %}
 	</div>
 </footer>

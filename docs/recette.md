@@ -368,6 +368,19 @@ public) et « **Note de cadrage du bureau** » (groupe privé).
 
 ---
 
+## 7 bis. Écrire au support (#45)
+
+| À faire | Attendu |
+|---|---|
+| Déconnecté, regarder le pied de page | **Pas** de lien « Nous contacter » : la page est réservée aux membres |
+| Connecté, pied de page → **Nous contacter** | Le formulaire, avec un rappel de l'adresse sous laquelle on écrit — aucun champ « votre e-mail » à remplir |
+| Envoyer sans rien saisir | Le message n'est pas envoyé, la page dit ce qui manque |
+| Saisir un objet et un message, envoyer | « Votre message est parti à l'équipe RNF », et l'e-mail arrive à `SUPPORT_EMAIL` |
+| Dans l'e-mail reçu, cliquer **Répondre** | La réponse s'adresse au membre qui a écrit, pas à la boîte d'envoi de la plateforme |
+| Vider `SUPPORT_EMAIL`, vider le cache, recharger | Le lien disparaît du pied de page, `/contact` répond 404, et `app:preflight` le signale |
+
+---
+
 ## 8. Si un jeton GeoNature est configuré
 
 ```bash

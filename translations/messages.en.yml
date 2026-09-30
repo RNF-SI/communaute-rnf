@@ -135,6 +135,16 @@ forms:
             label: "Themes"
             hint: "What this group is about. Pick from the list kept by the administrators; a group may cover several themes. The commission says who the group answers to, the theme says what it deals with."
 
+    contact:
+        subject:
+            label: "Subject"
+            placeholder: "For instance: I cannot upload a document"
+        message:
+            label: "Message"
+            hint: "Describe what you are trying to do and what happens. If a page of the platform is at fault, paste its address."
+            placeholder: "Your message…"
+        submit: "Send to support"
+
     administration:
         menus:
             footbar_platforms:
@@ -212,6 +222,12 @@ forms:
             hint: "Pick from the list kept by the administrators. A document may carry several."
 
 pages:
+    contact:
+        title: "Contact us"
+        link: "Contact us"
+        introduction: "A question about the platform, a problem, an idea? Write to the RNF team: your message is emailed to them, and their answer lands in your inbox."
+        identity: "You are writing as %name% (%email%): that is where the answer will come back."
+        address: "You may also write directly to"
     user:
         waiting: "%count% item(s) waiting"
         login:
@@ -821,6 +837,9 @@ emails:
         settings: "You get this e-mail straight away because you asked for it. To switch to a summary, see your"
 
 messages:
+    contact:
+        sent: "Your message is on its way to the RNF team. Thank you."
+        failed: "Your message could not be sent. Try again in a moment, or write directly to the support address."
     messaging:
         incomplete: "Pick at least one recipient and write your message."
         empty: "Your message is empty."

@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ 'pages.contact.title'|trans }} | {{ plateform.name }}{% endblock %}
+
+{% block main %}
+	<section class="main main__contact">
+		<div class="main--content content-container">
+			<div class="thin">
+				{% include 'components/app-flashes.html.twig' %}
+
+				<section class="contact-form panel">
+					<h1 class="h2">{{ 'pages.contact.title'|trans }}</h1>
+
+					<p class="hint">{{ 'pages.contact.introduction'|trans }}</p>
+
+					{# Qui écrit n'est pas saisi : c'est le compte. Le dire évite
+					   de chercher un champ « votre adresse » qui n'existe pas. #}
+					<p class="hint contact-form--identity">
+						{{ 'pages.contact.identity'|trans({'%name%': user.displayName, '%email%': user.email}) }}
+					</p>
+
+					{% include 'forms/contact-form.html.twig' with {'form': form} %}
+
+					<p class="hint contact-form--address">
+						{{ 'pages.contact.address'|trans }}
+						<a href="mailto:{{ support }}">{{ support }}</a>
+					</p>
+				</section>
+			</div>
+		</div>
+	</section>
+{% endblock %}

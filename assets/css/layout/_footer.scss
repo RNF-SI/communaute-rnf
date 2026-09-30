@@ -76,6 +76,31 @@
 	}
 }
 
+// Le lien vers le formulaire de contact (#45) : une ligne à lui sous les
+// colonnes, et non une cinquième colonne — il n'a pas de titre, il ne vient
+// pas de l'administration, et il disparaît pour un visiteur non connecté.
+// La largeur pleine le fait passer à la ligne dans la grille en flex.
+.footer--contact {
+	width:       100%;
+	margin-top:  rem(24px);
+	padding-top: rem(16px);
+	border-top:  1px solid $color_border;
+
+	a {
+		@include font_default_bold;
+
+		color:           $color_action;
+		text-decoration: none;
+
+		@include transition(color);
+
+		&:focus,
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+}
+
 .project-sponsor-logo {
 	margin-top:  rem(32px);
 

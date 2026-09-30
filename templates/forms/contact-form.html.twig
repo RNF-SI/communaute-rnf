@@ -1,0 +1,20 @@
+{{ form_start(form) }}
+<div class="form_errors">{{ form_errors(form) }}</div>
+<div class="form-row__mandatory">{{ 'forms.mandatory'|trans }}</div>
+<div class="form-rows">
+	<div class="form-row form-row__field">
+		{{ form_label(form.subject, 'forms.contact.subject.label') }}
+		{{ form_widget(form.subject, {'attr': {'placeholder': 'forms.contact.subject.placeholder'}}) }}
+		<div class="form_errors">{{ form_errors(form.subject) }}</div>
+	</div>
+	<div class="form-row form-row__field">
+		{{ form_label(form.message, 'forms.contact.message.label') }}
+		<div class="hint">{{ 'forms.contact.message.hint'|trans }}</div>
+		{{ form_widget(form.message, {'attr': {'placeholder': 'forms.contact.message.placeholder'}}) }}
+		<div class="form_errors">{{ form_errors(form.message) }}</div>
+	</div>
+</div>
+<div class="form-row form-row__submit">
+	{{ form_widget(form.submit, {'label': 'forms.contact.submit'}) }}
+</div>
+{{ form_end(form) }}

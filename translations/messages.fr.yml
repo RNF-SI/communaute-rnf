@@ -214,6 +214,16 @@ forms:
             label: "Étiquettes"
             hint: "Choisissez dans la liste tenue par les administrateurs. Un document peut en porter plusieurs."
 
+    contact:
+        subject:
+            label: "Objet"
+            placeholder: "Exemple : je n’arrive pas à déposer un document"
+        message:
+            label: "Message"
+            hint: "Décrivez ce que vous cherchez à faire et ce qui se passe. Si c’est une page de la plateforme qui pose problème, recopiez son adresse."
+            placeholder: "Votre message…"
+        submit: "Envoyer au support"
+
     administration:
         submit: "Sauvegarder les modifications"
         document_tags:
@@ -322,6 +332,12 @@ forms:
             community: "Admin communauté"
 
 pages:
+    contact:
+        title: "Nous contacter"
+        link: "Nous contacter"
+        introduction: "Une question sur la plateforme, un problème, une idée ? Écrivez à l’équipe RNF : votre message lui part par e-mail, et la réponse arrive dans votre boîte."
+        identity: "Vous écrivez en tant que %name% (%email%) : c’est à cette adresse que la réponse reviendra."
+        address: "Vous pouvez aussi écrire directement à"
     user:
         # Ce que la pastille de l’avatar annonce à un lecteur d’écran : elle
         # additionne les conversations et les notifications en attente.
@@ -1007,6 +1023,9 @@ emails:
         settings: "Vous recevez cet e-mail tout de suite parce que vous l’avez demandé. Pour passer à un résumé, voyez vos"
 
 messages:
+    contact:
+        sent: "Votre message est parti à l’équipe RNF. Merci."
+        failed: "Votre message n’a pas pu être envoyé. Réessayez dans un moment, ou écrivez directement à l’adresse du support."
     messaging:
         incomplete: "Choisissez au moins un destinataire et écrivez votre message."
         empty: "Votre message est vide."

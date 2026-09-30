@@ -666,6 +666,27 @@ domain (SPF / DKIM / Return-Path / DMARC, see `MailDeliverability`): a token
 being present says nothing about whether the domain lets Postmark send in its
 name. See `docs/delivrabilite-emails.md`.
 
+### Écrire au support (#45)
+
+`/contact` (`ContactController`, `SupportSender`) envoie à `SUPPORT_EMAIL` ce
+qu'un membre écrit. Trois choses tiennent ensemble et ne s'échangent pas :
+**l'expéditeur est la plateforme** — Postmark ne signe qu'un domaine à lui,
+partir de l'adresse du membre ferait refuser le message ou le classerait en
+indésirable —, **le `Reply-To` porte son adresse**, sans quoi répondre
+obligerait à recopier une adresse lue dans le corps du message, et **une
+adresse de destination vide éteint tout** : la route répond 404, le lien du
+pied de page disparaît, `app:preflight` le signale. Un formulaire sans
+destinataire accepterait des messages pour les jeter.
+
+Réservé aux membres connectés : qui écrit vient du compte, ce qui dispense à la
+fois de le saisir et de protéger la page des automates. Le lien vit **en dur
+dans `templates/layout/footer.html.twig`**, et non dans les colonnes tenues
+depuis l'administration — `config/platform/config.yaml` n'est pas versionné, un
+lien ajouté au défaut n'apparaîtrait sur aucune installation en place.
+
+`SupportSender::send()` **lit le nombre rendu** par le transport : zéro, rien
+n'est parti et la page ne dit pas « envoyé ». Même leçon que `ContentSender`.
+
 ### Frontend (`assets/`)
 - Webpack Encore, SCSS (`assets/css/`), ES6 modules (`assets/js/`).
 - WYSIWYG is **Quill** (`assets/js/ui/wysiwyg.js`, `_quill-editor.scss`) — not CKEditor.

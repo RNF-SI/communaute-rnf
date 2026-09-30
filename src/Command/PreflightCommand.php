@@ -198,6 +198,18 @@ class PreflightCommand extends Command {
 				FALSE,
 		];
 
+		// Vide, le formulaire de contact n'existe pas : la route répond 404 et
+		// le lien du pied de page disparaît. Rien n'est perdu, mais personne
+		// ne peut plus écrire au support depuis la plateforme. (#45)
+		$checks[] = [
+				'SUPPORT_EMAIL',
+				!empty( $platform[ 'support' ] ),
+				empty( $platform[ 'support' ] )
+						? 'vide — pas de formulaire de contact'
+						: $platform[ 'support' ],
+				FALSE,
+		];
+
 		$checks[] = [
 				'Configuration plateforme',
 				file_exists( $this->parameters->get( 'kernel.project_dir' ) . '/config/platform/config.yaml' ),

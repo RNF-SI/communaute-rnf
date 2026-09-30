@@ -138,6 +138,11 @@ POSTMARK_INBOUND_KEY=
 POSTMARK_LIST_DOMAIN=list.communaute-rnf.fr
 POSTMARK_BULK_TOKEN=
 
+# Adresse qui reçoit le formulaire de contact, /contact (#45). Le message part
+# depuis POSTMARK_SENDER et porte en Reply-To l'adresse du membre qui écrit.
+# Vide, la page n'existe pas et son lien disparaît du pied de page.
+SUPPORT_EMAIL=support@reserves-naturelles.org
+
 # Sécurité
 SECURE_SCHEME=https  # Force HTTPS en production
 TRUSTED_PROXIES=127.0.0.1  # Si derrière un proxy
