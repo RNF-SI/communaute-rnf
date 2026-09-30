@@ -182,6 +182,16 @@ services:
           index: "groups.index"
           class: "Usergroup"
 
+  # Les fixtures déposent de vrais fichiers depuis #42 : le purgeur par défaut
+  # bute alors sur les clés étrangères des fichiers au rechargement suivant.
+  # On redéfinit le service du bundle sous son propre identifiant : un second
+  # service à l'alias « default » serait écrasé par le sien.
+  doctrine.fixtures.purger.orm_purger_factory:
+    class: App\DataFixtures\ForeignKeySafePurgerFactory
+    autowire: false
+    tags:
+      - { name: 'doctrine.fixtures.purger_factory', alias: 'default' }
+
   App\DataFixtures\AppFixtures:
     arguments:
       $testAccountsEmail: "%env(string:TEST_ACCOUNTS_EMAIL)%"

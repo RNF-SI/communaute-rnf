@@ -257,6 +257,31 @@ class DocumentPreviewTest extends WebTestCase {
 		$this->assertStringContainsString( 'introuvable sur le serveur', $crawler->filter( 'body' )->text() );
 	}
 
+	/**
+	 * Un lien vers le fichier d'un document qui n'en a pas ramène sur la
+	 * fiche, qui le dit — au lieu d'une page 404. (#42)
+	 */
+	public function testALinkToAMissingFileLeadsToTheSheet () {
+		$user = $this->member();
+
+		$document = new Document();
+		$document->setTitle( 'Sans fichier' );
+		$document->setSlug( 'sans-fichier-' . uniqid() );
+		$document->setUsergroup( $this->group );
+		$document->setUser( $user );
+		$document->setCreatedAt( new DateTime() );
+		$this->manager->persist( $document );
+		$this->manager->flush();
+
+		$this->client->request( 'GET', $this->file( $document ) );
+
+		$this->assertTrue( $this->client->getResponse()->isRedirect( $this->sheet( $document ) ) );
+
+		$crawler = $this->client->followRedirect();
+
+		$this->assertStringContainsString( 'pas de fichier', $crawler->filter( 'body' )->text() );
+	}
+
 	/**************************************************
 	 * CE QUI NE S'AFFICHE JAMAIS
 	 **************************************************/

@@ -1064,6 +1064,7 @@ messages:
         article_deleted: "L’article a été supprimé"
 
     document:
+        no_file: "Ce document n’a pas de fichier à afficher ni à télécharger."
         file_missing: "Le fichier de ce document est introuvable sur le serveur. Ce n’est pas de votre fait : prévenez un administrateur de la plateforme."
         document_created: "Le document a été ajouté"
         document_updated: "Le document a été mis à jour"

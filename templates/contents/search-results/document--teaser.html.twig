@@ -1,5 +1,5 @@
 {% set classes = ['result', 'result__teaser'] %}
-<a class="{{ classes|join(' ') }}"  href="{{ path('group_document_get', {'groupSlug': document.group_slug, 'documentId': document.id}) }}">
+<a class="{{ classes|join(' ') }}"  href="{{ path('group_document_index', {'groupSlug': document.group_slug, 'documentId': document.id}) }}">
 	<div>
 		<div class="result-type">{{ 'search.results.document'|trans }}</div>
 		<div class="result-title">{{ document.title|raw }}</div>

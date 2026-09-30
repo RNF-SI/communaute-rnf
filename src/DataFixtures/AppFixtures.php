@@ -12,6 +12,7 @@ use App\Entity\DiscussionMessage;
 use App\Entity\Document;
 use App\Entity\DocumentFolder;
 use App\Entity\DocumentTag;
+use App\Entity\File;
 use App\Entity\LogEvent;
 use App\Entity\MessageReport;
 use App\Entity\Notification;
@@ -23,6 +24,7 @@ use App\Entity\Usergroup;
 use App\Entity\UsergroupMembership;
 use App\Notification\NotificationRhythm;
 use App\Service\SlugGenerator;
+use App\Service\UsergroupFileManager;
 use Ramsey\Uuid\Uuid;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
@@ -156,10 +158,18 @@ class AppFixtures extends Fixture {
 	private $communitySlug;
 	private $environment;
 	private $allowed;
+	private $groupFiles;
+
+	/**
+	 * Rang du prochain fichier d'exemple : fait tourner les formats d'un
+	 * document au suivant.
+	 */
+	private $sampleRank = 0;
 
 	public function __construct (
 			UserPasswordEncoderInterface $passwordEncoder,
 			SlugGenerator $slugGenerator,
+			UsergroupFileManager $groupFiles,
 			string $testAccountsEmail = '',
 			string $communitySlug = 'communaute',
 			string $environment = 'dev',
@@ -167,6 +177,7 @@ class AppFixtures extends Fixture {
 	) {
 		$this->passwordEncoder   = $passwordEncoder;
 		$this->slugGenerator     = $slugGenerator;
+		$this->groupFiles        = $groupFiles;
 		$this->testAccountsEmail = $testAccountsEmail;
 		$this->communitySlug     = $communitySlug;
 		$this->environment       = $environment;
@@ -631,6 +642,8 @@ class AppFixtures extends Fixture {
 					$document->setDescription( $reference[ 'description' ] );
 				}
 
+				$this->attachSampleFile( $manager, $document, $reference[ 'description' ] );
+
 				$manager->persist( $document );
 			}
 
@@ -816,6 +829,8 @@ class AppFixtures extends Fixture {
 			if ( !empty( $documentTags ) && ( $rank % 2 === 0 ) ) {
 				$document->addTag( $documentTags[ $rank % count( $documentTags ) ] );
 			}
+
+			$this->attachSampleFile( $manager, $document, $reference[ 'description' ] );
 
 			$manager->persist( $document );
 		}
@@ -1248,6 +1263,8 @@ class AppFixtures extends Fixture {
 			}
 		}
 
+		$this->attachSampleFile( $manager, $classe, 'Compte rendu de la réunion de mars.', 'docx' );
+
 		$manager->persist( $classe );
 
 		$document = new Document();
@@ -1260,7 +1277,9 @@ class AppFixtures extends Fixture {
 
 		// Déposé par un membre ordinaire, et sans étiquette : la fiche que
 		// seul son déposant modifie (#33), et le document que le filtre par
-		// étiquette laisse de côté (#26).
+		// étiquette laisse de côté (#26). Un PDF : l'aperçu dans la page.
+		$this->attachSampleFile( $manager, $document, 'Un document décrit, pour éprouver l’affichage et la recherche.', 'pdf' );
+
 		$manager->persist( $document );
 
 		$manager->flush();
@@ -1600,9 +1619,64 @@ class AppFixtures extends Fixture {
 		$document->setUser( $author );
 		$document->setCreatedAt( new \DateTime( '-15 days' ) );
 
+		$this->attachSampleFile( $manager, $document, $description );
+
 		$manager->persist( $document );
 
 		return $document;
+	}
+
+	/**
+	 * Donne au document un vrai fichier, écrit dans le stockage du groupe.
+	 * (#42)
+	 *
+	 * Un document sans fichier est un état que la plateforme ne produit pas —
+	 * le formulaire l'exige —, et la préproduction, qui tourne sur ces
+	 * données, n'avait rien à consulter ni à télécharger : la recette l'a
+	 * rapporté comme une panne. Les formats tournent pour que l'aperçu PDF,
+	 * l'aperçu image et l'édition en ligne aient chacun de quoi s'éprouver.
+	 *
+	 * Le chemin porte l'identifiant du groupe, que la purge ne remet pas à
+	 * zéro : chaque rechargement laisse les fichiers du précédent, quelques
+	 * kilo-octets en tout.
+	 *
+	 * @param \Doctrine\Persistence\ObjectManager $manager
+	 * @param \App\Entity\Document                $document
+	 * @param string|null                         $body
+	 * @param string|null                         $kind un format de SampleFiles::KINDS, sinon le suivant
+	 */
+	private function attachSampleFile ( ObjectManager $manager, Document $document, $body = NULL, $kind = NULL ) {
+		$group = $document->getUsergroup();
+
+		// Le chemin du fichier porte l'identifiant du groupe.
+		if ( !$group->getId() ) {
+			$manager->flush();
+		}
+
+		list( $name, $type, $content ) = SampleFiles::make(
+				$kind ?: SampleFiles::kindFor( $this->sampleRank++ ),
+				$document->getTitle(),
+				(string) $body
+		);
+
+		$path = $this->groupFiles->writeFile( $name, $group, $content );
+
+		if ( !$path ) {
+			return;
+		}
+
+		$file = new File();
+		$file->setFilesystem( File::USERGROUP_FILES );
+		$file->setUser( $document->getUser() );
+		$file->setUsergroup( $group );
+		$file->setName( $name );
+		$file->setPath( $path );
+		$file->setType( $type );
+		$file->setSize( strlen( $content ) );
+
+		$manager->persist( $file );
+
+		$document->setFile( $file );
 	}
 
 	/**

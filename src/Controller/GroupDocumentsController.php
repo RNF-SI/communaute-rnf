@@ -663,8 +663,16 @@ class GroupDocumentsController extends AbstractController {
 		$this->denyAccessUnlessGranted( GroupDocumentVoter::READ, $document );
 
 		$file = $document->getFile();
+
+		// Un lien vers le fichier d'un document qui n'en a pas : la fiche le
+		// dit, une page 404 ne disait rien. (#42)
 		if ( !$file ) {
-			throw $this->createNotFoundException( 'The document file does not exist' );
+			$this->addFlash( 'error', 'messages.document.no_file' );
+
+			return $this->redirectToRoute( 'group_document_index', [
+					'groupSlug'  => $document->getUsergroup()->getSlug(),
+					'documentId' => $document->getId(),
+			] );
 		}
 
 		// Le lien vient d'une liste, d'une recherche, d'une vignette : plutôt
@@ -681,7 +689,7 @@ class GroupDocumentsController extends AbstractController {
 			$this->addFlash( 'error', 'messages.document.file_missing' );
 
 			return $this->redirectToRoute( 'group_document_index', [
-					'groupSlug'  => $group->getSlug(),
+					'groupSlug'  => $document->getUsergroup()->getSlug(),
 					'documentId' => $document->getId(),
 			] );
 		}

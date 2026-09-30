@@ -875,6 +875,7 @@ messages:
         article_deleted: "The article has been deleted"
 
     document:
+        no_file: "This document has no file to show or download."
         file_missing: "This document’s file cannot be found on the server. It is not your doing: please tell a platform administrator."
         document_created: "The document has been added"
         document_updated: "The document has been updated"

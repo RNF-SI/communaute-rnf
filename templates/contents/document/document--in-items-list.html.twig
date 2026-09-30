@@ -1,7 +1,6 @@
 {% set classes = ['document', 'document__in-items-list'] %}
 <a class="{{ classes|join(' ') }}" data-type="{{ document.file ? document.file.type|default('') : '' }}"
-   href="{{ path('group_document_get', {'groupSlug': document.usergroup.slug, 'documentId': document.id}) }}"
-   title="{{ document.title|escape('html_attr') }}"
-   target="_blank">
+   href="{{ path('group_document_index', {'groupSlug': document.usergroup.slug, 'documentId': document.id}) }}"
+   title="{{ document.title|escape('html_attr') }}">
 	<span>{{ document.title }}</span>
 </a>

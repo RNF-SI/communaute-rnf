@@ -44,9 +44,12 @@ chargement que les adresses des six comptes sont écrites : les changer après
 demande de tout recharger. Sans elle, les comptes repartent en `@example.org`,
 les comptes GeoNature de test ne les retrouvent plus, et aucun e-mail ne part.
 
-⚠️ Si la base contient une copie de production, la purge des fixtures échoue sur
-les clés étrangères des fichiers, qu'elles ne gèrent pas. Il faut alors repartir
-d'un schéma vide :
+La purge suspend les contrôles de clés étrangères le temps de vider les tables
+(`ForeignKeySafePurger`) : fichiers, groupes et comptes se désignent les uns
+les autres, et aucun ordre de suppression ne les satisfait tous. Elle échouait
+sur une copie de production, puis, dès que les fixtures ont déposé leurs
+propres fichiers, sur le **deuxième** chargement de n'importe quelle base.
+Si elle venait malgré tout à échouer, repartir d'un schéma vide :
 
 ```bash
 php bin/console doctrine:database:drop --force
@@ -107,9 +110,18 @@ décrit.
 Leur composition ne change pas d'un chargement à l'autre : c'est là qu'il faut
 faire les essais à la main, plutôt que dans un groupe généré au hasard.
 
-Les documents n'ont pas de fichier attaché : en écrire passerait par le stockage
-Gaufrette, ce qui n'est pas le rôle de fixtures. Titres et descriptions
-suffisent à éprouver les listes, la recherche et les filtres.
+Chaque document a un **vrai fichier**, écrit dans le stockage du groupe
+(`var/files/groups/group-<id>/`) et fabriqué à la volée (`SampleFiles`) : un
+PDF pour l'aperçu dans la page, une image, un `.docx` et un `.csv` pour
+l'édition en ligne, un `.txt`. Dans `groupe-de-test`, « Document de test » est
+un PDF et « Compte rendu de mars » un `.docx`. Ce n'était pas le cas avant #42 :
+la recette sur la préproduction rapportait qu'aucun document ne s'ouvrait, et
+c'était vrai — il n'y avait rien à ouvrir.
+
+La purge ne remet pas les identifiants à zéro : chaque rechargement laisse les
+fichiers du précédent, quelques kilo-octets. `rm -rf var/files/groups/group-*`
+avant de recharger, si on tient à un disque propre — **jamais** sur une
+installation qui porte de vrais documents.
 
 ## Travailler sur une copie des données de production
 

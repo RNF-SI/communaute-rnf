@@ -83,7 +83,10 @@ class UrlManager {
 			return '';
 		}
 
-		return $this->urlGenerator->generate( 'group_document_get', [
+		// La fiche, pas le fichier : c'est l'adresse d'un document depuis #32,
+		// et un document sans fichier y dit ce qu'il en est au lieu d'une
+		// erreur. (#42)
+		return $this->urlGenerator->generate( 'group_document_index', [
 				'groupSlug'  => $document->getUsergroup()->getSlug(),
 				'documentId' => $id,
 		] );
