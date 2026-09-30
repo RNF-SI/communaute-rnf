@@ -2,6 +2,9 @@
 import Quill from 'quill';
 import attachMentions from './mentions';
 import { TOOLBAR, FORMATS } from './wysiwyg-config';
+import { registerDivider, insertDivider, labelDividerButton } from './wysiwyg-divider';
+
+registerDivider(Quill);
 
 // WYSIWYG Module
 document.addEventListener('DOMContentLoaded', function() {
@@ -26,7 +29,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const quillOptions = {
                 theme: 'snow',
                 modules: {
-                    toolbar: TOOLBAR,
+                    toolbar: {
+                        container: TOOLBAR,
+                        handlers: {
+                            divider: function () {
+                                insertDivider(this.quill);
+                            }
+                        }
+                    },
                     history: {
                         delay: 1000,
                         maxStack: 50,
@@ -39,6 +49,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Initialiser Quill
             const quill = new Quill(quillContainer, quillOptions);
             
+            labelDividerButton(quill.getModule('toolbar').container, document.body.dataset.wysiwygDivider);
+
             // Ajouter fonctionnalité de redimensionnement d'images custom
             addImageResizing(quill);
 

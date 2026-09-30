@@ -1,5 +1,7 @@
 # translations/messages.fr.yaml
 ui:
+    wysiwyg:
+        divider: "Insérer un séparateur"
     home: "Accueil"
     skip_to_content: "Aller au contenu"
     menu: "Menu"

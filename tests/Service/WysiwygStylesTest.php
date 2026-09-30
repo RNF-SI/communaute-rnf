@@ -60,4 +60,13 @@ class WysiwygStylesTest extends TestCase {
 				'bloc de code'       => [ '.ql-code-block' ],
 		];
 	}
+
+	/**
+	 * Issue #42 (3) — le séparateur inséré dans l'éditeur doit rester visible
+	 * une fois la page publiée : un `<hr>` sans style disparaît dans la
+	 * remise à zéro.
+	 */
+	public function testTheDividerIsStyled () {
+		$this->assertRegExp( '/\bhr\s*\{[^}]*border-top/s', $this->stylesheet() );
+	}
 }

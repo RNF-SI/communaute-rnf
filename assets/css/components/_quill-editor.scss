@@ -1,6 +1,13 @@
 // Styles personnalisés pour l'éditeur Quill
 .quill-container .ql-editor {
 	// Synchroniser l'apparence de l'éditeur avec le rendu final
+
+	// Séparateur (#42) : le même trait que sur la page publiée.
+	hr {
+		border: 0;
+		border-top: 1px solid $color_border_strong;
+		margin: 2em 0;
+	}
 	
 	// Headers
 	h1 {

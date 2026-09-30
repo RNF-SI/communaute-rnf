@@ -18,7 +18,7 @@ export const TOOLBAR = [
 	[ 'bold', 'italic', 'underline' ],
 	[ { list: 'ordered' }, { list: 'bullet' } ],
 	[ { indent: '-1' }, { indent: '+1' } ],
-	[ 'blockquote' ],
+	[ 'blockquote', 'divider' ],
 	[ { color: [] }, { background: [] } ],
 	[ { align: [] } ],
 	[ 'link', 'image', 'video' ],
@@ -41,6 +41,9 @@ export const FORMATS = [
 	'script', 'indent', 'direction', 'size',
 	'color', 'background', 'align',
 	'link', 'image', 'video',
+	// Le séparateur (#42), un bloc `<hr>` appris à Quill dans
+	// wysiwyg-divider.js.
+	'divider',
 ];
 
 /**

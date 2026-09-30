@@ -95,6 +95,13 @@
 		font-size: 0.9em;
 	}
 
+	// Séparateur (#42)
+	hr {
+		border: 0;
+		border-top: 1px solid $color_border_strong;
+		margin: 2em 0;
+	}
+
 	// Citations
 	blockquote, .ql-blockquote {
 		border-left: 4px solid $color_border_strong;

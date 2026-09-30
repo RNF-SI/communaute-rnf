@@ -1,5 +1,7 @@
 # translations/messages.en.yaml
 ui:
+    wysiwyg:
+        divider: "Insert a divider"
     skip_to_content: "Skip to content"
     home: "Home"
     menu: "Menu"
