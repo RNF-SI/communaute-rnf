@@ -295,6 +295,37 @@ les réenregistrer reviendrait à les convertir sous les pieds de qui les a
 déposés. La page le dit avant d'ouvrir l'éditeur, plutôt que de le laisser
 découvrir dedans.
 
+### Recette du 28/09 (#42) — ce qu'il faut savoir en relisant
+
+- **Un document est un fichier OU un lien** (`Document::$url`, `isLink()`).
+  L'un ou l'autre au dépôt, jamais les deux ; à la modification l'un remplace
+  l'autre, l'ancien fichier part après l'enregistrement (#41). Seules les
+  adresses http(s) passent. Tout code qui lit `getFile()->…` sur un document
+  doit prévoir `NULL` : documents-liens, et documents hérités sans fichier.
+- **Un fichier peut manquer au stockage** : `FileManager::isAvailable()` ouvre
+  le flux (Gaufrette lève, il ne rend pas FALSE). La fiche le dit, la route
+  du fichier ramène sur la fiche, `app:preflight` compte les manquants.
+- **Les fixtures déposent de vrais fichiers** (`DataFixtures\SampleFiles`) —
+  la préproduction tourne sur elles. Du coup le purgeur par défaut butait sur
+  les clés étrangères des fichiers au rechargement suivant :
+  `ForeignKeySafePurger` suspend les contrôles le temps de la purge. Il
+  **remplace** le service du bundle sous son propre identifiant
+  (`config/services.yaml`) : un second service à l'alias `default` serait
+  écrasé par celui du bundle.
+- **Une page s'archive** (`Page::$archivedAt`) : lisible à son adresse, hors
+  des listes (`Usergroup::getActivePages()`), hors des suggestions de tags —
+  mais un tag déjà écrit la retrouve : le filtre est dans
+  `TagParser::proposableFor()`, pas dans `queryFor()`.
+- **Le type d'un groupe se lit dans son nom** (`GroupKind` : premier mot,
+  Commission / Pôle / Groupe·GT / Atelier). Aucun champ ne le porte ;
+  renommer un groupe change son type.
+- **Les outils du champ de message** (« Insérer un lien », emojis) vivent dans
+  `components/composer-tools.html.twig` ; le dock le clone depuis un
+  `<template>` en remplaçant `__field__`.
+- **`config/platform/config.yaml` n'est pas versionné** : une section ajoutée
+  au défaut n'existe pas sur les installations en place. `AppTextManager`
+  reprend du défaut toute section absente.
+
 ### Guided tour (#39)
 `GuidedTour` declares the ordered steps; their wording lives in
 `pages.tour.steps.*` of the translation files, so a formulation changes without
