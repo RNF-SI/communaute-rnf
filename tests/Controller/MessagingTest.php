@@ -12,6 +12,7 @@ use App\Entity\Usergroup;
 use App\Entity\UsergroupMembership;
 use App\Notification\NotificationCategory;
 use App\Notification\NotificationLevel;
+use App\Service\ConversationManager;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -249,20 +250,22 @@ class MessagingTest extends WebTestCase {
 	}
 
 	/**
-	 * Issue #46 — un fil s'ouvre sur son dernier message, et un lien déplie
-	 * le reste.
+	 * Issue #46 — un fil s'ouvre sur ses derniers messages, dans une zone qui
+	 * défile ; un lien en tête déplie le reste.
 	 */
-	public function testAThreadOpensOnItsLastMessage () {
+	public function testAThreadOpensOnItsLastMessages () {
 		$author    = $this->user( 'Jeanne Réserve' );
 		$recipient = $this->user( 'Paul Martin' );
 
 		$this->logIn( $author );
-		$conversation = $this->threeMessages( $author, $recipient );
+		$conversation = $this->longThread( $author, $recipient, 22 );
 
 		$crawler = $this->client->request( 'GET', '/messages?conversation=' . $conversation->getId() );
+		$shown   = $crawler->filter( '.thread[data-thread-scroll] .message' );
 
-		$this->assertCount( 1, $crawler->filter( '.thread .message' ) );
-		$this->assertStringContainsString( 'Troisième', $crawler->filter( '.thread .message' )->text() );
+		$this->assertCount( 20, $shown );
+		$this->assertStringContainsString( 'Message 3', $shown->first()->text() );
+		$this->assertStringContainsString( 'Message 22', $shown->last()->text() );
 
 		$link = $crawler->filter( '.thread--earlier a' );
 
@@ -272,22 +275,20 @@ class MessagingTest extends WebTestCase {
 
 		$crawler = $this->client->click( $link->link() );
 
-		$this->assertCount( 3, $crawler->filter( '.thread .message' ) );
+		$this->assertCount( 22, $crawler->filter( '.thread .message' ) );
 		$this->assertCount( 0, $crawler->filter( '.thread--earlier' ) );
 	}
 
 	/**
-	 * Trois messages reçus en son absence ne se résument pas au dernier : le
-	 * fil s'ouvre au premier non lu.
+	 * Un fil court tient entier : pas de lien qui ne déplierait rien.
 	 */
-	public function testAThreadOpensOnTheFirstUnreadMessage () {
+	public function testAShortThreadHasNothingToUnfold () {
 		$author    = $this->user( 'Jeanne Réserve' );
 		$recipient = $this->user( 'Paul Martin' );
 
 		$this->logIn( $author );
-		$conversation = $this->threeMessages( $author, $recipient );
+		$conversation = $this->longThread( $author, $recipient, 3 );
 
-		$this->logIn( $recipient );
 		$crawler = $this->client->request( 'GET', '/messages?conversation=' . $conversation->getId() );
 
 		$this->assertCount( 3, $crawler->filter( '.thread .message' ) );
@@ -295,21 +296,37 @@ class MessagingTest extends WebTestCase {
 	}
 
 	/**
+	 * Rien de non lu ne reste replié : le fil remonte jusqu'au premier.
+	 */
+	public function testAThreadNeverFoldsAnUnreadMessage () {
+		$author    = $this->user( 'Jeanne Réserve' );
+		$recipient = $this->user( 'Paul Martin' );
+
+		$this->logIn( $author );
+		$conversation = $this->longThread( $author, $recipient, 22 );
+
+		$this->logIn( $recipient );
+		$crawler = $this->client->request( 'GET', '/messages?conversation=' . $conversation->getId() );
+
+		$this->assertCount( 22, $crawler->filter( '.thread .message' ) );
+		$this->assertCount( 0, $crawler->filter( '.thread--earlier' ) );
+	}
+
+	/**
 	 * @param \App\Entity\User $author
 	 * @param \App\Entity\User $recipient
+	 * @param int              $count
 	 *
 	 * @return \App\Entity\Conversation
 	 */
-	private function threeMessages ( User $author, User $recipient ) {
-		$this->writeTo( $author, $recipient, 'Premier message' );
+	private function longThread ( User $author, User $recipient, $count ) {
+		$this->writeTo( $author, $recipient, 'Message 1' );
 
-		$conversation = $this->conversationsOf( $author )[ 0 ];
+		$conversation  = $this->conversationsOf( $author )[ 0 ];
+		$conversations = self::$container->get( ConversationManager::class );
 
-		foreach ( [ 'Deuxième message', 'Troisième message' ] as $body ) {
-			$crawler        = $this->client->request( 'GET', '/messages?conversation=' . $conversation->getId() );
-			$form           = $crawler->filter( 'form.thread--reply' )->form();
-			$form[ 'body' ] = $body;
-			$this->client->submit( $form );
+		for ( $i = 2; $i <= $count; $i++ ) {
+			$conversations->post( $conversation, $author, 'Message ' . $i );
 		}
 
 		return $conversation;

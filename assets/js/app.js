@@ -54,6 +54,7 @@ import './ui/onlyoffice';
 // le premier tour.
 import './messaging/badge';
 import './messaging/dock';
+import './messaging/thread';
 //
 import './user/profile';
 import './user/dashboard';

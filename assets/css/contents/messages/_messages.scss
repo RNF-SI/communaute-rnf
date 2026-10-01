@@ -215,9 +215,20 @@
 	}
 }
 
+/**
+ * Le fil défile dans sa propre zone, comme une messagerie instantanée (#46) :
+ * la réponse reste sous les yeux, et le JavaScript ouvre la zone en bas.
+ * `position: relative` fait du fil la référence de `offsetTop` — c'est ce qui
+ * permet de s'y poser sur la barre « Nouveaux messages ».
+ */
 .thread {
 	@include clearulli(true);
-	margin-bottom: column_gap();
+	position:            relative;
+	margin-bottom:       column_gap();
+	max-height:          60vh;
+	overflow-y:          auto;
+	overscroll-behavior: contain;
+	padding-right:       $space_2;
 }
 
 // Même piège que `.message` : c'est un `<li>` de `.thread`, il lui faut la

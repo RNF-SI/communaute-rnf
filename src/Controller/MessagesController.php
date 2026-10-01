@@ -41,6 +41,13 @@ class MessagesController extends AbstractController {
 	private const PER_PAGE = 50;
 
 	/**
+	 * Combien de messages le fil montre en s'ouvrant (#46) — les derniers,
+	 * dans une zone qui défile et s'ouvre sur le plus récent, comme dans une
+	 * messagerie instantanée. Le reste se déplie par un lien.
+	 */
+	private const THREAD_TAIL = 20;
+
+	/**
 	 * @Route("/messages", name="messages_index", methods={"GET"})
 	 *
 	 * @param \Symfony\Component\HttpFoundation\Request $request
@@ -102,10 +109,10 @@ class MessagesController extends AbstractController {
 
 			$conversations->markRead( $open, $user );
 
-			// Le fil s'ouvre sur sa fin (#46) : le dernier message, ou tout ce
-			// qui n'avait pas été lu — trois messages reçus en son absence ne
-			// se résument pas au dernier. Le reste attend `all=1`, un lien et
-			// un rechargement : la page n'a pas besoin de JavaScript pour lire.
+			// Le fil s'ouvre sur sa fin (#46) : les derniers messages, et tout
+			// ce qui n'avait pas été lu s'il remonte plus haut — rien de non
+			// lu ne doit rester replié. Le reste attend `all=1`, un lien et un
+			// rechargement : la page n'a pas besoin de JavaScript pour lire.
 			if ( !$request->query->getBoolean( 'all' ) ) {
 				$earlier  = $this->earlierCount( $messages, $firstUnread );
 				$messages = array_slice( $messages, $earlier );
@@ -652,8 +659,8 @@ class MessagesController extends AbstractController {
 
 	/**
 	 * Combien de messages le fil replie au-dessus de ce qu'il montre : tous
-	 * sauf le dernier, ou tous ceux d'avant le premier non lu s'il est plus
-	 * haut.
+	 * sauf les `THREAD_TAIL` derniers, ou tous ceux d'avant le premier non lu
+	 * s'il est plus haut.
 	 *
 	 * @param \App\Entity\PrivateMessage[] $messages
 	 * @param int|null                     $firstUnread
@@ -661,7 +668,7 @@ class MessagesController extends AbstractController {
 	 * @return int
 	 */
 	private function earlierCount ( array $messages, $firstUnread = NULL ) {
-		$earlier = max( 0, count( $messages ) - 1 );
+		$earlier = max( 0, count( $messages ) - self::THREAD_TAIL );
 
 		foreach ( array_values( $messages ) as $index => $message ) {
 			if ( $firstUnread && ( $message->getId() === $firstUnread ) ) {
