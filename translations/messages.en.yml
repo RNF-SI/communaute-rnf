@@ -788,6 +788,7 @@ pages:
         nobody: "Conversation with nobody else"
         thread_empty: "Nothing has been written here yet."
         new_messages: "New messages"
+        show_earlier: "{1} Show the previous message|]1,Inf[ Show the %count% previous messages"
         unknown_author: "Deleted account"
         deleted: "Message deleted"
         edited: "edited"

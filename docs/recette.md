@@ -317,12 +317,15 @@ public) et « **Note de cadrage du bureau** » (groupe privé).
 |---|---|
 | Se connecter en **Manon Membre**, regarder l'en-tête | Un compteur à côté de **Messages** |
 | En-tête → **Messages** | La page s'ouvre en deux colonnes : la liste à gauche, un texte d'invite à droite |
-| Ouvrir la conversation avec Rémi | Une barre « Nouveaux messages » devant le dernier ; le compteur retombe à zéro |
-| Dans ce fil | Un message porte « modifié » ; les tags sont des liens colorés avec une pastille de type |
-| Onglet **Archivées** | La conversation à plusieurs s'y trouve, avec un « Message supprimé » qui garde sa place et Éric qui l'a quittée |
+| Ouvrir la conversation avec Rémi | Le fil s'ouvre **sur sa fin** : la barre « Nouveaux messages » puis le dernier, et au-dessus un bouton « Afficher les N messages précédents » ; le compteur retombe à zéro (#46) |
+| Cliquer **Afficher les N messages précédents** | Tout le fil apparaît, la page se pose sur le message qu'on voyait déjà ; plus de bouton (#46) |
+| Recharger la conversation sans rien de non lu | Seul le **dernier** message est visible, le bouton au-dessus (#46) |
+| Dans le fil déplié | Un message porte « modifié » ; les tags sont des liens colorés avec une pastille de type |
+| Modifier un ancien message du fil déplié | On revient sur **ce** message, fil toujours déplié (#46) |
+| Onglet **Archivées** | La conversation à plusieurs s'y trouve ; une fois dépliée, un « Message supprimé » qui garde sa place et Éric qui l'a quittée |
 | Fiche d'**Éric Extérieur** | Pas de bouton « Écrire » : sa boîte est fermée |
 | Mais la conversation avec Éric, dans la boîte de Manon | Elle s'ouvre et on peut y répondre — fermer sa boîte n'interrompt pas ce qui est en cours |
-| Se connecter en **Rémi Référent**, ouvrir la conversation avec Camille | Les trois tags sont des **liens** : il est membre du groupe privé |
+| Se connecter en **Rémi Référent**, ouvrir la conversation avec Camille (la déplier si besoin) | Les trois tags sont des **liens** : il est membre du groupe privé |
 | Se connecter en **Camille Candidate**, ouvrir la même | « Groupe privé de test » et « Note de cadrage du bureau » sont **grisés et non cliquables** ; « Guide des suivis partagés » reste un lien |
 | Fiche d'un membre → **Écrire** | Le formulaire s'ouvre avec cette personne déjà cochée |
 | Écrire un premier message | La conversation s'ouvre, le message y est |

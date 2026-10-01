@@ -101,6 +101,15 @@ class MessagesController extends AbstractController {
 			$firstUnread = $this->firstUnread( $messages, $participant );
 
 			$conversations->markRead( $open, $user );
+
+			// Le fil s'ouvre sur sa fin (#46) : le dernier message, ou tout ce
+			// qui n'avait pas été lu — trois messages reçus en son absence ne
+			// se résument pas au dernier. Le reste attend `all=1`, un lien et
+			// un rechargement : la page n'a pas besoin de JavaScript pour lire.
+			if ( !$request->query->getBoolean( 'all' ) ) {
+				$earlier  = $this->earlierCount( $messages, $firstUnread );
+				$messages = array_slice( $messages, $earlier );
+			}
 		}
 
 		// « Ajouter quelqu'un » cherche côté serveur : la page n'a pas besoin
@@ -125,6 +134,7 @@ class MessagesController extends AbstractController {
 				'conversation'  => $open,
 				'messages'      => $messages,
 				'firstUnread'   => isset( $firstUnread ) ? $firstUnread : NULL,
+				'earlier'       => isset( $earlier ) ? $earlier : 0,
 				'query'         => $query,
 				'archived'      => $archived,
 				'search'        => $search,
@@ -436,7 +446,7 @@ class MessagesController extends AbstractController {
 			$conversations->edit( $message, $body );
 		}
 
-		return $this->back( $message->getConversation() );
+		return $this->back( $message->getConversation(), $message );
 	}
 
 	/**
@@ -473,7 +483,7 @@ class MessagesController extends AbstractController {
 			$this->addFlash( 'notice', 'messages.messaging.deleted' );
 		}
 
-		return $this->back( $message->getConversation() );
+		return $this->back( $message->getConversation(), $message );
 	}
 
 	/**
@@ -641,6 +651,28 @@ class MessagesController extends AbstractController {
 	}
 
 	/**
+	 * Combien de messages le fil replie au-dessus de ce qu'il montre : tous
+	 * sauf le dernier, ou tous ceux d'avant le premier non lu s'il est plus
+	 * haut.
+	 *
+	 * @param \App\Entity\PrivateMessage[] $messages
+	 * @param int|null                     $firstUnread
+	 *
+	 * @return int
+	 */
+	private function earlierCount ( array $messages, $firstUnread = NULL ) {
+		$earlier = max( 0, count( $messages ) - 1 );
+
+		foreach ( array_values( $messages ) as $index => $message ) {
+			if ( $firstUnread && ( $message->getId() === $firstUnread ) ) {
+				return min( $earlier, $index );
+			}
+		}
+
+		return $earlier;
+	}
+
+	/**
 	 * Un tag qui désigne quelqu'un d'étranger à la conversation ne prévient
 	 * personne — le prévenir reviendrait à lui montrer un échange dont il
 	 * n'est pas. On le dit à celui qui vient d'écrire, plutôt que de le
@@ -696,15 +728,24 @@ class MessagesController extends AbstractController {
 	}
 
 	/**
-	 * @param \App\Entity\Conversation|null $conversation
+	 * Revenir sur un message précis rouvre le fil en entier et s'y pose :
+	 * celui qu'on vient de modifier ou d'effacer peut être loin au-dessus du
+	 * dernier, que le fil replié montrerait seul (#46).
+	 *
+	 * @param \App\Entity\Conversation|null  $conversation
+	 * @param \App\Entity\PrivateMessage|null $message
 	 *
 	 * @return \Symfony\Component\HttpFoundation\RedirectResponse
 	 */
-	private function back ( Conversation $conversation = NULL ) {
-		return $this->redirectToRoute(
-				'messages_index',
-				$conversation ? [ 'conversation' => $conversation->getId() ] : []
-		);
+	private function back ( Conversation $conversation = NULL, PrivateMessage $message = NULL ) {
+		$parameters = $conversation ? [ 'conversation' => $conversation->getId() ] : [];
+
+		if ( $conversation && $message ) {
+			$parameters[ 'all' ]       = 1;
+			$parameters[ '_fragment' ] = 'message-' . $message->getId();
+		}
+
+		return $this->redirectToRoute( 'messages_index', $parameters );
 	}
 
 	/**

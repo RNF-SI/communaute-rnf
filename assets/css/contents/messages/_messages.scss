@@ -234,6 +234,14 @@
 	border-top: 1px solid $color_tertiary;
 }
 
+// Le lien qui déplie le haut du fil (#46). Même spécificité que le
+// séparateur, pour la même raison.
+.thread--earlier,
+.thread > .thread--earlier {
+	margin-bottom: column_gap();
+	text-align:    center;
+}
+
 .thread--empty {
 	color:     $color_grey_neutral;
 	font-size: rem(15px);

@@ -901,6 +901,7 @@ pages:
         nobody: "Conversation sans autre participant"
         thread_empty: "Rien n’a encore été écrit ici."
         new_messages: "Nouveaux messages"
+        show_earlier: "{1} Afficher le message précédent|]1,Inf[ Afficher les %count% messages précédents"
         unknown_author: "Compte supprimé"
         deleted: "Message supprimé"
         edited: "modifié"

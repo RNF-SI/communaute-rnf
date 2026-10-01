@@ -123,6 +123,21 @@
 						</div>
 
 						<ol class="thread">
+							{# Le fil s'ouvre sur sa fin (#46) ; le reste se déplie par
+							   un lien, qui recharge la page et se pose sur le premier
+							   message qu'on voyait déjà. #}
+							{% if earlier > 0 and messages is not empty %}
+								<li class="thread--earlier">
+									<a class="cta__inverted" href="{{ path('messages_index', {
+										'conversation': conversation.id,
+										'q': query,
+										'archived': archived ? 1 : null,
+										'all': 1,
+										'_fragment': 'message-' ~ (messages|first).id
+									}) }}">{{ 'pages.messages.show_earlier'|trans({'%count%': earlier}) }}</a>
+								</li>
+							{% endif %}
+
 							{% for message in messages %}
 								{# La barre « nouveaux messages ». Le message devant lequel
 								   elle se pose est repéré côté PHP : un compteur posé dans

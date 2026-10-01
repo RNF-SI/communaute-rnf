@@ -249,6 +249,73 @@ class MessagingTest extends WebTestCase {
 	}
 
 	/**
+	 * Issue #46 — un fil s'ouvre sur son dernier message, et un lien déplie
+	 * le reste.
+	 */
+	public function testAThreadOpensOnItsLastMessage () {
+		$author    = $this->user( 'Jeanne Réserve' );
+		$recipient = $this->user( 'Paul Martin' );
+
+		$this->logIn( $author );
+		$conversation = $this->threeMessages( $author, $recipient );
+
+		$crawler = $this->client->request( 'GET', '/messages?conversation=' . $conversation->getId() );
+
+		$this->assertCount( 1, $crawler->filter( '.thread .message' ) );
+		$this->assertStringContainsString( 'Troisième', $crawler->filter( '.thread .message' )->text() );
+
+		$link = $crawler->filter( '.thread--earlier a' );
+
+		$this->assertCount( 1, $link );
+		$this->assertStringContainsString( '2', $link->text() );
+		$this->assertStringContainsString( 'all=1', $link->attr( 'href' ) );
+
+		$crawler = $this->client->click( $link->link() );
+
+		$this->assertCount( 3, $crawler->filter( '.thread .message' ) );
+		$this->assertCount( 0, $crawler->filter( '.thread--earlier' ) );
+	}
+
+	/**
+	 * Trois messages reçus en son absence ne se résument pas au dernier : le
+	 * fil s'ouvre au premier non lu.
+	 */
+	public function testAThreadOpensOnTheFirstUnreadMessage () {
+		$author    = $this->user( 'Jeanne Réserve' );
+		$recipient = $this->user( 'Paul Martin' );
+
+		$this->logIn( $author );
+		$conversation = $this->threeMessages( $author, $recipient );
+
+		$this->logIn( $recipient );
+		$crawler = $this->client->request( 'GET', '/messages?conversation=' . $conversation->getId() );
+
+		$this->assertCount( 3, $crawler->filter( '.thread .message' ) );
+		$this->assertCount( 0, $crawler->filter( '.thread--earlier' ) );
+	}
+
+	/**
+	 * @param \App\Entity\User $author
+	 * @param \App\Entity\User $recipient
+	 *
+	 * @return \App\Entity\Conversation
+	 */
+	private function threeMessages ( User $author, User $recipient ) {
+		$this->writeTo( $author, $recipient, 'Premier message' );
+
+		$conversation = $this->conversationsOf( $author )[ 0 ];
+
+		foreach ( [ 'Deuxième message', 'Troisième message' ] as $body ) {
+			$crawler        = $this->client->request( 'GET', '/messages?conversation=' . $conversation->getId() );
+			$form           = $crawler->filter( 'form.thread--reply' )->form();
+			$form[ 'body' ] = $body;
+			$this->client->submit( $form );
+		}
+
+		return $conversation;
+	}
+
+	/**
 	 * Une notification de message privé ne porte aucun groupe — c'est la seule
 	 * — et son titre est le nom de celui qui écrit, jamais un extrait.
 	 */
